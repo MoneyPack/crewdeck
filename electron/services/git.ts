@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { GitDiffKind, GitDiffResult, GitFileState, GitFileStatus, GitStatus } from '../../shared/ipc';
@@ -307,6 +308,76 @@ export async function gitDiscard(root: string, rel: string, untracked: boolean):
     return;
   }
   await runGit(root, ['restore', '--worktree', '--', p.rel], [0], { write: true });
+}
+
+const WORKTREE_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
+export const WORKTREE_BRANCH_PREFIX = 'crewdeck/';
+
+/** Directory holding all crewdeck worktrees for the repo at `root`: `<root>/../.crewdeck-worktrees/<name>`. */
+export function worktreesBase(root: string): string {
+  return path.join(path.dirname(root), '.crewdeck-worktrees', path.basename(root));
+}
+
+/** True when `p` is strictly inside `base` (case-insensitive on Windows). */
+function isInside(base: string, p: string): boolean {
+  const norm = (s: string) => (process.platform === 'win32' ? path.resolve(s).toLowerCase() : path.resolve(s));
+  const rel = path.relative(norm(base), norm(p));
+  return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
+/**
+ * Creates a worktree for one tab on a fresh `crewdeck/<agent>-<shortid>` branch based on HEAD.
+ * `dir` is any path inside the repository.
+ */
+export async function worktreeAdd(dir: string, tabId: string, agentId: string): Promise<{ path: string; branch: string }> {
+  if (!WORKTREE_SEGMENT.test(tabId) || !WORKTREE_SEGMENT.test(agentId)) throw new GitError('invalid tab or agent id', null, '');
+  const root = await repoRoot(dir);
+  if (!root) throw new GitError('not a git repository', null, '');
+  if (!(await hasHead(root))) throw new GitError('repository has no commits yet', null, '');
+  const target = path.join(worktreesBase(root), tabId);
+  if (fs.existsSync(target)) throw new GitError('worktree folder already exists', null, '');
+  const short = crypto.randomBytes(3).toString('hex');
+  const branch = `${WORKTREE_BRANCH_PREFIX}${agentId.toLowerCase()}-${short}`;
+  await fs.promises.mkdir(path.dirname(target), { recursive: true });
+  await runGit(root, ['worktree', 'add', '-b', branch, target, 'HEAD'], [0], { write: true });
+  return { path: target, branch };
+}
+
+export type WorktreeRemoveOutcome = { removed: true } | { removed: false; reason: string; needsForce: boolean };
+
+/**
+ * Removes a crewdeck worktree and deletes its `crewdeck/*` branch. Without `force`, refuses when the
+ * worktree has uncommitted changes or its branch is not merged into the main checkout's HEAD.
+ */
+export async function worktreeRemove(dir: string, worktreePath: string, force: boolean): Promise<WorktreeRemoveOutcome> {
+  const root = await repoRoot(dir);
+  if (!root) throw new GitError('not a git repository', null, '');
+  const base = worktreesBase(root);
+  if (typeof worktreePath !== 'string' || !isInside(base, worktreePath)) throw new GitError('not a crewdeck worktree', null, '');
+  const target = path.resolve(worktreePath);
+
+  let branch: string | null = null;
+  if (fs.existsSync(target)) {
+    const head = await runGit(target, ['rev-parse', '--abbrev-ref', 'HEAD'], [0, 128]);
+    const name = head.code === 0 ? head.stdout.trim() : '';
+    if (name.startsWith(WORKTREE_BRANCH_PREFIX)) branch = name;
+    if (!force) {
+      const { stdout } = await runGit(target, ['status', '--porcelain=v1', '--untracked-files=normal']);
+      if (stdout.trim()) return { removed: false, reason: 'worktree has uncommitted changes', needsForce: true };
+      if (branch) {
+        const merged = await runGit(root, ['merge-base', '--is-ancestor', branch, 'HEAD'], [0, 1]);
+        if (merged.code !== 0) return { removed: false, reason: `branch ${branch} is not merged`, needsForce: true };
+      }
+    }
+    const args = ['worktree', 'remove'];
+    if (force) args.push('--force', '--force');
+    args.push(target);
+    await runGit(root, args, [0], { write: true });
+  } else {
+    await runGit(root, ['worktree', 'prune'], [0], { write: true });
+  }
+  if (branch) await runGit(root, ['branch', '-D', branch], [0, 1], { write: true });
+  return { removed: true };
 }
 
 const WATCH_IGNORE_SEGMENTS = new Set(['node_modules', '.venv', '__pycache__', '.next', 'dist', 'target']);

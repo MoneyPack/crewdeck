@@ -14,6 +14,7 @@ import type {
   RestoreResult,
   RouteLogEntry,
   RouteLogInput,
+  WorktreeInfo,
 } from '../shared/ipc';
 
 /** A terminal session. Spawn parameters are fixed at creation time. */
@@ -27,6 +28,8 @@ interface TermSpec {
   cwd?: string;
   /** Human-readable resume command recorded in session metadata (restored agents only). */
   resumeCommand?: string;
+  /** Isolated git worktree this tab runs in (opt-in at creation). */
+  worktree?: WorktreeInfo;
 }
 
 type LayoutSize = 1 | 2 | 4;
@@ -67,7 +70,13 @@ function buildSpec(
 }
 
 function toPersisted(terminals: TermSpec[], projectPath: string): PersistedTerminal[] {
-  return terminals.map((t) => ({ id: t.id, title: t.title, profileId: t.profileId, cwd: t.cwd ?? projectPath }));
+  return terminals.map((t) => ({
+    id: t.id,
+    title: t.title,
+    profileId: t.profileId,
+    cwd: t.cwd ?? projectPath,
+    ...(t.worktree ? { worktree: t.worktree } : {}),
+  }));
 }
 
 /** Delay between pasting text and pressing Enter; agent TUIs treat a same-chunk \r as pasted text. */
@@ -105,6 +114,9 @@ export function App() {
   const [routeLog, setRouteLog] = useState<RouteLogEntry[]>([]);
   const [showLog, setShowLog] = useState(false);
   const [showGit, setShowGit] = useState(false);
+  // Opt-in: new tabs get their own git worktree + branch instead of the shared project folder.
+  const [isolateNext, setIsolateNext] = useState(false);
+  const [worktreeError, setWorktreeError] = useState<string | null>(null);
   // Last single-target route, for CD-20 change attribution.
   const lastRoute = useRef<LastRoute | null>(null);
   // Read inside stable callbacks so routing doesn't need to be re-created per project.
@@ -201,7 +213,10 @@ export function App() {
 
   /** Replaces all state with a restored project snapshot. */
   const applyRestore = useCallback((r: RestoreResult, dets: AgentDetection[]) => {
-    const specs = r.terminals.map((t) => buildSpec(t.id, t.title, t.profileId, t.cwd, dets, true));
+    const specs = r.terminals.map((t) => {
+      const spec = buildSpec(t.id, t.title, t.profileId, t.cwd, dets, true);
+      return t.worktree ? { ...spec, worktree: t.worktree } : spec;
+    });
     setProject(r.project);
     setTerminals(specs);
     const saved: PersistedLayout = r.layout ?? { layout: 1, slots: [], activeSlot: 0 };
@@ -303,7 +318,24 @@ export function App() {
     const detection = dets.find((d) => d.id === profileId);
     if (profileId !== 'shell' && !detection?.launch) return;
     const n = terminals.filter((t) => t.profileId === profileId).length + 1;
-    const spec = buildSpec(crypto.randomUUID(), `${profile.name} ${n}`, profileId, project?.path, dets);
+    const id = crypto.randomUUID();
+    let worktree: WorktreeInfo | undefined;
+    if (isolateNext && project) {
+      try {
+        const r = await window.crewdeck.git.worktreeAdd(project.id, id, profileId);
+        if (!r.ok) {
+          setWorktreeError(`Worktree not created: ${r.error}`);
+          return;
+        }
+        worktree = r.worktree;
+      } catch (err) {
+        setWorktreeError(`Worktree not created: ${err instanceof Error ? err.message : String(err)}`);
+        return;
+      }
+    }
+    setWorktreeError(null);
+    const base = buildSpec(id, `${profile.name} ${n}`, profileId, worktree?.path ?? project?.path, dets);
+    const spec: TermSpec = worktree ? { ...base, worktree } : base;
     // Persist the row before the pane mounts so its session can reference it (FK).
     if (project) {
       // A stale debounced save (without this terminal) must not land after ours and delete the row.
@@ -338,6 +370,45 @@ export function App() {
       }
       return next;
     });
+  };
+
+  /**
+   * Closes a worktree tab and deletes its worktree. The pane's PTY is killed on unmount but
+   * not awaited, and Windows refuses to remove a directory that is some process's cwd, so
+   * busy-dir failures are retried with backoff. Dirty worktrees need a second confirmation.
+   */
+  const removeWorktree = async (id: string) => {
+    const term = terminals.find((t) => t.id === id);
+    if (!project || !term?.worktree) return;
+    const { path, branch } = term.worktree;
+    if (!window.confirm(`Close "${term.title}" and delete its worktree?\n\n${path}\n\nThe branch ${branch} is kept.`)) {
+      return;
+    }
+    closeTerminal(id);
+    let force = false;
+    let lastError = 'unknown error';
+    for (let attempt = 0, delay = 300; attempt < 6; attempt++, delay = Math.min(delay * 2, 2000)) {
+      await new Promise((r) => setTimeout(r, delay));
+      try {
+        const r = await window.crewdeck.git.worktreeRemove(project.id, path, force);
+        if (r.ok) {
+          setWorktreeError(null);
+          return;
+        }
+        lastError = r.error ?? lastError;
+        if (r.needsForce && !force) {
+          if (!window.confirm(`${lastError}.\n\nDelete the worktree anyway? Uncommitted changes will be lost.`)) {
+            setWorktreeError(`Worktree kept: ${path}`);
+            return;
+          }
+          force = true;
+          attempt--; // the forced retry does not count against busy-dir retries
+        }
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
+      }
+    }
+    setWorktreeError(`Worktree not removed: ${lastError}`);
   };
 
   const renameTerminal = (id: string, title: string) => {
@@ -468,6 +539,18 @@ export function App() {
             );
           })}
         </select>
+        <label
+          className="worktree-toggle"
+          title="Start new terminals and agents in their own git worktree on a crewdeck/* branch"
+        >
+          <input
+            type="checkbox"
+            checked={isolateNext}
+            disabled={!project}
+            onChange={(e) => setIsolateNext(e.target.checked)}
+          />
+          Worktree
+        </label>
         <button type="button" title="Re-detect installed agents" onClick={() => refreshAgents(true)}>
           ↻
         </button>
@@ -490,6 +573,15 @@ export function App() {
           Git
         </button>
       </div>
+
+      {worktreeError && (
+        <div className="banner error" role="alert">
+          <span>{worktreeError}</span>
+          <button type="button" title="Dismiss" onClick={() => setWorktreeError(null)}>
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="tabs" role="tablist">
         {terminals.map((t) => (
@@ -517,6 +609,19 @@ export function App() {
               />
             ) : (
               <span>{t.title}</span>
+            )}
+            {t.worktree && (
+              <button
+                type="button"
+                className="branch-badge"
+                title={`Worktree: ${t.worktree.path}\nBranch: ${t.worktree.branch}\nClick to close the tab and delete the worktree`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void removeWorktree(t.id);
+                }}
+              >
+                ⎇ {t.worktree.branch.replace(/^crewdeck\//, '')}
+              </button>
             )}
             <button
               type="button"

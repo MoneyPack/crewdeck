@@ -99,6 +99,15 @@ export interface PersistedTerminal {
   title: string;
   profileId: AgentId;
   cwd: string;
+  /** Set when the tab runs in its own git worktree (opt-in). */
+  worktree?: WorktreeInfo;
+}
+
+export interface WorktreeInfo {
+  /** Absolute worktree path. */
+  path: string;
+  /** Branch checked out in the worktree, e.g. `crewdeck/claude-1a2b3c`. */
+  branch: string;
 }
 
 export interface RestoreResult {
@@ -166,7 +175,18 @@ export const GitChannels = {
   stage: 'git:stage',
   unstage: 'git:unstage',
   discard: 'git:discard',
+  worktreeAdd: 'git:worktreeAdd',
+  worktreeRemove: 'git:worktreeRemove',
 } as const;
+
+export type WorktreeAddResult = { ok: true; worktree: WorktreeInfo } | { ok: false; error: string };
+
+export interface WorktreeRemoveResult {
+  ok: boolean;
+  error?: string;
+  /** True when removal was refused because of uncommitted or unmerged work; retry with `force`. */
+  needsForce?: boolean;
+}
 
 export interface GitActionResult {
   ok: boolean;
@@ -235,6 +255,10 @@ export interface CrewdeckGitApi {
   unstage(projectId: string, path: string, oldPath?: string): Promise<GitActionResult>;
   /** Irreversible. `untracked` deletes the file; otherwise restores it from the index. */
   discard(projectId: string, path: string, untracked: boolean): Promise<GitActionResult>;
+  /** Creates `<project>/../.crewdeck-worktrees/<project>/<tabId>` on a new `crewdeck/<agent>-<shortid>` branch. */
+  worktreeAdd(projectId: string, tabId: string, agentId: string): Promise<WorktreeAddResult>;
+  /** Removes a crewdeck worktree and its branch. Refuses dirty/unmerged work unless `force`. */
+  worktreeRemove(projectId: string, worktreePath: string, force: boolean): Promise<WorktreeRemoveResult>;
 }
 
 export interface CrewdeckApi {

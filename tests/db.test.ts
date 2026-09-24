@@ -93,6 +93,23 @@ test('terminals: ordered replace keeps ids and cascades deletes', () => {
   });
 });
 
+test('terminals: worktree config round-trips and can be cleared', () => {
+  withDb((db) => {
+    const p = db.openProject('C:/p', 'p');
+    const worktree = { path: 'C:/.crewdeck-worktrees/p/tab1', branch: 'crewdeck/claude-abc123' };
+    const [t] = db.saveTerminals(p.id, [
+      { title: 'claude', profileId: 'claude', cwd: worktree.path, config: { yolo: true, worktree } },
+    ]);
+    assert.deepEqual(db.listTerminals(p.id)[0].config, { yolo: true, worktree });
+    assert.equal(db.listTerminals(p.id)[0].cwd, worktree.path);
+
+    db.saveTerminals(p.id, [{ id: t.id, title: 'claude', profileId: 'claude', cwd: 'C:/p', config: { yolo: true } }]);
+    const [after] = db.listTerminals(p.id);
+    assert.equal(after.id, t.id);
+    assert.deepEqual(after.config, { yolo: true });
+  });
+});
+
 test('sessions: lifecycle, latest, dangling, live scrollback', () => {
   withDb((db) => {
     const p = db.openProject('C:/p', 'p');

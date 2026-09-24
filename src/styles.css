@@ -900,3 +900,67 @@ body,
 .tok-fn { color: #d2a8ff; }
 .tok-type { color: #ffa657; }
 .tok-punc { color: #c9d1d9; }
+
+/* ---- Worktree isolation ---- */
+.worktree-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.worktree-toggle input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.worktree-toggle:has(input:checked) {
+  color: var(--text);
+}
+
+.worktree-toggle:has(input:disabled) {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.tab button.branch-badge {
+  font-size: 11px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: #3fb950;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab button.branch-badge:hover {
+  color: #f85149;
+  border-color: #f85149;
+  background: transparent;
+}
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: pre-wrap;
+}
+
+.banner.error {
+  background: rgba(248, 81, 73, 0.1);
+  color: #f85149;
+}
+
+.banner button {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}

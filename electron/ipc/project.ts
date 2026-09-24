@@ -8,6 +8,7 @@ import {
   type PersistedTerminal,
   type ProjectInfo,
   type RestoreResult,
+  type WorktreeInfo,
 } from '../../shared/ipc';
 import { getDatabase, type Json } from '../services/db';
 
@@ -48,12 +49,17 @@ export function registerProjectIpc(): void {
     // Bump last_opened_at so the restored project stays "last".
     db.openProject(row.path, row.name);
 
-    const terminals: PersistedTerminal[] = db.listTerminals(row.id).map((t) => ({
-      id: t.id,
-      title: t.title,
-      profileId: t.profileId,
-      cwd: isDirectory(t.cwd) ? t.cwd : row.path,
-    }));
+    const terminals: PersistedTerminal[] = db.listTerminals(row.id).map((t) => {
+      const worktree = parseWorktree(t.config.worktree);
+      const liveWorktree = worktree && isDirectory(worktree.path) ? worktree : undefined;
+      return {
+        id: t.id,
+        title: t.title,
+        profileId: t.profileId,
+        cwd: isDirectory(t.cwd) ? t.cwd : row.path,
+        ...(liveWorktree ? { worktree: liveWorktree } : {}),
+      };
+    });
     const layout = parseLayout(row.layout, new Set(terminals.map((t) => t.id)));
 
     BrowserWindow.fromWebContents(e.sender)?.setTitle(`crewdeck — ${row.name}`);
@@ -75,7 +81,14 @@ export function registerProjectIpc(): void {
       if (!t) return; // reject the whole batch rather than silently dropping terminals
       clean.push(t);
     }
-    getDatabase().saveTerminals(projectId, clean);
+    getDatabase().saveTerminals(
+      projectId,
+      clean.map(({ worktree, ...t }) => {
+        const config: Record<string, Json> = {};
+        if (worktree) config.worktree = { path: worktree.path, branch: worktree.branch };
+        return { ...t, config };
+      }),
+    );
   });
 }
 
@@ -100,7 +113,17 @@ function parseTerminal(raw: unknown): PersistedTerminal | null {
   const o = raw as Record<string, unknown>;
   if (!isId(o.id) || !isText(o.title) || !isText(o.cwd)) return null;
   if (typeof o.profileId !== 'string' || !AGENT_IDS.has(o.profileId)) return null;
-  return { id: o.id, title: o.title, profileId: o.profileId as AgentId, cwd: o.cwd };
+  const base = { id: o.id, title: o.title, profileId: o.profileId as AgentId, cwd: o.cwd };
+  if (o.worktree === undefined || o.worktree === null) return base;
+  const worktree = parseWorktree(o.worktree);
+  return worktree ? { ...base, worktree } : null;
+}
+
+function parseWorktree(raw: unknown): WorktreeInfo | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const o = raw as Record<string, unknown>;
+  if (!isText(o.path) || !o.path || !isText(o.branch) || !o.branch) return undefined;
+  return { path: o.path, branch: o.branch };
 }
 
 /**

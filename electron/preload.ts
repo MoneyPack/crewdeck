@@ -62,6 +62,9 @@ const api: CrewdeckApi = {
     stage: (projectId, path) => ipcRenderer.invoke(GitChannels.stage, projectId, path),
     unstage: (projectId, path, oldPath) => ipcRenderer.invoke(GitChannels.unstage, projectId, path, oldPath),
     discard: (projectId, path, untracked) => ipcRenderer.invoke(GitChannels.discard, projectId, path, untracked),
+    worktreeAdd: (projectId, tabId, agentId) => ipcRenderer.invoke(GitChannels.worktreeAdd, projectId, tabId, agentId),
+    worktreeRemove: (projectId, worktreePath, force) =>
+      ipcRenderer.invoke(GitChannels.worktreeRemove, projectId, worktreePath, force),
   },
 };
 

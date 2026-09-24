@@ -6,9 +6,21 @@ import {
   type GitDiffKind,
   type GitDiffResult,
   type GitStatus,
+  type WorktreeAddResult,
+  type WorktreeRemoveResult,
 } from '../../shared/ipc';
 import { getDatabase } from '../services/db';
-import { gitDiff, gitDiscard, gitStage, gitStatus, gitUnstage, repoRoot, watchRepo } from '../services/git';
+import {
+  gitDiff,
+  gitDiscard,
+  gitStage,
+  gitStatus,
+  gitUnstage,
+  repoRoot,
+  watchRepo,
+  worktreeAdd,
+  worktreeRemove,
+} from '../services/git';
 
 const DIFF_KINDS: ReadonlySet<string> = new Set<GitDiffKind>(['staged', 'unstaged', 'untracked']);
 
@@ -136,4 +148,33 @@ export function registerGitIpc(): void {
     if (typeof untracked !== 'boolean') return { ok: false, error: 'invalid request' };
     return action(projectId, rel, (root, p) => gitDiscard(root, p, untracked));
   });
+
+  ipcMain.handle(
+    GitChannels.worktreeAdd,
+    async (_e, projectId: unknown, tabId: unknown, agentId: unknown): Promise<WorktreeAddResult> => {
+      const dir = projectPath(projectId);
+      if (!dir) return { ok: false, error: 'unknown project' };
+      if (!isId(tabId) || !isId(agentId)) return { ok: false, error: 'invalid request' };
+      try {
+        return { ok: true, worktree: await worktreeAdd(dir, tabId, agentId) };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    GitChannels.worktreeRemove,
+    async (_e, projectId: unknown, worktreePath: unknown, force: unknown): Promise<WorktreeRemoveResult> => {
+      const dir = projectPath(projectId);
+      if (!dir) return { ok: false, error: 'unknown project' };
+      if (!isRelPath(worktreePath) || typeof force !== 'boolean') return { ok: false, error: 'invalid request' };
+      try {
+        const r = await worktreeRemove(dir, worktreePath, force);
+        return r.removed ? { ok: true } : { ok: false, error: r.reason, needsForce: r.needsForce };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      }
+    },
+  );
 }
