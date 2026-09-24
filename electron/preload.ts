@@ -1,0 +1,68 @@
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import {
+  AgentChannels,
+  GitChannels,
+  ProjectChannels,
+  RoutingChannels,
+  TerminalChannels,
+  type CrewdeckApi,
+  type GitChangedEvent,
+  type TerminalCreateResponse,
+  type TerminalDataEvent,
+  type TerminalExitEvent,
+} from '../shared/ipc';
+
+const api: CrewdeckApi = {
+  platform: process.platform,
+  terminal: {
+    create: async (options) => {
+      const res = (await ipcRenderer.invoke(TerminalChannels.create, options)) as TerminalCreateResponse;
+      if ('error' in res) throw new Error(res.error);
+      return res;
+    },
+    write: (id, data) => ipcRenderer.send(TerminalChannels.write, id, data),
+    resize: (id, cols, rows) => ipcRenderer.send(TerminalChannels.resize, id, cols, rows),
+    kill: (id) => ipcRenderer.invoke(TerminalChannels.kill, id),
+    scrollback: (terminalId) => ipcRenderer.invoke(TerminalChannels.scrollback, terminalId),
+    onData: (listener) => {
+      const handler = (_e: IpcRendererEvent, event: TerminalDataEvent) => listener(event);
+      ipcRenderer.on(TerminalChannels.data, handler);
+      return () => ipcRenderer.removeListener(TerminalChannels.data, handler);
+    },
+    onExit: (listener) => {
+      const handler = (_e: IpcRendererEvent, event: TerminalExitEvent) => listener(event);
+      ipcRenderer.on(TerminalChannels.exit, handler);
+      return () => ipcRenderer.removeListener(TerminalChannels.exit, handler);
+    },
+  },
+  agents: {
+    detect: (refresh) => ipcRenderer.invoke(AgentChannels.detect, refresh === true),
+  },
+  project: {
+    select: () => ipcRenderer.invoke(ProjectChannels.select),
+    restore: () => ipcRenderer.invoke(ProjectChannels.restore),
+    saveLayout: (projectId, layout) => ipcRenderer.invoke(ProjectChannels.saveLayout, projectId, layout),
+    saveTerminals: (projectId, terminals) => ipcRenderer.invoke(ProjectChannels.saveTerminals, projectId, terminals),
+  },
+  routing: {
+    writeTemp: (text) => ipcRenderer.invoke(RoutingChannels.writeTemp, text),
+    log: (projectId, input) => ipcRenderer.invoke(RoutingChannels.log, projectId, input),
+    list: (projectId) => ipcRenderer.invoke(RoutingChannels.list, projectId),
+  },
+  git: {
+    status: (projectId) => ipcRenderer.invoke(GitChannels.status, projectId),
+    diff: (projectId, path, kind, oldPath) => ipcRenderer.invoke(GitChannels.diff, projectId, path, kind, oldPath),
+    watch: (projectId) => ipcRenderer.invoke(GitChannels.watch, projectId),
+    unwatch: (projectId) => ipcRenderer.invoke(GitChannels.unwatch, projectId),
+    onChanged: (listener) => {
+      const handler = (_e: IpcRendererEvent, event: GitChangedEvent) => listener(event);
+      ipcRenderer.on(GitChannels.changed, handler);
+      return () => ipcRenderer.removeListener(GitChannels.changed, handler);
+    },
+    stage: (projectId, path) => ipcRenderer.invoke(GitChannels.stage, projectId, path),
+    unstage: (projectId, path, oldPath) => ipcRenderer.invoke(GitChannels.unstage, projectId, path, oldPath),
+    discard: (projectId, path, untracked) => ipcRenderer.invoke(GitChannels.discard, projectId, path, untracked),
+  },
+};
+
+contextBridge.exposeInMainWorld('crewdeck', api);

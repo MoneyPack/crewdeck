@@ -1,0 +1,94 @@
+{
+  "name": "crewdeck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-agent AI development workspace",
+  "author": "crewdeck",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moneypack/crewdeck.git"
+  },
+  "homepage": "https://github.com/moneypack/crewdeck#readme",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run typecheck && vite build && node scripts/build-electron.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "start": "electron .",
+    "rebuild": "electron-rebuild -f -o node-pty,better-sqlite3",
+    "smoke": "node scripts/build-electron.mjs --smoke && electron dist-electron/smoke.cjs",
+    "test": "node scripts/test.mjs",
+    "test:e2e": "npm run build && playwright test",
+    "icon": "node scripts/make-icon.mjs",
+    "dist": "npm run build && electron-builder --win --x64 --publish never",
+    "test:e2e:dist": "node scripts/e2e-dist.mjs"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/addon-web-links": "0.12.0",
+    "@xterm/xterm": "6.0.0",
+    "better-sqlite3": "13.0.3",
+    "node-pty": "1.1.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "4.2.0",
+    "@playwright/test": "1.63.0",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "electron": "44.4.3",
+    "electron-builder": "26.15.3",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.0"
+  },
+  "build": {
+    "appId": "dev.crewdeck.app",
+    "productName": "crewdeck",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "!dist-electron/tests/**",
+      "!dist-electron/smoke.cjs*",
+      "!**/*.map",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/node-pty/**",
+      "node_modules/better-sqlite3/**"
+    ],
+    "npmRebuild": false,
+    "publish": null,
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "allowScripts": {
+    "electron@44.4.3": true,
+    "esbuild@0.28.2": true
+  }
+}
