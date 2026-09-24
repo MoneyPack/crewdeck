@@ -1,5 +1,7 @@
 # crewdeck
 
+[![CI](https://github.com/MoneyPack/crewdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/MoneyPack/crewdeck/actions/workflows/ci.yml)
+
 A Windows desktop app for running several coding-agent CLIs (Claude Code, Codex, Gemini CLI, or a plain shell) side by side in one project. Features:
 
 - **N terminals** on ConPTY via `node-pty`, rendered with xterm.js. PTY output is batched once per animation frame.
@@ -58,6 +60,19 @@ To run the e2e smoke against the packaged exe instead of the dev build:
 ```pwsh
 $env:CREWDECK_E2E_EXE = 'release/win-unpacked/crewdeck.exe'; npx playwright test
 ```
+
+### CI
+
+`.github/workflows/ci.yml` runs on every push to `main` and on every PR, using `windows-latest` and Node 24. Steps:
+
+1. `npm ci`
+2. `electron-rebuild` of better-sqlite3
+3. typecheck
+4. unit tests
+5. `npm run dist`
+6. Playwright smoke against the packaged exe
+
+The NSIS installer is uploaded as the `crewdeck-installer` artifact. If a run fails, `test-results/` is uploaded as well.
 
 ## Environment hooks
 
