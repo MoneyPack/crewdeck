@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
+import { WebglAddon } from '@xterm/addon-webgl';
 import { RESTORED_DIVIDER, type TerminalDataEvent, type TerminalExitEvent } from '../../../shared/ipc';
 import type { MentionTarget } from '../../../shared/mention';
 
@@ -31,7 +32,40 @@ export interface TerminalPaneProps {
   sendTargets?: MentionTarget[];
   /** Forwards the raw selected text to `target`. Resolves an error message on failure. */
   onSendSelection?: (target: MentionTarget, text: string) => Promise<string | void> | string | void;
+  /** Agent profile id; drives the pane's accent color via `[data-agent]`. */
+  agent?: string;
 }
+
+/** xterm palette derived from the design tokens in styles.css (ink/paper/signal). */
+const XTERM_THEME = {
+  background: '#0c0c0a',
+  foreground: '#e8e4da',
+  cursor: '#ff4d00',
+  cursorAccent: '#0c0c0a',
+  selectionBackground: 'rgba(255, 77, 0, 0.28)',
+  selectionInactiveBackground: 'rgba(255, 77, 0, 0.14)',
+  scrollbarSliderBackground: 'rgba(232, 228, 218, 0.10)',
+  scrollbarSliderHoverBackground: 'rgba(232, 228, 218, 0.20)',
+  scrollbarSliderActiveBackground: 'rgba(255, 77, 0, 0.45)',
+  black: '#1d1d1a',
+  red: '#ff3b3b',
+  green: '#c6f432',
+  yellow: '#ffc233',
+  blue: '#5b9dff',
+  magenta: '#b69cff',
+  cyan: '#3fe0ff',
+  white: '#c9c4b8',
+  brightBlack: '#5d5a52',
+  brightRed: '#ff6b5b',
+  brightGreen: '#d8ff6a',
+  brightYellow: '#ffd466',
+  brightBlue: '#8bbaff',
+  brightMagenta: '#cfbcff',
+  brightCyan: '#7cecff',
+  brightWhite: '#f4f1ea',
+} as const;
+
+const XTERM_FONT = "'JetBrains Mono Variable', 'JetBrains Mono', monospace";
 
 /**
  * Make recorded output safe to replay into a fresh terminal: drop alternate-screen switches
@@ -48,7 +82,7 @@ const FAST_EXIT_MS = 1500;
 
 type Status = { kind: 'starting' } | { kind: 'running'; pid: number } | { kind: 'exited'; code: number } | { kind: 'error'; message: string };
 
-export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeCommand, restoredFrom, active, style, headerExtra, onActivate, onClose, onPtyId, sendTargets, onSendSelection }: TerminalPaneProps) {
+export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeCommand, restoredFrom, active, style, headerExtra, onActivate, onClose, onPtyId, sendTargets, onSendSelection, agent }: TerminalPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const onPtyIdRef = useRef(onPtyId);
   onPtyIdRef.current = onPtyId;
@@ -94,21 +128,42 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
 
     const api = window.crewdeck.terminal;
     const term = new Terminal({
-      fontFamily: "'Cascadia Mono', Consolas, monospace",
+      fontFamily: XTERM_FONT,
       fontSize: 13,
+      lineHeight: 1.15,
       cursorBlink: true,
+      cursorStyle: 'block',
+      cursorInactiveStyle: 'outline',
+      minimumContrastRatio: 1,
       scrollback: 10_000,
       allowProposedApi: false,
       // ConPTY clears the screen (ESC[2J) when a new session starts; push the replayed
       // history into scrollback instead of erasing it.
       scrollOnEraseInDisplay: true,
       windowsPty: window.crewdeck.platform === 'win32' ? { backend: 'conpty' } : undefined,
-      theme: { background: '#0f1115', foreground: '#d6dae1' },
+      theme: XTERM_THEME,
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.loadAddon(new WebLinksAddon());
     term.open(host);
+    // GPU renderer; falls back to the DOM renderer if WebGL2 is unavailable or the context is lost.
+    // `localStorage['crewdeck.renderer'] = 'dom'` forces the DOM renderer (A/B + troubleshooting).
+    let webgl: WebglAddon | null = null;
+    if (localStorage.getItem('crewdeck.renderer') !== 'dom') {
+      try {
+        const addon = new WebglAddon();
+        addon.onContextLoss(() => {
+          addon.dispose();
+          if (webgl === addon) webgl = null;
+        });
+        term.loadAddon(addon);
+        webgl = addon;
+      } catch {
+        webgl = null;
+      }
+    }
+    host.dataset.renderer = webgl ? 'webgl' : 'dom';
     // Expose the instance for automated (CDP) checks that need the full buffer, not just visible rows.
     (host as HTMLDivElement & { __xterm?: Terminal }).__xterm = term;
     safeFit(fit);
@@ -116,6 +171,17 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
     fitRef.current = fit;
 
     let disposed = false;
+    // The variable webfont may finish loading after open(); re-measure cells once it has.
+    const fontSpec = "13px 'JetBrains Mono Variable'";
+    if (document.fonts && !document.fonts.check(fontSpec)) {
+      void document.fonts.load(fontSpec).then(() => {
+        if (disposed) return;
+        // xterm skips no-op option writes, so bounce the value to force a glyph re-measure.
+        term.options.fontFamily = 'monospace';
+        term.options.fontFamily = XTERM_FONT;
+        safeFit(fit);
+      });
+    }
     let ptyId: string | null = null;
     // Events that arrive before create() resolves are held until we know our id.
     const pending: TerminalDataEvent[] = [];
@@ -223,6 +289,8 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
       onPtyIdRef.current?.(null);
       termRef.current = null;
       fitRef.current = null;
+      webgl?.dispose();
+      webgl = null;
       term.dispose();
     };
     // Shell/args/cwd are fixed for the life of a pane.
@@ -232,6 +300,7 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
   return (
     <div
       className={active ? 'pane active' : 'pane'}
+      data-agent={agent}
       style={style}
       onMouseDown={onActivate}
       onFocus={onActivate}
@@ -261,8 +330,8 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
         {sendNote && <span className="send-note">{sendNote}</span>}
         <span className="status">{describe(status)}</span>
         {onClose && (
-          <button type="button" title="Close terminal" onClick={onClose}>
-            ✕
+          <button type="button" className="icon-btn" title="Close terminal" aria-label="Close terminal" onClick={onClose}>
+            <i className="ri-close-line" aria-hidden="true" />
           </button>
         )}
       </div>

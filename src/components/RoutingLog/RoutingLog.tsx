@@ -25,8 +25,8 @@ export function RoutingLog({ entries, hasProject, onClose }: Props) {
         <span>Routing log</span>
         <span className="count">{entries.length}</span>
         <span className="spacer" />
-        <button type="button" title="Hide routing log" onClick={onClose}>
-          ✕
+        <button type="button" title="Hide routing log" aria-label="Hide routing log" onClick={onClose}>
+          <i className="ri-close-line" aria-hidden="true" />
         </button>
       </div>
       {entries.length === 0 ? (

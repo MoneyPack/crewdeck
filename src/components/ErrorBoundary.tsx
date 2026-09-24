@@ -24,9 +24,9 @@ export class ErrorBoundary extends Component<Props, State> {
     const { error } = this.state;
     if (!error) return this.props.children;
     return (
-      <div role="alert" style={{ padding: 24, fontFamily: 'system-ui, sans-serif', color: '#e6e6e6' }}>
-        <h2 style={{ marginTop: 0 }}>crewdeck hit an unexpected error</h2>
-        <pre style={{ whiteSpace: 'pre-wrap', opacity: 0.8 }}>{error.message}</pre>
+      <div role="alert" className="crash">
+        <h2>crewdeck hit an unexpected error</h2>
+        <pre>{error.message}</pre>
         <button type="button" onClick={() => window.location.reload()}>
           Reload window
         </button>

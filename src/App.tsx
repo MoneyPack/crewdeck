@@ -502,7 +502,8 @@ export function App() {
       <div className="toolbar">
         <span className="title">crewdeck</span>
         <button type="button" className="project" onClick={() => void selectProject()} title={project?.path ?? 'Choose project folder'}>
-          {project ? `📁 ${project.name}` : 'Open Project…'}
+          <i className={project ? 'ri-folder-3-line' : 'ri-folder-open-line'} aria-hidden="true" />
+          {project ? project.name : 'Open Project…'}
         </button>
         <span className="spacer" />
         <div className="layout-picker" role="group" aria-label="Layout">
@@ -518,8 +519,9 @@ export function App() {
             </button>
           ))}
         </div>
-        <button type="button" onClick={() => void openTerminal('shell')}>
-          + Terminal
+        <button type="button" className="new-term" data-agent="shell" onClick={() => void openTerminal('shell')}>
+          <i className="ri-terminal-box-line" aria-hidden="true" />
+          Terminal
         </button>
         <select
           className="agent-picker"
@@ -549,10 +551,17 @@ export function App() {
             disabled={!project}
             onChange={(e) => setIsolateNext(e.target.checked)}
           />
+          <i className="ri-git-branch-line" aria-hidden="true" />
           Worktree
         </label>
-        <button type="button" title="Re-detect installed agents" onClick={() => refreshAgents(true)}>
-          ↻
+        <button
+          type="button"
+          className="icon-btn"
+          title="Re-detect installed agents"
+          aria-label="Re-detect installed agents"
+          onClick={() => refreshAgents(true)}
+        >
+          <i className="ri-refresh-line" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -561,6 +570,7 @@ export function App() {
           title="Routing log"
           onClick={() => setShowLog((v) => !v)}
         >
+          <i className="ri-route-line" aria-hidden="true" />
           Log{routeLog.length ? ` (${routeLog.length})` : ''}
         </button>
         <button
@@ -570,6 +580,7 @@ export function App() {
           title="Git changes"
           onClick={() => setShowGit((v) => !v)}
         >
+          <i className="ri-git-commit-line" aria-hidden="true" />
           Git
         </button>
       </div>
@@ -577,8 +588,8 @@ export function App() {
       {worktreeError && (
         <div className="banner error" role="alert">
           <span>{worktreeError}</span>
-          <button type="button" title="Dismiss" onClick={() => setWorktreeError(null)}>
-            ✕
+          <button type="button" className="icon-btn" title="Dismiss" aria-label="Dismiss" onClick={() => setWorktreeError(null)}>
+            <i className="ri-close-line" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -589,6 +600,7 @@ export function App() {
             key={t.id}
             role="tab"
             aria-selected={t.id === activeId}
+            data-agent={t.profileId}
             className={['tab', t.id === activeId ? 'active' : '', visibleSlots.includes(t.id) ? 'visible' : '']
               .filter(Boolean)
               .join(' ')}
@@ -620,18 +632,21 @@ export function App() {
                   void removeWorktree(t.id);
                 }}
               >
-                ⎇ {t.worktree.branch.replace(/^crewdeck\//, '')}
+                <i className="ri-git-branch-line" aria-hidden="true" />
+                {t.worktree.branch.replace(/^crewdeck\//, '')}
               </button>
             )}
             <button
               type="button"
+              className="tab-close"
               title="Close terminal"
+              aria-label="Close terminal"
               onClick={(e) => {
                 e.stopPropagation();
                 closeTerminal(t.id);
               }}
             >
-              ✕
+              <i className="ri-close-line" aria-hidden="true" />
             </button>
           </div>
         ))}
@@ -640,7 +655,8 @@ export function App() {
       <div className="workspace">
       {terminals.length === 0 ? (
         <div className="grid empty">
-          {project ? 'No terminals. Use “+ Terminal” or “+ Agent”.' : 'Open a project, then start a terminal or agent.'}
+          <i className={project ? 'ri-terminal-window-line' : 'ri-folder-open-line'} aria-hidden="true" />
+          <span>{project ? 'No terminals. Start a Terminal or an Agent.' : 'Open a project, then start a terminal or agent.'}</span>
         </div>
       ) : (
         <div
@@ -658,6 +674,7 @@ export function App() {
                 key={t.id}
                 terminalId={project ? t.id : undefined}
                 title={t.title}
+                agent={t.profileId}
                 shell={t.shell}
                 args={t.args}
                 env={t.env}

@@ -256,8 +256,8 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
         {actionError && (
           <div className="git-warning error" role="alert">
             {actionError}
-            <button type="button" title="Dismiss" onClick={() => setActionError(null)}>
-              ✕
+            <button type="button" title="Dismiss" aria-label="Dismiss" onClick={() => setActionError(null)}>
+              <i className="ri-close-line" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -277,7 +277,7 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
         <span className="git-title">Git</span>
         {status?.isRepo && (
           <span className="git-branch" title={status.upstream ? `Tracking ${status.upstream}` : 'No upstream'}>
-            ⎇ {status.branch ?? '(detached)'}
+            <i className="ri-git-branch-line" aria-hidden="true" /> {status.branch ?? '(detached)'}
             {tracking && <span className="git-tracking"> {tracking}</span>}
           </span>
         )}
@@ -293,11 +293,11 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
             </button>
           </div>
         )}
-        <button type="button" title="Refresh" disabled={!projectId || loading} onClick={refresh}>
-          ↻
+        <button type="button" title="Refresh" aria-label="Refresh" disabled={!projectId || loading} onClick={refresh}>
+          <i className="ri-refresh-line" aria-hidden="true" />
         </button>
-        <button type="button" title="Close git panel" onClick={onClose}>
-          ✕
+        <button type="button" title="Close git panel" aria-label="Close git panel" onClick={onClose}>
+          <i className="ri-close-line" aria-hidden="true" />
         </button>
       </div>
       <div className="git-panel-body">

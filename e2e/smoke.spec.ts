@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { _electron as electron, expect, test } from '@playwright/test';
+import { paneText } from './xterm';
 
 // Launch the built app against a throwaway profile + project, spawn a shell, echo round-trip.
 test('launch, spawn shell, echo round-trip', async () => {
@@ -25,16 +26,15 @@ test('launch, spawn shell, echo round-trip', async () => {
     await page.locator('button.project').click();
     await expect(page.locator('button.project')).toContainText('project');
 
-    await page.getByRole('button', { name: '+ Terminal' }).click();
+    await page.getByRole('button', { name: 'Terminal', exact: true }).click();
     const pane = page.locator('.pane').last();
-    const rows = pane.locator('.xterm-rows');
-    await expect(rows).toBeVisible();
+    await expect(pane.locator('.pane-body[data-renderer]')).toBeVisible();
 
     // Marker is concatenated at runtime so the echoed command line alone cannot match.
     await pane.locator('.pane-body').click();
     await page.keyboard.type("Write-Output ('CREW' + 'DECK_E2E')");
     await page.keyboard.press('Enter');
-    await expect(rows).toContainText('CREWDECK_E2E');
+    await expect.poll(() => paneText(pane), { timeout: 15_000 }).toContain('CREWDECK_E2E');
   } finally {
     await app.close();
     try {
