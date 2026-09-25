@@ -672,7 +672,7 @@ textarea {
   text-align: center;
 }
 
-.grid.empty i {
+.grid.empty > i {
   font-size: clamp(40px, 7vw, 88px);
   color: var(--signal);
   line-height: 1;
@@ -709,6 +709,318 @@ textarea {
 
 .empty-slot .empty {
   flex: 1;
+}
+
+.empty-slot .empty .hint,
+.onboard .hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--paper-mute);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* ---------------------------------------------------------------- onboarding */
+.onboard {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--s3);
+  width: min(720px, 100%);
+  padding: var(--s4);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-align: left;
+  animation: rise var(--t-med) var(--glide) both;
+}
+
+.onboard .kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 2px 8px;
+  color: var(--ink);
+  background: var(--signal);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  animation: slam var(--t-med) var(--snap) both;
+}
+
+.onboard h1 {
+  margin: 0;
+  font-family: var(--wide);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: clamp(28px, 5vw, 64px);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+.onboard h1 em {
+  font-style: normal;
+  color: var(--signal);
+}
+
+.onboard p {
+  margin: 0;
+  max-width: 56ch;
+  color: var(--paper-dim);
+  line-height: 1.6;
+}
+
+.onboard ol {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  margin: var(--s2) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--rule-w) solid var(--rule);
+}
+
+.onboard li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) 0;
+  border-bottom: var(--rule-w) solid var(--rule);
+  color: var(--paper-dim);
+  animation: rise var(--t-med) var(--glide) both;
+}
+
+.onboard li:nth-child(2) { animation-delay: 60ms; }
+.onboard li:nth-child(3) { animation-delay: 120ms; }
+.onboard li:nth-child(4) { animation-delay: 180ms; }
+
+.onboard li .idx {
+  font-family: var(--wide);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--paper-mute);
+}
+
+.onboard li b {
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.onboard .cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  height: 40px;
+  padding: 0 var(--s4);
+  margin-top: var(--s2);
+  border: var(--rule-w) solid var(--signal);
+  border-radius: var(--r);
+  background: var(--signal);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
+}
+
+.onboard .cta:hover {
+  background: transparent;
+  color: var(--signal);
+}
+
+.onboard .cta:focus-visible {
+  outline: var(--rule-w) solid var(--paper);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- key caps */
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--paper);
+  background: var(--ink-3);
+  border: 1px solid var(--rule-hi);
+  border-bottom-width: var(--rule-w);
+  border-radius: var(--r);
+}
+
+.keys {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.keys + .keys::before {
+  content: '/';
+  margin: 0 6px 0 3px;
+  color: var(--paper-mute);
+  align-self: center;
+}
+
+/* ---------------------------------------------------------------- shortcut sheet */
+.shortcut-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--s4);
+  background: rgba(12, 12, 10, 0.78);
+  backdrop-filter: blur(2px);
+  animation: rise var(--t-fast) var(--glide) both;
+}
+
+.shortcut-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(880px, 100%);
+  max-height: 100%;
+  background: var(--ink);
+  border: var(--rule-w) solid var(--rule-hi);
+  border-top: 6px solid var(--signal);
+  box-shadow: 10px 10px 0 0 var(--ink-3);
+  animation: rise var(--t-med) var(--snap) both;
+}
+
+.shortcut-sheet header {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s3) var(--s3) var(--s4);
+  border-bottom: var(--rule-w) solid var(--rule);
+}
+
+.shortcut-sheet header > i {
+  font-size: 22px;
+  color: var(--signal);
+  vertical-align: 0;
+}
+
+.shortcut-sheet h2 {
+  margin: 0;
+  font-family: var(--wide);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  animation: slam var(--t-med) var(--snap) both;
+}
+
+.shortcut-sheet header .icon-btn {
+  width: 32px;
+  height: 32px;
+  color: var(--paper-dim);
+  background: transparent;
+  border: var(--rule-w) solid var(--rule);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: color var(--t-fast) var(--snap), border-color var(--t-fast) var(--snap);
+}
+
+.shortcut-sheet header .icon-btn:hover,
+.shortcut-sheet header .icon-btn:focus-visible {
+  color: var(--signal);
+  border-color: var(--signal);
+  outline: none;
+}
+
+.shortcut-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  overflow: auto;
+}
+
+.shortcut-groups section {
+  padding: var(--s3) var(--s4) var(--s4);
+  border-right: var(--rule-w) solid var(--rule);
+  animation: rise var(--t-med) var(--glide) both;
+}
+
+.shortcut-groups section:last-child {
+  border-right: none;
+}
+
+.shortcut-groups h3 {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  margin: 0 0 var(--s3);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--paper-dim);
+}
+
+.shortcut-groups h3 .idx {
+  font-family: var(--wide);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  color: var(--signal);
+}
+
+.shortcut-groups dl {
+  display: grid;
+  margin: 0;
+}
+
+.shortcut-groups .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.shortcut-groups .row:last-child {
+  border-bottom: none;
+}
+
+.shortcut-groups dt {
+  color: var(--paper-dim);
+}
+
+.shortcut-groups .row:hover dt {
+  color: var(--paper);
+}
+
+.shortcut-groups dd {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.shortcut-sheet footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: var(--s2) var(--s4);
+  border-top: var(--rule-w) solid var(--rule);
+  color: var(--paper-mute);
+  font-size: 11px;
+  background: var(--ink-2);
 }
 
 /* ================================================================

@@ -5,6 +5,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { WebglAddon } from '@xterm/addon-webgl';
 import { RESTORED_DIVIDER, type TerminalDataEvent, type TerminalExitEvent } from '../../../shared/ipc';
 import type { MentionTarget } from '../../../shared/mention';
+import { findShortcut } from '../../../shared/shortcuts';
 
 export interface TerminalPaneProps {
   title: string;
@@ -147,6 +148,10 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
     term.loadAddon(fit);
     term.loadAddon(new WebLinksAddon());
     term.open(host);
+    // App-level shortcuts are handled by the window capture listener; keep xterm from also
+    // forwarding them to the PTY.
+    const mac = window.crewdeck.platform === 'darwin';
+    term.attachCustomKeyEventHandler((e) => !findShortcut(e, mac));
     // GPU renderer; falls back to the DOM renderer if WebGL2 is unavailable or the context is lost.
     // `localStorage['crewdeck.renderer'] = 'dom'` forces the DOM renderer (A/B + troubleshooting).
     let webgl: WebglAddon | null = null;

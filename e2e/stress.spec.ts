@@ -76,7 +76,7 @@ test('stress: 4 panes, 3 flooding, interactive echo latency', async () => {
     }, renderer);
     await page.locator('button.project').click();
     await expect(page.locator('button.project')).toContainText('project');
-    await page.locator('.layout-picker button[title="4-pane layout"]').click();
+    await page.locator('.layout-picker button[title^="4-pane layout"]').click();
 
     for (let i = 0; i < PANES; i++) {
       await page.getByRole('button', { name: 'Terminal', exact: true }).click();

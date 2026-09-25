@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { TerminalPane } from './components/Terminal/TerminalPane';
-import { Composer } from './components/Composer/Composer';
-import { RoutingLog } from './components/RoutingLog/RoutingLog';
-import { GitPanel } from './components/GitPanel/GitPanel';
+import { Composer, type ComposerHandle } from './components/Composer/Composer';
+import { Keys, ShortcutHelp } from './components/ShortcutHelp/ShortcutHelp';
+import { findShortcut, shortcutHint, SHORTCUTS, type Combo, type ShortcutAction } from '../shared/shortcuts';
+
+// Side panels are off by default; keep them (and the diff highlighter) out of the startup bundle.
+const RoutingLog = lazy(() => import('./components/RoutingLog/RoutingLog').then((m) => ({ default: m.RoutingLog })));
+const GitPanel = lazy(() => import('./components/GitPanel/GitPanel').then((m) => ({ default: m.GitPanel })));
 import { useGitAttribution, type LastRoute } from './hooks/useGitAttribution';
 import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
@@ -90,6 +94,18 @@ function submitToPty(ptyId: string, message: string) {
   setTimeout(() => api.write(ptyId, '\r'), SUBMIT_DELAY_MS);
 }
 
+const IS_MAC = window.crewdeck.platform === 'darwin';
+
+/** Primary key combo for an action (used for inline key-cap hints). */
+function comboFor(action: ShortcutAction): Combo {
+  return SHORTCUTS.find((s) => s.action === action)!.combos[0];
+}
+
+/** Tooltip text: `label (combo)`. */
+function withHint(label: string, action: ShortcutAction): string {
+  return `${label} (${shortcutHint(action, IS_MAC)})`;
+}
+
 function normalizeSlots(slots: (string | null)[]): (string | null)[] {
   return Array.from({ length: SLOT_COUNT }, (_, i) => slots[i] ?? null);
 }
@@ -117,6 +133,8 @@ export function App() {
   // Opt-in: new tabs get their own git worktree + branch instead of the shared project folder.
   const [isolateNext, setIsolateNext] = useState(false);
   const [worktreeError, setWorktreeError] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const composerRef = useRef<ComposerHandle>(null);
   // Last single-target route, for CD-20 change attribution.
   const lastRoute = useRef<LastRoute | null>(null);
   // Read inside stable callbacks so routing doesn't need to be re-created per project.
@@ -471,6 +489,75 @@ export function App() {
     }
   };
 
+  const runShortcut = (action: ShortcutAction) => {
+    switch (action) {
+      case 'help':
+        setShowHelp((v) => !v);
+        return;
+      case 'newTerminal':
+        void openTerminal('shell');
+        return;
+      case 'closeTerminal':
+        if (activeId) closeTerminal(activeId);
+        return;
+      case 'nextTab':
+      case 'prevTab': {
+        if (!terminals.length) return;
+        const at = terminals.findIndex((t) => t.id === activeId);
+        const step = action === 'nextTab' ? 1 : -1;
+        const next = at < 0 ? 0 : (at + step + terminals.length) % terminals.length;
+        showTerminal(terminals[next].id);
+        return;
+      }
+      case 'focusComposer':
+        composerRef.current?.focus();
+        return;
+      case 'layout1':
+        changeLayout(1);
+        return;
+      case 'layout2':
+        changeLayout(2);
+        return;
+      case 'layout4':
+        changeLayout(4);
+        return;
+      case 'focusPane1':
+      case 'focusPane2':
+      case 'focusPane3':
+      case 'focusPane4': {
+        const slot = Number(action.slice(-1)) - 1;
+        if (slot < layout) setActiveSlot(slot);
+        return;
+      }
+      case 'toggleGit':
+        setShowGit((v) => !v);
+        return;
+      case 'toggleLog':
+        setShowLog((v) => !v);
+        return;
+    }
+  };
+
+  // The listener is installed once; it always dispatches through the latest render's closure.
+  const shortcutRef = useRef(runShortcut);
+  shortcutRef.current = runShortcut;
+  const helpOpenRef = useRef(showHelp);
+  helpOpenRef.current = showHelp;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.repeat) return;
+      const action = findShortcut(e, IS_MAC);
+      if (!action) return;
+      // While the help sheet is open only its own toggle works; Escape is handled by the sheet.
+      if (helpOpenRef.current && action !== 'help') return;
+      e.preventDefault();
+      e.stopPropagation();
+      shortcutRef.current(action);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
+
   const { cols, rows } = slotGrid(layout);
   const visibleSlots = slots.slice(0, layout);
 
@@ -513,13 +600,13 @@ export function App() {
               type="button"
               className={layout === size ? 'selected' : undefined}
               onClick={() => changeLayout(size)}
-              title={`${size}-pane layout`}
+              title={withHint(`${size}-pane layout`, `layout${size}`)}
             >
               {size}
             </button>
           ))}
         </div>
-        <button type="button" className="new-term" data-agent="shell" onClick={() => void openTerminal('shell')}>
+        <button type="button" className="new-term" data-agent="shell" onClick={() => void openTerminal('shell')} title={withHint('New shell terminal', 'newTerminal')}>
           <i className="ri-terminal-box-line" aria-hidden="true" />
           Terminal
         </button>
@@ -567,7 +654,7 @@ export function App() {
           type="button"
           className={showLog ? 'log-toggle selected' : 'log-toggle'}
           aria-pressed={showLog}
-          title="Routing log"
+          title={withHint('Routing log', 'toggleLog')}
           onClick={() => setShowLog((v) => !v)}
         >
           <i className="ri-route-line" aria-hidden="true" />
@@ -577,11 +664,21 @@ export function App() {
           type="button"
           className={showGit ? 'log-toggle selected' : 'log-toggle'}
           aria-pressed={showGit}
-          title="Git changes"
+          title={withHint('Git changes', 'toggleGit')}
           onClick={() => setShowGit((v) => !v)}
         >
           <i className="ri-git-commit-line" aria-hidden="true" />
           Git
+        </button>
+        <button
+          type="button"
+          className={showHelp ? 'icon-btn selected' : 'icon-btn'}
+          aria-pressed={showHelp}
+          aria-label="Keyboard shortcuts"
+          title={withHint('Keyboard shortcuts', 'help')}
+          onClick={() => setShowHelp((v) => !v)}
+        >
+          <i className="ri-question-line" aria-hidden="true" />
         </button>
       </div>
 
@@ -655,8 +752,69 @@ export function App() {
       <div className="workspace">
       {terminals.length === 0 ? (
         <div className="grid empty">
-          <i className={project ? 'ri-terminal-window-line' : 'ri-folder-open-line'} aria-hidden="true" />
-          <span>{project ? 'No terminals. Start a Terminal or an Agent.' : 'Open a project, then start a terminal or agent.'}</span>
+          <section className="onboard" aria-labelledby="onboard-title">
+            <span className="kicker">
+              <i className={project ? 'ri-terminal-window-line' : 'ri-folder-open-line'} aria-hidden="true" />
+              {project ? 'Deck armed' : 'No project'}
+            </span>
+            <h1 id="onboard-title">
+              {project ? (
+                <>
+                  Spin up the <em>crew</em>.
+                </>
+              ) : (
+                <>
+                  Pick a <em>project</em>.
+                </>
+              )}
+            </h1>
+            <p>
+              {project
+                ? `Working in ${project.name}. Launch a shell or an agent, tile up to four panes, and route one message to many with @mentions in the composer.`
+                : 'crewdeck runs shells and coding agents side by side against one folder. Choose a project to start the deck.'}
+            </p>
+            <ol>
+              <li>
+                <span className="idx">01</span>
+                <span>
+                  <b>Open a terminal</b> — shell or agent, from the toolbar.
+                </span>
+                <Keys combo={comboFor('newTerminal')} mac={IS_MAC} />
+              </li>
+              <li>
+                <span className="idx">02</span>
+                <span>
+                  <b>Tile the deck</b> — one, two or four panes.
+                </span>
+                <Keys combo={comboFor('layout4')} mac={IS_MAC} />
+              </li>
+              <li>
+                <span className="idx">03</span>
+                <span>
+                  <b>Route a message</b> — @mention panes from the composer.
+                </span>
+                <Keys combo={comboFor('focusComposer')} mac={IS_MAC} />
+              </li>
+              <li>
+                <span className="idx">04</span>
+                <span>
+                  <b>Every shortcut</b> — the full sheet.
+                </span>
+                <Keys combo={comboFor('help')} mac={IS_MAC} />
+              </li>
+            </ol>
+            {project ? (
+              <button type="button" className="cta" onClick={() => void openTerminal('shell')}>
+                <i className="ri-terminal-box-line" aria-hidden="true" />
+                Open shell
+              </button>
+            ) : (
+              <button type="button" className="cta" onClick={() => void selectProject()}>
+                <i className="ri-folder-open-line" aria-hidden="true" />
+                Choose folder
+              </button>
+            )}
+          </section>
         </div>
       ) : (
         <div
@@ -703,17 +861,27 @@ export function App() {
                   <span className="pane-title">Empty pane</span>
                   {slotPicker(slot)}
                 </div>
-                <div className="empty">Pick a terminal, or open a new one.</div>
+                <div className="empty">
+                  <span>Pick a terminal, or open a new one.</span>
+                  <span className="hint">
+                    New <Keys combo={comboFor('newTerminal')} mac={IS_MAC} />
+                    <span aria-hidden="true">·</span>
+                    Focus <Keys combo={comboFor(`focusPane${slot + 1}` as ShortcutAction)} mac={IS_MAC} />
+                  </span>
+                </div>
               </div>
             ) : null,
           )}
         </div>
       )}
-      {showLog && <RoutingLog entries={routeLog} hasProject={!!project} onClose={() => setShowLog(false)} />}
-      {showGit && <GitPanel projectId={projectId} onClose={() => setShowGit(false)} attributions={attributions} />}
+      <Suspense fallback={null}>
+        {showLog && <RoutingLog entries={routeLog} hasProject={!!project} onClose={() => setShowLog(false)} />}
+        {showGit && <GitPanel projectId={projectId} onClose={() => setShowGit(false)} attributions={attributions} />}
+      </Suspense>
       </div>
 
-      <Composer terminals={mentionTerminals} onSend={routeMessage} />
+      <Composer ref={composerRef} terminals={mentionTerminals} onSend={routeMessage} />
+      {showHelp && <ShortcutHelp mac={IS_MAC} onClose={() => setShowHelp(false)} />}
     </div>
   );
 }

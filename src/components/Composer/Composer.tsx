@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useImperativeHandle, useMemo, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { mentionCompletions, mentionHandles, parseMention, type MentionTarget, type MentionTerminal } from '../../../shared/mention';
 
 const HISTORY_MAX = 100;
@@ -7,6 +7,11 @@ export interface ComposerProps {
   terminals: readonly MentionTerminal[];
   /** Deliver `message` to each target. Return an error string to keep the draft and show it. */
   onSend: (targets: MentionTarget[], message: string) => string | void;
+  ref?: Ref<ComposerHandle>;
+}
+
+export interface ComposerHandle {
+  focus(): void;
 }
 
 interface Suggest {
@@ -23,8 +28,9 @@ function tokenAtCaret(text: string, caret: number): { start: number; prefix: str
   return { start: caret - m[2].length - 1, prefix: m[2] };
 }
 
-export function Composer({ terminals, onSend }: ComposerProps) {
+export function Composer({ terminals, onSend, ref }: ComposerProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }), []);
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [suggest, setSuggest] = useState<Suggest | null>(null);

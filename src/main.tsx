@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/jetbrains-mono/index.css';
-import 'remixicon/fonts/remixicon.css';
+import './icons/icons.css';
 import '@xterm/xterm/css/xterm.css';
 import './styles.css';
 import { App } from './App';

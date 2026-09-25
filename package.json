@@ -14,7 +14,7 @@
   "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "npm run typecheck && vite build && node scripts/build-electron.mjs",
+    "build": "node scripts/build-icons.mjs --check && npm run typecheck && vite build && node scripts/build-electron.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "start": "electron .",
     "rebuild": "electron-rebuild -f -o node-pty,better-sqlite3",
@@ -23,6 +23,7 @@
     "test:e2e": "npm run build && playwright test",
     "test:stress": "node scripts/stress.mjs",
     "icon": "node scripts/make-icon.mjs",
+    "icons": "node scripts/build-icons.mjs",
     "dist": "npm run build && electron-builder --win --x64 --publish never",
     "test:e2e:dist": "node scripts/e2e-dist.mjs"
   },
@@ -50,6 +51,7 @@
     "electron": "44.4.3",
     "electron-builder": "26.15.3",
     "esbuild": "0.28.2",
+    "subset-font": "2.9.0",
     "typescript": "7.0.2",
     "vite": "8.3.0"
   },
