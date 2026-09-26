@@ -137,6 +137,8 @@ test('browser pane is driven over the authenticated bridge', async () => {
     expect(waited.text).toContain('hello crew');
 
     const shot = await run({ action: 'screenshot', fullPage: false, annotate: true });
+    console.log('[e2e] via', shot.via);
+    expect(shot.via).toBe('offscreen');
     expect(fs.existsSync(shot.screenshotPath)).toBe(true);
     expect(fs.statSync(shot.screenshotPath).size).toBeGreaterThan(100);
 

@@ -344,43 +344,9 @@ export class BrowserEngine {
     };
   }
 
-  private async screenshot(fullPage: boolean, annotate: boolean): Promise<{ file: string; legend: string }> {
-    const view = this.ensureView();
-    const hidden = !this.visible || this.bounds.width <= 0 || this.bounds.height <= 0;
-    if (hidden) {
-      view.setBounds({ x: 0, y: 0, width: 1280, height: 800 });
-      view.setVisible(true);
-    }
-    const host = this.win;
-    if (host && !host.isDestroyed()) {
-      if (host.isMinimized()) host.restore();
-      if (!host.isVisible()) host.showInactive();
-      host.contentView.addChildView(view);
-    }
-    if (!view.webContents.isDestroyed()) view.webContents.invalidate();
-    await this.send('Page.bringToFront').catch(() => undefined);
-    await this.send('Emulation.setFocusEmulationEnabled', { enabled: true }).catch(() => undefined);
-    await this.waitForPaint();
-    try {
-      return await this.captureShot(fullPage, annotate);
-    } finally {
-      if (hidden && !view.webContents.isDestroyed()) {
-        view.setBounds(this.bounds);
-        view.setVisible(this.visible && this.bounds.width > 0 && this.bounds.height > 0);
-      }
-    }
-  }
-
-  private async waitForPaint(timeoutMs = 1_500): Promise<void> {
-    const wc = this.wc();
-    if (wc.isDestroyed()) return;
-    wc.invalidate();
-    await Promise.race([
-      wc
-        .executeJavaScript('new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(true))))', true)
-        .catch(() => undefined),
-      sleep(timeoutMs),
-    ]);
+  private async screenshot(fullPage: boolean, annotate: boolean): Promise<{ file: string; legend: string; via: string }> {
+    this.ensureView();
+    return this.captureShot(fullPage, annotate);
   }
 
   /** Fallback when the on-screen view refuses to paint (occluded/hidden host): re-render the page in an offscreen window. */
@@ -468,88 +434,7 @@ export class BrowserEngine {
   }
 
 
-  private async capturePng(params: NonNullable<Parameters<BrowserEngine['send']>[1]>): Promise<{ png: Buffer; via: string }> {
-    const errors: string[] = [];
-    const valid = (buf: Buffer): boolean =>
-      buf.length > 100 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
-    const fullPage = Boolean((params as { captureBeyondViewport?: boolean }).captureBeyondViewport);
-    // Hard ceiling for the whole capture so callers (bridge/CLI/MCP) never hang.
-    const deadline = Date.now() + 10_000;
-    const remaining = (): number => deadline - Date.now();
-    const bounded = <T>(p: Promise<T>, ms: number, what: string): Promise<T> =>
-      new Promise<T>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error(what + ' timed out')), Math.max(1, ms));
-        p.then(
-          (v) => { clearTimeout(timer); resolve(v); },
-          (e: unknown) => { clearTimeout(timer); reject(e instanceof Error ? e : new Error(String(e))); },
-        );
-      });
-    const tryCdp = async (label: string, ms: number): Promise<Buffer | null> => {
-      try {
-        const res = await this.send<{ data: string }>('Page.captureScreenshot', params, Math.max(250, ms));
-        const buf = Buffer.from(res.data ?? '', 'base64');
-        if (valid(buf)) return buf;
-        errors.push(label + ': invalid image (' + buf.length + 'B)');
-      } catch (err) {
-        errors.push(label + ': ' + (err instanceof Error ? err.message : String(err)));
-      }
-      return null;
-    };
-    const tryNative = async (label: string, ms: number): Promise<Buffer | null> => {
-      const wc = this.wc();
-      if (!wc || wc.isDestroyed()) {
-        errors.push(label + ': webContents destroyed');
-        return null;
-      }
-      try {
-        const img = await bounded(wc.capturePage(), ms, 'capturePage');
-        const buf = img.isEmpty() ? Buffer.alloc(0) : img.toPNG();
-        if (valid(buf)) return buf;
-        errors.push(label + ': invalid image (' + buf.length + 'B)');
-      } catch (err) {
-        errors.push(label + ': ' + (err instanceof Error ? err.message : String(err)));
-      }
-      return null;
-    };
-    // First valid PNG wins; resolves null only once every contender failed.
-    const firstValid = (contenders: Array<Promise<{ png: Buffer | null; via: string }>>): Promise<{ png: Buffer; via: string } | null> =>
-      new Promise((resolve) => {
-        let pending = contenders.length;
-        for (const c of contenders) {
-          void c.then((r) => {
-            pending -= 1;
-            if (r.png) resolve({ png: r.png, via: r.via });
-            else if (pending === 0) resolve(null);
-          });
-        }
-      });
-
-    for (let attempt = 1; attempt <= 4 && remaining() > 400; attempt += 1) {
-      const budget = Math.min(3_000 + 1_000 * (attempt - 1), remaining());
-      if (!fullPage) {
-        const won = await firstValid([
-          tryCdp('cdp#' + attempt, budget).then((png) => ({ png, via: 'cdp' })),
-          tryNative('native#' + attempt, budget).then((png) => ({ png, via: 'native' })),
-        ]);
-        if (won) return won;
-      } else {
-        const cdp = await tryCdp('cdp#' + attempt, budget);
-        if (cdp) return { png: cdp, via: 'cdp' };
-        if (remaining() > 400) {
-          const native = await tryNative('native#' + attempt, Math.min(3_000, remaining()));
-          if (native) return { png: native, via: 'native' };
-        }
-      }
-      if (remaining() > 900) {
-        await sleep(100 * attempt);
-        await this.waitForPaint(Math.min(800, Math.max(100, remaining() - 500)));
-      }
-    }
-    if (errors.length === 0) errors.push('deadline exceeded before any attempt');
-    throw new Error('screenshot failed: ' + errors.join('; '));
-  }
-
-  private async captureShot(fullPage: boolean, annotate: boolean): Promise<{ file: string; legend: string }> {
+  private async captureShot(fullPage: boolean, annotate: boolean): Promise<{ file: string; legend: string; via: string }> {
     const vp = await this.viewport();
     let legend = '';
     if (annotate) {
@@ -580,21 +465,14 @@ export class BrowserEngine {
         params.captureBeyondViewport = true;
         params.clip = { x: 0, y: 0, width: Math.max(1, vp.contentWidth), height: Math.max(1, Math.min(vp.contentHeight, 16_384)), scale: 1 };
       }
-      let png: Buffer;
-      try {
-        ({ png } = await this.capturePng(params));
-      } catch (err) {
-        try {
-          png = await this.offscreenCapture(params);
-        } catch (err2) {
-          throw new Error(`${(err as Error).message}; offscreen: ${(err2 as Error).message}`);
-        }
-      }
+      const png = await this.offscreenCapture(params);
+      const via = 'offscreen';
       const dir = path.join(forwardTempDir(), 'shots');
       mkdirSync(dir, { recursive: true });
       const file = path.join(dir, `${Date.now()}-${randomUUID().slice(0, 8)}.png`);
       writeFileSync(file, png, { mode: 0o600 });
-      return { file, legend };
+      console.log('[browser] screenshot via', via);
+      return { file, legend, via };
     } finally {
       if (annotate) await this.evaluate(`(function(){var r=document.getElementById('__crewdeck_annot');if(r)r.remove()})()`).catch(() => undefined);
     }
@@ -752,8 +630,8 @@ export class BrowserEngine {
         }
       }
       case 'screenshot': {
-        const { file, legend } = await this.screenshot(cmd.fullPage, cmd.annotate);
-        return { screenshotPath: file, text: legend ? `${file}\n${legend}` : file };
+        const { file, legend, via } = await this.screenshot(cmd.fullPage, cmd.annotate);
+        return { screenshotPath: file, via, text: legend ? `${file}\n${legend}` : file };
       }
       case 'console': {
         const text = this.consoleLines.join('\n') || '(no console output)';

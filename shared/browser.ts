@@ -641,6 +641,7 @@ export interface BrowserResult {
   diff?: string;
   /** Absolute path of a written PNG. */
   screenshotPath?: string;
+  via?: string;
   error?: string;
 }
 
