@@ -46,7 +46,7 @@ export interface SessionRow {
 export type TerminalInput = Pick<TerminalRow, 'title' | 'profileId' | 'cwd'> &
   Partial<Pick<TerminalRow, 'id' | 'config'>>;
 
-export type RouteKind = 'composer' | 'forward';
+export type RouteKind = 'composer' | 'forward' | 'browser';
 
 export interface RouteRow {
   id: string;

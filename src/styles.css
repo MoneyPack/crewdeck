@@ -1983,6 +1983,303 @@ kbd {
 }
 
 /* ================================================================
+   BROWSER PANE - agent-drivable viewport docked right
+   The page itself is a native WebContentsView laid over
+   .browser-viewport; everything here is the cockpit around it.
+   ================================================================ */
+.browser-pane {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: min(720px, 50vw);
+  min-width: 360px;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ink-2);
+  border-left: var(--rule-w) solid var(--rule);
+  animation: slide-in-right var(--t-med) var(--glide);
+}
+
+.browser-header {
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  height: 34px;
+  padding: 0 0 0 var(--s3);
+  border-bottom: var(--rule-w) solid var(--rule);
+  background: var(--ink);
+  white-space: nowrap;
+}
+
+.browser-title {
+  display: inline-flex;
+  align-items: center;
+  padding-right: var(--s3);
+  font-family: var(--wide);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+.browser-title::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  background: var(--signal);
+}
+
+.browser-pane.loading .browser-title::before {
+  animation: browser-blink 0.6s steps(2, jump-none) infinite;
+}
+
+@keyframes browser-blink {
+  to { background: transparent; box-shadow: inset 0 0 0 2px var(--signal); }
+}
+
+.browser-nav {
+  display: inline-flex;
+}
+
+.browser-header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 var(--s3);
+  background: transparent;
+  color: var(--paper-dim);
+  border: none;
+  border-left: var(--rule-w) solid var(--rule);
+  border-radius: 0;
+  font: inherit;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
+}
+
+.browser-nav button {
+  padding: 0 var(--s2);
+  font-size: 14px;
+}
+
+.browser-header button:hover:not(:disabled) {
+  color: var(--paper);
+  background: var(--ink-3);
+}
+
+.browser-header button:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
+}
+
+.browser-header button:disabled {
+  color: var(--paper-mute);
+  cursor: default;
+}
+
+.browser-header .browser-close:hover:not(:disabled) {
+  background: var(--signal);
+  color: var(--ink);
+}
+
+.browser-address {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  padding: 0 var(--s2);
+  border-left: var(--rule-w) solid var(--rule);
+  color: var(--paper-mute);
+  transition: background var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
+}
+
+.browser-address:focus-within {
+  background: var(--ink-3);
+  color: var(--signal);
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+.browser-address input,
+.browser-cmd input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.browser-address input::placeholder,
+.browser-cmd input::placeholder {
+  color: var(--paper-mute);
+}
+
+.browser-warning {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px var(--s3);
+  border-bottom: var(--rule-w) solid var(--rule);
+  background: var(--err);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: pre-wrap;
+  animation: slam var(--t-med) var(--snap) both;
+}
+
+.browser-warning button {
+  margin-left: auto;
+  padding: 0 4px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.browser-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--ink);
+}
+
+.browser-viewport[data-blank] {
+  display: grid;
+  place-items: center;
+  background-image:
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+.browser-empty {
+  display: grid;
+  gap: var(--s2);
+  max-width: 340px;
+  padding: var(--s4);
+  border: var(--rule-w) solid var(--rule-hi);
+  background: var(--ink-2);
+  color: var(--paper-dim);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.browser-empty strong {
+  font-family: var(--wide);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+.browser-empty code {
+  padding: 0 4px;
+  background: var(--ink);
+  color: var(--signal);
+  font-family: var(--mono);
+}
+
+.browser-console {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  border-top: var(--rule-w) solid var(--rule);
+  background: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.browser-status {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+  height: 22px;
+  padding: 0 var(--s3);
+  border-bottom: 1px solid var(--rule);
+  color: var(--paper-dim);
+  white-space: nowrap;
+}
+
+.browser-host {
+  flex: none;
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.browser-page-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.browser-busy {
+  flex: none;
+  padding: 0 6px;
+  background: var(--signal);
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.browser-output {
+  max-height: 180px;
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  overflow: auto;
+  border-bottom: 1px solid var(--rule);
+  border-left: 3px solid var(--ok);
+  background: var(--ink-2);
+  color: var(--paper);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.browser-output.error {
+  border-left-color: var(--err);
+  color: var(--err);
+}
+
+.browser-output:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
+}
+
+.browser-cmd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 var(--s3);
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.browser-cmd:focus-within {
+  background: var(--ink-3);
+}
+
+/* ================================================================
    ERROR BOUNDARY
    ================================================================ */
 .crash {

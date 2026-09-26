@@ -2,10 +2,13 @@ import { app, BrowserWindow, dialog, session, shell } from 'electron';
 import path from 'node:path';
 import { closeDatabase, openDatabase } from './services/db';
 import { registerAgentIpc } from './ipc/agents';
+import { registerBrowserIpc } from './ipc/browser';
 import { disposeAllGitWatchers, registerGitIpc } from './ipc/git';
 import { registerProjectIpc } from './ipc/project';
 import { registerRoutingIpc } from './ipc/routing';
 import { registerTerminalIpc } from './ipc/terminal';
+import { browserEngine } from './services/browserEngine';
+import { startBrowserTooling, stopBrowserTooling } from './services/browserTooling';
 import { log } from './services/logger';
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
@@ -63,6 +66,7 @@ function createWindow(): BrowserWindow {
   } else {
     void win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
+  browserEngine.attachWindow(win);
   return win;
 }
 
@@ -71,6 +75,7 @@ registerAgentIpc();
 registerProjectIpc();
 registerRoutingIpc();
 registerGitIpc();
+registerBrowserIpc();
 
 function initDatabase(): boolean {
   const file = path.join(app.getPath('userData'), 'crewdeck.db');
@@ -101,6 +106,7 @@ app.whenReady().then(() => {
   }
   applyContentSecurityPolicy();
   createWindow();
+  startBrowserTooling().catch((err: unknown) => log.error('browser bridge failed to start', err));
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -112,6 +118,7 @@ app.on('before-quit', () => {
   endAll();
   ptys.killAll();
   disposeAllGitWatchers();
+  browserEngine.dispose(); void stopBrowserTooling();
 });
 app.on('will-quit', () => closeDatabase());
 

@@ -19,6 +19,7 @@ export type ShortcutAction =
   | 'focusComposer'
   | 'toggleGit'
   | 'toggleLog'
+  | 'toggleBrowser'
   | 'help';
 
 export interface Combo {
@@ -62,6 +63,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { action: 'focusPane4', label: 'Focus pane 4', group: 'Layout', combos: [{ code: 'Digit4', alt: true }] },
   { action: 'toggleGit', label: 'Toggle git panel', group: 'Panels', combos: [{ code: 'KeyG', mod: true, shift: true }] },
   { action: 'toggleLog', label: 'Toggle routing log', group: 'Panels', combos: [{ code: 'KeyL', mod: true, shift: true }] },
+  { action: 'toggleBrowser', label: 'Toggle browser pane', group: 'Panels', combos: [{ code: 'KeyB', mod: true, shift: true }] },
   { action: 'help', label: 'Keyboard shortcuts', group: 'Panels', combos: [{ code: 'F1' }, { code: 'Slash', mod: true, shift: true }] },
 ];
 

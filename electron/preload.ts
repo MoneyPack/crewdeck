@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import {
   AgentChannels,
+  BrowserChannels,
   GitChannels,
   ProjectChannels,
   RoutingChannels,
@@ -10,7 +11,9 @@ import {
   type TerminalCreateResponse,
   type TerminalDataEvent,
   type TerminalExitEvent,
+  type RouteLogEntry,
 } from '../shared/ipc';
+import type { BrowserState } from '../shared/browser';
 
 const api: CrewdeckApi = {
   platform: process.platform,
@@ -48,6 +51,11 @@ const api: CrewdeckApi = {
     writeTemp: (text) => ipcRenderer.invoke(RoutingChannels.writeTemp, text),
     log: (projectId, input) => ipcRenderer.invoke(RoutingChannels.log, projectId, input),
     list: (projectId) => ipcRenderer.invoke(RoutingChannels.list, projectId),
+    onAppended: (listener) => {
+      const handler = (_e: IpcRendererEvent, entry: RouteLogEntry) => listener(entry);
+      ipcRenderer.on(RoutingChannels.appended, handler);
+      return () => ipcRenderer.removeListener(RoutingChannels.appended, handler);
+    },
   },
   git: {
     status: (projectId) => ipcRenderer.invoke(GitChannels.status, projectId),
@@ -65,6 +73,18 @@ const api: CrewdeckApi = {
     worktreeAdd: (projectId, tabId, agentId) => ipcRenderer.invoke(GitChannels.worktreeAdd, projectId, tabId, agentId),
     worktreeRemove: (projectId, worktreePath, force) =>
       ipcRenderer.invoke(GitChannels.worktreeRemove, projectId, worktreePath, force),
+  },
+  browser: {
+    run: (command, projectId) => ipcRenderer.invoke(BrowserChannels.run, command, projectId),
+    setBounds: (bounds) => ipcRenderer.send(BrowserChannels.setBounds, bounds),
+    setVisible: (visible) => ipcRenderer.send(BrowserChannels.setVisible, visible),
+    state: () => ipcRenderer.invoke(BrowserChannels.state),
+    bridge: () => ipcRenderer.invoke(BrowserChannels.bridge),
+    onState: (listener) => {
+      const handler = (_e: IpcRendererEvent, state: BrowserState) => listener(state);
+      ipcRenderer.on(BrowserChannels.stateChanged, handler);
+      return () => ipcRenderer.removeListener(BrowserChannels.stateChanged, handler);
+    },
   },
 };
 

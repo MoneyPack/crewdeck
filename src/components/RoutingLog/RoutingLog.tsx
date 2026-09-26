@@ -48,7 +48,7 @@ export function RoutingLog({ entries, hasProject, onClose }: Props) {
               </div>
               <div className="route-preview">{e.preview || <em>(empty)</em>}</div>
               <div className="route-foot">
-                {e.kind === 'forward' ? 'selection' : 'composer'} · {formatBytes(e.bytes)}
+                {e.kind === 'forward' ? 'selection' : e.kind === 'browser' ? 'browser' : 'composer'} · {formatBytes(e.bytes)}
                 {e.viaFile ? ' · via temp file' : ''}
               </div>
             </li>

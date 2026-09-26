@@ -11,6 +11,7 @@ import {
   type WorktreeInfo,
 } from '../../shared/ipc';
 import { getDatabase, type Json } from '../services/db';
+import { normalizeUrl } from '../../shared/browser';
 
 const AGENT_IDS = new Set<string>(AGENT_PROFILES.map((p) => p.id));
 const MAX_TERMINALS = 64;
@@ -138,5 +139,8 @@ function parseLayout(raw: unknown, known: Set<string> | null): PersistedLayout |
   if (!Array.isArray(o.slots) || o.slots.length > 16) return null;
   const slots = o.slots.map((s) => (isId(s) && (!known || known.has(s)) ? s : null));
   const active = typeof o.activeSlot === 'number' && Number.isInteger(o.activeSlot) ? o.activeSlot : 0;
-  return { layout: size, slots, activeSlot: Math.min(Math.max(active, 0), size - 1) };
+  const out: PersistedLayout = { layout: size, slots, activeSlot: Math.min(Math.max(active, 0), size - 1) };
+  const url = typeof o.browserUrl === 'string' ? normalizeUrl(o.browserUrl) : null;
+  if (url && /^https?:/i.test(url)) out.browserUrl = url;
+  return out;
 }

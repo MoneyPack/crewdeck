@@ -1,5 +1,6 @@
 // Types and channel names shared between main, preload and renderer.
 import type { AgentDetection, AgentId } from './agents';
+import type { BrowserResult, BrowserState } from './browser';
 
 export const TerminalChannels = {
   create: 'terminal:create',
@@ -92,6 +93,8 @@ export interface PersistedLayout {
   layout: PersistedLayoutSize;
   slots: (string | null)[];
   activeSlot: number;
+  /** Last page shown in the browser pane (http(s) only; omitted when blank). */
+  browserUrl?: string;
 }
 
 export interface PersistedTerminal {
@@ -129,9 +132,10 @@ export const RoutingChannels = {
   writeTemp: 'routing:writeTemp',
   log: 'routing:log',
   list: 'routing:list',
+  appended: 'routing:appended',
 } as const;
 
-export type RouteLogKind = 'composer' | 'forward';
+export type RouteLogKind = 'composer' | 'forward' | 'browser';
 
 /** Max characters of routed text kept as the log preview. */
 export const ROUTE_PREVIEW_LIMIT = 300;
@@ -164,6 +168,8 @@ export interface CrewdeckRoutingApi {
   log(projectId: string, input: RouteLogInput): Promise<RouteLogEntry | null>;
   /** Most recent entries first. */
   list(projectId: string): Promise<RouteLogEntry[]>;
+  /** Subscribes to entries written by the main process (e.g. agent browser actions). */
+  onAppended(listener: (entry: RouteLogEntry) => void): () => void;
 }
 
 export const GitChannels = {
@@ -261,11 +267,47 @@ export interface CrewdeckGitApi {
   worktreeRemove(projectId: string, worktreePath: string, force: boolean): Promise<WorktreeRemoveResult>;
 }
 
+export const BrowserChannels = {
+  run: 'browser:run',
+  setBounds: 'browser:setBounds',
+  setVisible: 'browser:setVisible',
+  state: 'browser:state',
+  stateChanged: 'browser:stateChanged',
+  bridge: 'browser:bridge',
+} as const;
+
+export interface BrowserBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** Connection info for the local agent bridge (HTTP on 127.0.0.1). */
+export interface BrowserBridgeInfo {
+  url: string;
+  cliPath: string;
+  mcpPath: string;
+}
+
+export interface CrewdeckBrowserApi {
+  /** Runs a browser command (validated in main). `projectId` attributes the routing-log entry. */
+  run(command: unknown, projectId: string | null): Promise<BrowserResult>;
+  /** Positions the native view in window content coordinates (CSS px at zoom 1 == DIP). */
+  setBounds(bounds: BrowserBounds): void;
+  setVisible(visible: boolean): void;
+  state(): Promise<BrowserState>;
+  onState(listener: (state: BrowserState) => void): Unsubscribe;
+  /** Agent bridge endpoint (token excluded), or null if not running. */
+  bridge(): Promise<BrowserBridgeInfo | null>;
+}
+
 export interface CrewdeckApi {
   terminal: CrewdeckTerminalApi;
   agents: CrewdeckAgentsApi;
   project: CrewdeckProjectApi;
   routing: CrewdeckRoutingApi;
   git: CrewdeckGitApi;
+  browser: CrewdeckBrowserApi;
   platform: string;
 }

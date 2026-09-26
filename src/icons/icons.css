@@ -12,11 +12,16 @@
   font-weight: normal;
   -webkit-font-smoothing: antialiased;
 }
+.ri-arrow-left-line:before { content: '\ea60'; }
+.ri-arrow-right-line:before { content: '\ea6c'; }
+.ri-camera-line:before { content: '\eb31'; }
 .ri-close-line:before { content: '\eb99'; }
+.ri-focus-3-line:before { content: '\ed4c'; }
 .ri-folder-3-line:before { content: '\ed54'; }
 .ri-folder-open-line:before { content: '\ed70'; }
 .ri-git-branch-line:before { content: '\edbd'; }
 .ri-git-commit-line:before { content: '\edbf'; }
+.ri-global-line:before { content: '\edcf'; }
 .ri-keyboard-box-line:before { content: '\ee73'; }
 .ri-question-line:before { content: '\f045'; }
 .ri-refresh-line:before { content: '\f064'; }

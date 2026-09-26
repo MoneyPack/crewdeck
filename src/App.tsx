@@ -7,6 +7,7 @@ import { findShortcut, shortcutHint, SHORTCUTS, type Combo, type ShortcutAction 
 // Side panels are off by default; keep them (and the diff highlighter) out of the startup bundle.
 const RoutingLog = lazy(() => import('./components/RoutingLog/RoutingLog').then((m) => ({ default: m.RoutingLog })));
 const GitPanel = lazy(() => import('./components/GitPanel/GitPanel').then((m) => ({ default: m.GitPanel })));
+const BrowserPane = lazy(() => import('./components/BrowserPane/BrowserPane').then((m) => ({ default: m.BrowserPane })));
 import { useGitAttribution, type LastRoute } from './hooks/useGitAttribution';
 import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
@@ -130,6 +131,8 @@ export function App() {
   const [routeLog, setRouteLog] = useState<RouteLogEntry[]>([]);
   const [showLog, setShowLog] = useState(false);
   const [showGit, setShowGit] = useState(false);
+  const [showBrowser, setShowBrowser] = useState(false);
+  const [browserUrl, setBrowserUrl] = useState<string | null>(null);
   // Opt-in: new tabs get their own git worktree + branch instead of the shared project folder.
   const [isolateNext, setIsolateNext] = useState(false);
   const [worktreeError, setWorktreeError] = useState<string | null>(null);
@@ -166,10 +169,20 @@ export function App() {
       .log(id, input)
       .then((entry) => {
         // Drop the result if the user switched projects while the write was in flight.
-        if (entry && projectIdRef.current === entry.projectId) setRouteLog((prev) => [entry, ...prev]);
+        if (entry && projectIdRef.current === entry.projectId) setRouteLog((prev) => (prev.some((p) => p.id === entry.id) ? prev : [entry, ...prev]));
       })
       .catch((err: unknown) => console.error('routing log write failed', err));
   }, []);
+
+  // Main-process writes (agent browser actions) arrive live; dedupe against local optimistic inserts.
+  useEffect(
+    () =>
+      window.crewdeck.routing.onAppended((entry) => {
+        if (entry.projectId !== projectIdRef.current) return;
+        setRouteLog((prev) => (prev.some((p) => p.id === entry.id) ? prev : [entry, ...prev]));
+      }),
+    [],
+  );
 
   const mentionTerminals = useMemo(() => terminals.map(({ id, title }) => ({ id, title })), [terminals]);
 
@@ -246,6 +259,7 @@ export function App() {
     setLayout(saved.layout);
     setSlots(nextSlots);
     setActiveSlot(saved.activeSlot < saved.layout ? saved.activeSlot : 0);
+    setBrowserUrl(saved.browserUrl ?? null);
   }, []);
 
   // Restore the last project once agent detection is known (needed to rebuild launch commands).
@@ -295,11 +309,11 @@ export function App() {
   useEffect(() => {
     if (!ready || !project) return;
     const id = project.id;
-    const payload: PersistedLayout = { layout, slots, activeSlot };
+    const payload: PersistedLayout = browserUrl ? { layout, slots, activeSlot, browserUrl } : { layout, slots, activeSlot };
     return scheduleSave('layout', () => {
       window.crewdeck.project.saveLayout(id, payload).catch((err: unknown) => console.error(err));
     });
-  }, [ready, project, layout, slots, activeSlot, scheduleSave]);
+  }, [ready, project, layout, slots, activeSlot, browserUrl, scheduleSave]);
 
   const activeId = slots[activeSlot] ?? null;
   const attributions = useGitAttribution(projectId, mentionTerminals, activeId, lastRoute);
@@ -535,6 +549,9 @@ export function App() {
       case 'toggleLog':
         setShowLog((v) => !v);
         return;
+      case 'toggleBrowser':
+        setShowBrowser((v) => !v);
+        return;
     }
   };
 
@@ -669,6 +686,16 @@ export function App() {
         >
           <i className="ri-git-commit-line" aria-hidden="true" />
           Git
+        </button>
+        <button
+          type="button"
+          className={showBrowser ? 'log-toggle selected' : 'log-toggle'}
+          aria-pressed={showBrowser}
+          title={withHint('Browser', 'toggleBrowser')}
+          onClick={() => setShowBrowser((v) => !v)}
+        >
+          <i className="ri-global-line" aria-hidden="true" />
+          Browser
         </button>
         <button
           type="button"
@@ -877,6 +904,15 @@ export function App() {
       <Suspense fallback={null}>
         {showLog && <RoutingLog entries={routeLog} hasProject={!!project} onClose={() => setShowLog(false)} />}
         {showGit && <GitPanel projectId={projectId} onClose={() => setShowGit(false)} attributions={attributions} />}
+        {showBrowser && (
+          <BrowserPane
+            projectId={projectId}
+            hidden={showHelp}
+            initialUrl={browserUrl}
+            onUrlChange={setBrowserUrl}
+            onClose={() => setShowBrowser(false)}
+          />
+        )}
       </Suspense>
       </div>
 

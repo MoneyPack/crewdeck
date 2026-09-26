@@ -25,6 +25,26 @@ const FLUSH_INTERVAL_MS = 8;
 /** Flush immediately once this much output is pending. */
 const MAX_PENDING_BYTES = 64 * 1024;
 
+/** Extra environment injected into every spawned shell (crewdeck browser bridge, shim PATH). */
+let extraEnv: Record<string, string> = {};
+let extraPath: string | null = null;
+
+export function setExtraPtyEnv(env: Record<string, string>, prependPath: string | null = null): void {
+  extraEnv = { ...env };
+  extraPath = prependPath;
+}
+
+function withExtraEnv(base: Record<string, string>): Record<string, string> {
+  const env = { ...base, ...extraEnv };
+  if (extraPath) {
+    const key = Object.keys(env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH';
+    const current = env[key] ?? '';
+    const parts = current.split(path.delimiter).filter((p) => p && p !== extraPath);
+    env[key] = [extraPath, ...parts].join(path.delimiter);
+  }
+  return env;
+}
+
 export function resolveDefaultShell(): string {
   if (process.platform !== 'win32') return process.env.SHELL || '/bin/bash';
   const candidates = [
@@ -45,10 +65,12 @@ export class PtyManager {
   create(options: TerminalCreateOptions = {}): TerminalCreateResult {
     const shell = options.shell ?? resolveDefaultShell();
     const cwd = options.cwd && existsSync(options.cwd) ? options.cwd : os.homedir();
-    const env = { ...process.env, ...options.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' } as Record<
-      string,
-      string
-    >;
+    const env = withExtraEnv({
+      ...(process.env as Record<string, string>),
+      ...options.env,
+      TERM: 'xterm-256color',
+      COLORTERM: 'truecolor',
+    });
 
     const proc = pty.spawn(shell, options.args ?? [], {
       name: 'xterm-256color',

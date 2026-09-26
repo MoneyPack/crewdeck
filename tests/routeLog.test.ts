@@ -15,6 +15,8 @@ test('accepts a well-formed input and copies targets', () => {
 test('rejects non-objects and bad kinds/labels/preview', () => {
   for (const raw of [null, undefined, 42, 'x']) assert.equal(parseRouteInput(raw), null);
   assert.equal(parseRouteInput({ ...base, kind: 'broadcast' }), null);
+  // 'browser' rows are written by the main-process browser engine only.
+  assert.equal(parseRouteInput({ ...base, kind: 'browser' }), null);
   assert.equal(parseRouteInput({ ...base, fromLabel: '' }), null);
   assert.equal(parseRouteInput({ ...base, fromLabel: 7 }), null);
   assert.equal(parseRouteInput({ ...base, preview: undefined }), null);
