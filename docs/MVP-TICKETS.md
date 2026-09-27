@@ -95,6 +95,98 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 
 ---
 
+## Overseer — CREWDECK's built-in AI helper
+
+> All Overseer work sits behind the `overseer.enabled` flag (off by default). Provider: Claude (`@anthropic-ai/sdk`). Every writing run gets its own worktree/branch and merges only after diff review. Push and release always require explicit approval.
+
+## Overseer Phase 0 — Spikes
+- **CD-27 SDK tool-loop spike** (0.5d)
+  AC: a throwaway script shows Claude calling a tool via `@anthropic-ai/sdk` and using the result in its answer.
+- **CD-28 CLI headless/MCP spike** (1d)
+  AC: documented findings on whether claude, codex and gemini CLIs can run unattended against an MCP server; results feed CD-48.
+
+---
+
+## Overseer Phase 1 — Run model
+- **CD-29 Migration `004_overseer.sql`** (0.5d)
+  AC: new tables for runs, tool calls, approvals, audit and memory (TEXT UUIDs, epoch-ms, `json_valid()` checks); applied by `db.ts`; `schema.sql` untouched.
+- **CD-30 Service skeleton + flag** (0.5d)
+  AC: `electron/services/overseer/index.ts` starts only when `overseer.enabled` is true; off by default; no behaviour change when disabled.
+- **CD-31 RunManager** (1.5d)
+  AC: states `queued → running → awaiting_approval → done|failed|cancelled`; token/step/time budgets enforced; kill switch stops a run in under 1s.
+- **CD-32 `overseer:*` IPC channels** (0.5d)
+  AC: typed channels in `shared/ipc.ts` + preload for start/cancel/list runs, stream events and answer approvals.
+
+---
+
+## Overseer Phase 2 — Tools, policy, audit
+- **CD-33 ToolRegistry** (1d)
+  AC: tools register with a schema and a risk class (`read`, `write-local`, `exec`, `git-local`, `network`, `git-remote`, `release`); invalid input rejected before execution.
+- **CD-34 Policy** (0.5d)
+  AC: per-project policy with defaults — `read` auto; `write-local`, `exec`, `git-local` approve; `network` deny; `git-remote`, `release` approve and locked (cannot be set to auto).
+- **CD-35 Audit trail** (0.5d)
+  AC: every tool call, decision and result is recorded with run id, timestamp and outcome; viewable per run.
+- **CD-36 Read-only tools** (1d)
+  AC: `fs.read`, `fs.list`, `fs.search`, `git.status`, `git.diff`, `git.log`, `project.info`, `routing_log.read`, `browser.snapshot`; confined to the project root.
+
+---
+
+## Overseer Phase 3 — Claude runtime and panel
+- **CD-37 API key storage** (0.5d)
+  AC: Anthropic key stored encrypted via `safeStorage`; never written to logs or the renderer.
+- **CD-38 ApiRuntime** (2d)
+  AC: Claude tool loop over the ToolRegistry with streaming, budgets, cancellation and error handling.
+- **CD-39 Project context** (0.5d)
+  AC: runs include project info plus `CLAUDE.md`/`AGENTS.md` when present, within a size cap.
+- **CD-40 Overseer panel** (2d)
+  AC: `src/overseer/*` panel to start a run, see live steps, answer approvals and cancel; not added to `App.tsx` beyond mounting.
+- **CD-41 Memory** (0.5d)
+  AC: per-project notes the Overseer can read and propose; user can view and delete them.
+
+---
+
+## Overseer Phase 4 — Safe changes
+- **CD-42 Worktree per run** (0.5d)
+  AC: each writing run works in its own git worktree and branch; cleaned up after merge or discard.
+- **CD-43 Write tools** (1d)
+  AC: `fs.write`, `fs.patch`, `fs.delete` limited to the run's worktree; all `write-local` risk.
+- **CD-44 ApprovalGate** (1.5d)
+  AC: risky calls pause the run in `awaiting_approval`; approve/deny from the panel; a timeout counts as deny.
+- **CD-45 Diff review and merge** (1.5d)
+  AC: user sees the full diff of a run and chooses merge or discard; nothing reaches the main branch without this step.
+
+---
+
+## Overseer Phase 5 — CLI runtimes
+- **CD-46 Per-run bridge tokens** (0.5d)
+  AC: each run gets its own short-lived bridge token scoped to its allowed tools; revoked when the run ends.
+- **CD-47 Extend `crewdeck-mcp`** (1d)
+  AC: MCP server exposes Overseer tools (not only the browser), still subject to policy and approvals.
+- **CD-48 CliRuntime** (2d)
+  AC: runs can use claude/codex/gemini CLIs over MCP (per CD-28 findings); marked "partially governed"; no `git-remote` or `release` rights.
+
+---
+
+## Overseer Phase 6 — Test, build and hand-off
+- **CD-49 Exec tools** (1d)
+  AC: typecheck, `npm test` and build runnable inside the run's worktree; `exec` risk; output captured in the audit trail.
+- **CD-50 `@overseer` and hand-off** (1.5d)
+  AC: `@overseer` mention routes to the Overseer; it can hand a task to an agent tab and report the result back.
+
+---
+
+## Overseer Phase 7 — Push, PR, release
+- **CD-51 Push and PR** (1d)
+  AC: push branch and open a PR only after approval; force-push always denied.
+- **CD-52 Release** (1d)
+  AC: release steps require double confirmation; never automatic.
+- **CD-53 Hardening and docs** (1.5d)
+  AC: security review of tools/bridge, README section on the Overseer, and the out-of-MVP list updated.
+
+---
+
+**Overseer totals:** Phases 0–4 ≈ 17.5d; Phases 5–7 ≈ 9.5d; ≈ 27d overall.
+
 ## Explicitly out of MVP
 Embedded browser (CDP), workflow/chart canvas (`@xyflow/react`), multi-project, collaboration,
 tunnels, SSO, audit logging, macOS/Linux builds, licensing/monetization.

@@ -293,7 +293,8 @@ textarea {
 }
 
 .toolbar button:focus-visible,
-.toolbar select:focus-visible {
+.toolbar select:focus-visible,
+.toolbar .worktree-toggle:focus-visible {
   outline: var(--rule-w) solid var(--signal);
   outline-offset: -2px;
 }
@@ -379,6 +380,11 @@ textarea {
   border-color: var(--rule-hi);
 }
 
+.pane-header select:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
+}
+
 .pane-header select option {
   background: var(--ink-2);
   color: var(--paper);
@@ -442,6 +448,13 @@ textarea {
   background: var(--ink-2);
 }
 
+.tab:focus-visible {
+  color: var(--paper-dim);
+  background: var(--ink-2);
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
+}
+
 .tab.visible {
   color: var(--paper-dim);
 }
@@ -485,6 +498,11 @@ textarea {
 .tab button:hover {
   color: var(--ink);
   background: var(--signal);
+}
+
+.tab button:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
 }
 
 /* -------------------------------------------------------------- workspace */
@@ -547,7 +565,9 @@ textarea {
 }
 
 .pane.active::before,
-.pane.active::after {
+.pane.active::after,
+.pane:focus-visible::before,
+.pane:focus-visible::after {
   opacity: 1;
   transform: none;
 }
@@ -639,6 +659,11 @@ textarea {
   background: var(--signal);
 }
 
+.pane-header button:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
+}
+
 .send-selection {
   max-width: 150px;
   padding: 1px 6px;
@@ -653,7 +678,7 @@ textarea {
 }
 
 .send-selection:hover,
-.send-selection:focus {
+.send-selection:focus-visible {
   color: var(--paper);
   border-color: var(--signal);
   outline: none;
@@ -1123,7 +1148,7 @@ kbd {
 }
 
 .slot-picker:hover,
-.slot-picker:focus {
+.slot-picker:focus-visible {
   color: var(--paper);
   border-color: var(--agent, var(--signal));
   outline: none;
@@ -1648,8 +1673,10 @@ kbd {
 }
 
 .git-file:focus-visible {
-  outline: none;
-  border-left-color: var(--paper-dim);
+  border-left-color: var(--signal);
+  background: var(--ink-3);
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
 }
 
 .git-file.selected {
@@ -2386,5 +2413,10 @@ kbd {
 .crash button:hover {
   background: var(--signal);
   border-color: var(--signal);
+}
+
+.crash button:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
 }
 
