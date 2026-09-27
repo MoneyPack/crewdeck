@@ -499,6 +499,10 @@ textarea {
   color: var(--ink);
   background: var(--signal);
 }
+.tab button:active {
+  background: var(--signal-soft);
+  color: var(--ink);
+}
 
 .tab button:focus-visible {
   outline: var(--rule-w) solid var(--signal);
@@ -662,6 +666,10 @@ textarea {
 .pane-header button:focus-visible {
   outline: var(--rule-w) solid var(--signal);
   outline-offset: -2px;
+}
+.pane-header button:active:not(:disabled) {
+  background: var(--signal-soft);
+  color: var(--ink);
 }
 
 .send-selection {
@@ -900,6 +908,10 @@ textarea {
   background: transparent;
   color: var(--signal);
 }
+.onboard .cta:active {
+  background: var(--signal-soft);
+  color: var(--ink);
+}
 
 .onboard .cta:focus-visible {
   outline: var(--rule-w) solid var(--paper);
@@ -1004,6 +1016,10 @@ kbd {
   color: var(--signal);
   border-color: var(--signal);
   outline: none;
+}
+.shortcut-sheet header .icon-btn:active {
+  background: var(--signal);
+  color: var(--ink);
 }
 
 .shortcut-groups {
@@ -1153,6 +1169,9 @@ kbd {
   border-color: var(--agent, var(--signal));
   outline: none;
 }
+.slot-picker:active {
+  background: var(--ink-3);
+}
 
 .slot-picker option {
   color: var(--paper);
@@ -1214,6 +1233,11 @@ kbd {
 .routing-log-header button:hover:not(:disabled) {
   color: var(--paper);
   border-color: var(--rule-hi);
+}
+.routing-log-header button:active:not(:disabled) {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--ink);
 }
 
 .routing-log-header button:disabled {
@@ -1575,6 +1599,10 @@ kbd {
   color: var(--paper);
   background: var(--ink-3);
 }
+.git-panel-header button:active:not(:disabled) {
+  background: var(--signal);
+  color: var(--ink);
+}
 
 .git-panel-header button:disabled {
   color: var(--paper-mute);
@@ -1671,6 +1699,9 @@ kbd {
 .git-file:hover {
   background: var(--ink-3);
 }
+.git-file:active {
+  background: var(--ink-4);
+}
 
 .git-file:focus-visible {
   border-left-color: var(--signal);
@@ -1762,6 +1793,11 @@ kbd {
 .git-actions button:hover:not(:disabled) {
   background: var(--paper);
   border-color: var(--paper);
+  color: var(--ink);
+}
+.git-actions button:active:not(:disabled) {
+  background: var(--signal);
+  border-color: var(--signal);
   color: var(--ink);
 }
 
@@ -2154,6 +2190,10 @@ kbd {
   color: var(--paper);
   background: var(--ink-3);
 }
+.browser-header button:active:not(:disabled) {
+  background: var(--signal);
+  color: var(--ink);
+}
 
 .browser-header button:focus-visible {
   outline: var(--rule-w) solid var(--signal);
@@ -2167,6 +2207,10 @@ kbd {
 
 .browser-header .browser-close:hover:not(:disabled) {
   background: var(--signal);
+  color: var(--ink);
+}
+.browser-header .browser-close:active:not(:disabled) {
+  background: var(--signal-soft);
   color: var(--ink);
 }
 
