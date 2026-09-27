@@ -289,7 +289,8 @@ textarea {
 .toolbar button:disabled,
 .toolbar select:disabled {
   color: var(--paper-mute);
-  cursor: default;
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .toolbar button:focus-visible,
@@ -375,7 +376,7 @@ textarea {
   cursor: pointer;
 }
 
-.pane-header select:hover {
+.pane-header select:hover:not(:disabled) {
   color: var(--paper);
   border-color: var(--rule-hi);
 }
@@ -495,7 +496,7 @@ textarea {
   border-radius: 0;
 }
 
-.tab button:hover {
+.tab button:hover:not(:disabled) {
   color: var(--ink);
   background: var(--signal);
 }
@@ -658,7 +659,7 @@ textarea {
   transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
 }
 
-.pane-header button:hover {
+.pane-header button:hover:not(:disabled) {
   color: var(--ink);
   background: var(--signal);
 }
@@ -672,6 +673,11 @@ textarea {
   color: var(--ink);
 }
 
+.pane-header button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .send-selection {
   max-width: 150px;
   padding: 1px 6px;
@@ -683,18 +689,22 @@ textarea {
   border: var(--rule-w) solid var(--rule);
   border-radius: 0;
   cursor: pointer;
+  transition: color var(--t-fast) var(--snap), border-color var(--t-fast) var(--snap);
 }
 
-.send-selection:hover,
-.send-selection:focus-visible {
+.send-selection:hover:not(:disabled) {
   color: var(--paper);
   border-color: var(--signal);
-  outline: none;
+}
+
+.send-selection:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
 }
 
 .send-selection:disabled {
   opacity: 0.4;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 .send-note {
@@ -904,7 +914,7 @@ textarea {
   transition: background var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
 }
 
-.onboard .cta:hover {
+.onboard .cta:hover:not(:disabled) {
   background: transparent;
   color: var(--signal);
 }
@@ -1011,7 +1021,7 @@ kbd {
   transition: color var(--t-fast) var(--snap), border-color var(--t-fast) var(--snap);
 }
 
-.shortcut-sheet header .icon-btn:hover,
+.shortcut-sheet header .icon-btn:hover:not(:disabled),
 .shortcut-sheet header .icon-btn:focus-visible {
   color: var(--signal);
   border-color: var(--signal);
@@ -2093,7 +2103,7 @@ kbd {
   font-weight: 700;
 }
 
-.tab button.branch-badge:hover {
+.tab button.branch-badge:hover:not(:disabled) {
   color: var(--ink);
   background: var(--err);
   border-color: var(--err);
@@ -2454,7 +2464,7 @@ kbd {
   transition: background var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
 }
 
-.crash button:hover {
+.crash button:hover:not(:disabled) {
   background: var(--signal);
   border-color: var(--signal);
 }
