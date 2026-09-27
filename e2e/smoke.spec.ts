@@ -20,6 +20,8 @@ test('launch, spawn shell, echo round-trip', async () => {
   });
   try {
     const page = await app.firstWindow();
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForSelector('[data-testid=splash]', { state: 'detached' });
     await expect(page.locator('.toolbar .title')).toHaveText('crewdeck');
 
     // Open the project via the test hook (bypasses the native folder dialog).

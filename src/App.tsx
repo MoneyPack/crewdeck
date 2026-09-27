@@ -14,6 +14,7 @@ import { useGitAttribution, type LastRoute } from './hooks/useGitAttribution';
 import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
 import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId } from '../shared/agents';
+import { Splash } from './components/Splash/Splash';
 import type {
   PersistedLayout,
   PersistedTerminal,
@@ -114,6 +115,8 @@ function normalizeSlots(slots: (string | null)[]): (string | null)[] {
 }
 
 export function App() {
+  const [splash, setSplash] = useState(true);
+  const endSplash = useCallback(() => setSplash(false), []);
   const [project, setProject] = useState<ProjectInfo | null>(null);
   const [terminals, setTerminals] = useState<TermSpec[]>([]);
   const [layout, setLayout] = useState<LayoutSize>(1);
@@ -616,6 +619,7 @@ export function App() {
 
   return (
     <div className="app">
+      {splash && <Splash onDone={endSplash} />}
       <div className="toolbar">
         <span className="title">crewdeck</span>
         <button

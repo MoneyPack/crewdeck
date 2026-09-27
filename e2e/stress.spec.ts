@@ -65,6 +65,8 @@ test('stress: 4 panes, 3 flooding, interactive echo latency', async () => {
   });
   try {
     const page = await app.firstWindow();
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForSelector('[data-testid=splash]', { state: 'detached' });
     await page.setViewportSize({ width: 1600, height: 1000 }).catch(() => undefined);
     // CREWDECK_STRESS_RENDERER=dom forces the DOM renderer for A/B comparison (read at pane mount).
     const renderer = process.env.CREWDECK_STRESS_RENDERER === 'dom' ? 'dom' : 'webgl';

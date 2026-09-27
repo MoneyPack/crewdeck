@@ -84,6 +84,8 @@ test('browser pane is driven over the authenticated bridge', async () => {
   try {
     const win = await test.step('open project and browser pane', async () => {
       const w = await app.firstWindow();
+      await w.keyboard.press('Escape').catch(() => {});
+      await w.waitForSelector('[data-testid=splash]', { state: 'detached' });
       await expect(w.locator('.toolbar .title')).toHaveText('crewdeck');
       await w.locator('button.project').click();
       await expect(w.locator('button.project')).toContainText('project');
