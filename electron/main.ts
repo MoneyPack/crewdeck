@@ -21,7 +21,9 @@ try {
 } catch (err) {
   console.error('[app] could not open log file:', err);
 }
-log.info(`[app] crewdeck ${app.getVersion()} starting (electron ${process.versions.electron}, ${process.platform}-${process.arch})`);
+log.info(
+  `[app] crewdeck ${app.getVersion()} starting (electron ${process.versions.electron}, ${process.platform}-${process.arch})`,
+);
 process.on('uncaughtException', (err) => log.error('[process] uncaughtException:', err));
 process.on('unhandledRejection', (reason) => log.error('[process] unhandledRejection:', reason));
 app.on('render-process-gone', (_event, _contents, details) => log.error('[renderer] process gone:', details));
@@ -118,7 +120,8 @@ app.on('before-quit', () => {
   endAll();
   ptys.killAll();
   disposeAllGitWatchers();
-  browserEngine.dispose(); void stopBrowserTooling();
+  browserEngine.dispose();
+  void stopBrowserTooling();
 });
 app.on('will-quit', () => closeDatabase());
 

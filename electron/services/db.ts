@@ -233,8 +233,7 @@ export class CrewdeckDb {
 
   getLastProject(): ProjectRow | null {
     const row = this.raw.prepare('SELECT * FROM projects ORDER BY last_opened_at DESC LIMIT 1').get() as
-      | RawProject
-      | undefined;
+      RawProject | undefined;
     return row ? toProject(row) : null;
   }
 
@@ -297,9 +296,7 @@ export class CrewdeckDb {
 
   startSession(terminalId: string, pid: number | null, metadata: Record<string, Json> = {}): SessionRow {
     const row = this.raw
-      .prepare(
-        `INSERT INTO sessions (id, terminal_id, pid, started_at, metadata) VALUES (?, ?, ?, ?, ?) RETURNING *`,
-      )
+      .prepare(`INSERT INTO sessions (id, terminal_id, pid, started_at, metadata) VALUES (?, ?, ?, ?, ?) RETURNING *`)
       .get(randomUUID(), terminalId, pid, Date.now(), JSON.stringify(metadata)) as RawSession;
     return toSession(row);
   }

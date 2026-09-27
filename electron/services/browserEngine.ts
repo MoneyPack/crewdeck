@@ -201,7 +201,13 @@ export class BrowserEngine {
     wc.on('will-navigate', (event, url) => {
       if (!isNavigable(url)) event.preventDefault();
     });
-    for (const ev of ['did-navigate', 'did-navigate-in-page', 'page-title-updated', 'did-start-loading', 'did-stop-loading'] as const) {
+    for (const ev of [
+      'did-navigate',
+      'did-navigate-in-page',
+      'page-title-updated',
+      'did-start-loading',
+      'did-stop-loading',
+    ] as const) {
       wc.on(ev as 'did-stop-loading', () => {
         if (ev === 'did-navigate') this.snapshot = null;
         this.emit();
@@ -213,7 +219,10 @@ export class BrowserEngine {
     view.setBounds(this.bounds);
     view.setVisible(false);
     this.view = view;
-    this.ready = wc.loadURL('about:blank').then(() => undefined, () => undefined);
+    this.ready = wc.loadURL('about:blank').then(
+      () => undefined,
+      () => undefined,
+    );
     return view;
   }
 
@@ -232,7 +241,13 @@ export class BrowserEngine {
     if (method === 'Runtime.consoleAPICalled') {
       const args = (params.args as Array<{ value?: unknown; description?: string; type?: string }> | undefined) ?? [];
       const text = args
-        .map((a) => (a.value !== undefined ? (typeof a.value === 'string' ? a.value : JSON.stringify(a.value)) : (a.description ?? a.type ?? '')))
+        .map((a) =>
+          a.value !== undefined
+            ? typeof a.value === 'string'
+              ? a.value
+              : JSON.stringify(a.value)
+            : (a.description ?? a.type ?? ''),
+        )
         .join(' ');
       this.pushConsole(String(params.type ?? 'log'), text);
     } else if (method === 'Runtime.exceptionThrown') {
@@ -253,7 +268,11 @@ export class BrowserEngine {
     return this.ensureView().webContents;
   }
 
-  private send<T = Record<string, unknown>>(method: string, params?: Record<string, unknown>, timeoutMs = 10_000): Promise<T> {
+  private send<T = Record<string, unknown>>(
+    method: string,
+    params?: Record<string, unknown>,
+    timeoutMs = 10_000,
+  ): Promise<T> {
     let timer: NodeJS.Timeout | undefined;
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(new Error(`CDP ${method} timed out`)), timeoutMs);
@@ -281,7 +300,9 @@ export class BrowserEngine {
 
   private async nodeCenter(backendNodeId: number): Promise<{ x: number; y: number }> {
     await this.send('DOM.scrollIntoViewIfNeeded', { backendNodeId }).catch(() => undefined);
-    const { model } = await this.send<{ model: { content: number[]; border: number[] } }>('DOM.getBoxModel', { backendNodeId });
+    const { model } = await this.send<{ model: { content: number[]; border: number[] } }>('DOM.getBoxModel', {
+      backendNodeId,
+    });
     return quadCenter(model.border.length === 8 ? model.border : model.content);
   }
 
@@ -301,7 +322,7 @@ export class BrowserEngine {
         functionDeclaration: fn,
         arguments: args.map((value) => ({ value })),
         returnByValue: true,
-        silent: true
+        silent: true,
       });
       return result.value;
     } finally {
@@ -320,7 +341,11 @@ export class BrowserEngine {
   }
 
   private async evaluate<T>(expression: string): Promise<T | undefined> {
-    const { result } = await this.send<{ result: { value?: T } }>('Runtime.evaluate', { expression, returnByValue: true, silent: true });
+    const { result } = await this.send<{ result: { value?: T } }>('Runtime.evaluate', {
+      expression,
+      returnByValue: true,
+      silent: true,
+    });
     return result.value;
   }
 
@@ -344,7 +369,10 @@ export class BrowserEngine {
     };
   }
 
-  private async screenshot(fullPage: boolean, annotate: boolean): Promise<{ file: string; legend: string; via: string }> {
+  private async screenshot(
+    fullPage: boolean,
+    annotate: boolean,
+  ): Promise<{ file: string; legend: string; via: string }> {
     this.ensureView();
     return this.captureShot(fullPage, annotate);
   }
@@ -356,10 +384,15 @@ export class BrowserEngine {
     if (!isNavigable(url)) throw new Error('offscreen: url not navigable');
     const overlay = String(
       (await live
-        .executeJavaScript("(() => { const n = document.getElementById('__crewdeck_annot'); return n ? n.outerHTML : ''; })()", true)
+        .executeJavaScript(
+          "(() => { const n = document.getElementById('__crewdeck_annot'); return n ? n.outerHTML : ''; })()",
+          true,
+        )
         .catch(() => '')) ?? '',
     );
-    const scroll = ((await live.executeJavaScript('[window.scrollX, window.scrollY]', true).catch(() => [0, 0])) ?? [0, 0]) as [number, number];
+    const scroll = ((await live.executeJavaScript('[window.scrollX, window.scrollY]', true).catch(() => [0, 0])) ?? [
+      0, 0,
+    ]) as [number, number];
     const b = this.view?.getBounds();
     const clip = (params as { clip?: { x?: number; y?: number; width?: number; height?: number } }).clip;
     const width = Math.max(320, Math.round(clip?.width ?? (b && b.width > 0 ? b.width : 1280)));
@@ -372,8 +405,14 @@ export class BrowserEngine {
       new Promise<T>((resolve, reject) => {
         const t = setTimeout(() => reject(new Error(what + ' timed out')), ms);
         p.then(
-          (v) => { clearTimeout(t); resolve(v); },
-          (e: unknown) => { clearTimeout(t); reject(e instanceof Error ? e : new Error(String(e))); },
+          (v) => {
+            clearTimeout(t);
+            resolve(v);
+          },
+          (e: unknown) => {
+            clearTimeout(t);
+            reject(e instanceof Error ? e : new Error(String(e)));
+          },
         );
       });
     const win = new BrowserWindow({
@@ -433,8 +472,10 @@ export class BrowserEngine {
     }
   }
 
-
-  private async captureShot(fullPage: boolean, annotate: boolean): Promise<{ file: string; legend: string; via: string }> {
+  private async captureShot(
+    fullPage: boolean,
+    annotate: boolean,
+  ): Promise<{ file: string; legend: string; via: string }> {
     const vp = await this.viewport();
     let legend = '';
     if (annotate) {
@@ -444,26 +485,40 @@ export class BrowserEngine {
       for (const entry of Object.values(snap.refs)) {
         if (targets.length >= ANNOTATE_LIMIT) break;
         try {
-          const { model } = await this.send<{ model: { border: number[] } }>('DOM.getBoxModel', { backendNodeId: entry.backendNodeId });
+          const { model } = await this.send<{ model: { border: number[] } }>('DOM.getBoxModel', {
+            backendNodeId: entry.backendNodeId,
+          });
           const box = quadBox(model.border);
           if (box.width < 1 || box.height < 1) continue;
-          if (!fullPage && (box.y + box.height < 0 || box.y > vp.height || box.x + box.width < 0 || box.x > vp.width)) continue;
+          if (!fullPage && (box.y + box.height < 0 || box.y > vp.height || box.x + box.width < 0 || box.x > vp.width))
+            continue;
           targets.push({ ref: entry.ref, box });
           lines.push(`@${entry.ref} ${entry.role}${entry.name ? ` "${entry.name}"` : ''}`);
         } catch {
           /* node without layout */
         }
       }
-      const notes = layoutAnnotations(targets, { width: fullPage ? vp.contentWidth : vp.width, height: fullPage ? vp.contentHeight : vp.height });
+      const notes = layoutAnnotations(targets, {
+        width: fullPage ? vp.contentWidth : vp.width,
+        height: fullPage ? vp.contentHeight : vp.height,
+      });
       const payload = JSON.stringify(notes);
-      await this.evaluate(`(function(){var n=${payload};var sx=window.scrollX,sy=window.scrollY;var root=document.createElement('div');root.id='__crewdeck_annot';root.style.cssText='position:absolute;left:0;top:0;width:0;height:0;z-index:2147483647;pointer-events:none';n.forEach(function(a){var b=document.createElement('div');b.style.cssText='position:absolute;box-sizing:border-box;border:2px solid #ff4d00;left:'+(a.box.x+sx)+'px;top:'+(a.box.y+sy)+'px;width:'+a.box.width+'px;height:'+a.box.height+'px';var l=document.createElement('div');l.textContent=a.label.text;l.style.cssText='position:absolute;font:600 11px/14px monospace;padding:0 3px;background:#ff4d00;color:#0b0b0b;left:'+(a.label.x+sx)+'px;top:'+(a.label.y+sy)+'px;height:'+a.label.height+'px';root.appendChild(b);root.appendChild(l);});document.documentElement.appendChild(root);return n.length})()`);
+      await this.evaluate(
+        `(function(){var n=${payload};var sx=window.scrollX,sy=window.scrollY;var root=document.createElement('div');root.id='__crewdeck_annot';root.style.cssText='position:absolute;left:0;top:0;width:0;height:0;z-index:2147483647;pointer-events:none';n.forEach(function(a){var b=document.createElement('div');b.style.cssText='position:absolute;box-sizing:border-box;border:2px solid #ff4d00;left:'+(a.box.x+sx)+'px;top:'+(a.box.y+sy)+'px;width:'+a.box.width+'px;height:'+a.box.height+'px';var l=document.createElement('div');l.textContent=a.label.text;l.style.cssText='position:absolute;font:600 11px/14px monospace;padding:0 3px;background:#ff4d00;color:#0b0b0b;left:'+(a.label.x+sx)+'px;top:'+(a.label.y+sy)+'px;height:'+a.label.height+'px';root.appendChild(b);root.appendChild(l);});document.documentElement.appendChild(root);return n.length})()`,
+      );
       legend = lines.join('\n');
     }
     try {
       const params: Record<string, unknown> = { format: 'png' };
       if (fullPage) {
         params.captureBeyondViewport = true;
-        params.clip = { x: 0, y: 0, width: Math.max(1, vp.contentWidth), height: Math.max(1, Math.min(vp.contentHeight, 16_384)), scale: 1 };
+        params.clip = {
+          x: 0,
+          y: 0,
+          width: Math.max(1, vp.contentWidth),
+          height: Math.max(1, Math.min(vp.contentHeight, 16_384)),
+          scale: 1,
+        };
       }
       const png = await this.offscreenCapture(params);
       const via = 'offscreen';
@@ -474,7 +529,10 @@ export class BrowserEngine {
       console.log('[browser] screenshot via', via);
       return { file, legend, via };
     } finally {
-      if (annotate) await this.evaluate(`(function(){var r=document.getElementById('__crewdeck_annot');if(r)r.remove()})()`).catch(() => undefined);
+      if (annotate)
+        await this.evaluate(`(function(){var r=document.getElementById('__crewdeck_annot');if(r)r.remove()})()`).catch(
+          () => undefined,
+        );
     }
   }
 
@@ -496,7 +554,13 @@ export class BrowserEngine {
       if (result.text !== undefined) result.text = clip(result.text);
     } catch (err) {
       const s = this.state();
-      result = { ok: false, action: cmd.action, url: s.url, title: s.title, error: err instanceof Error ? err.message : String(err) };
+      result = {
+        ok: false,
+        action: cmd.action,
+        url: s.url,
+        title: s.title,
+        error: err instanceof Error ? err.message : String(err),
+      };
     }
     this.log(cmd, ctx, result);
     this.emit();
@@ -511,15 +575,19 @@ export class BrowserEngine {
         this.wc();
         if (this.ready) await this.ready;
         this.snapshot = null;
-        await this.wc().loadURL(url).catch((e: unknown) => {
-          // ERR_ABORTED fires on redirects / in-page navigations; not fatal.
-          if (!(e instanceof Error) || !/ERR_ABORTED/.test(e.message)) throw e;
-        });
+        await this.wc()
+          .loadURL(url)
+          .catch((e: unknown) => {
+            // ERR_ABORTED fires on redirects / in-page navigations; not fatal.
+            if (!(e instanceof Error) || !/ERR_ABORTED/.test(e.message)) throw e;
+          });
         await this.waitForLoad(10_000).catch(() => undefined);
         if (this.wc().getURL() === 'about:blank' && url !== 'about:blank') {
-          await this.wc().loadURL(url).catch((e: unknown) => {
-            if (!/ERR_ABORTED/.test(String(e))) throw e;
-          });
+          await this.wc()
+            .loadURL(url)
+            .catch((e: unknown) => {
+              if (!/ERR_ABORTED/.test(String(e))) throw e;
+            });
           await this.waitForLoad(10_000).catch(() => undefined);
           if (this.wc().getURL() === 'about:blank') throw new Error(`open failed: ${cmd.url}`);
         }
@@ -582,8 +650,18 @@ export class BrowserEngine {
       case 'press': {
         const k = parseKey(cmd.key);
         if (!k) throw new Error(`unknown key "${cmd.key}"`);
-        const base = { key: k.key, code: k.code, windowsVirtualKeyCode: k.keyCode, nativeVirtualKeyCode: k.keyCode, modifiers: k.modifiers };
-        await this.send('Input.dispatchKeyEvent', { type: k.text ? 'keyDown' : 'rawKeyDown', ...base, ...(k.text ? { text: k.text, unmodifiedText: k.text } : {}) });
+        const base = {
+          key: k.key,
+          code: k.code,
+          windowsVirtualKeyCode: k.keyCode,
+          nativeVirtualKeyCode: k.keyCode,
+          modifiers: k.modifiers,
+        };
+        await this.send('Input.dispatchKeyEvent', {
+          type: k.text ? 'keyDown' : 'rawKeyDown',
+          ...base,
+          ...(k.text ? { text: k.text, unmodifiedText: k.text } : {}),
+        });
         await this.send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
         return { text: `pressed ${cmd.key}` };
       }
@@ -619,7 +697,9 @@ export class BrowserEngine {
         const needle = JSON.stringify(cmd.text ?? '');
         for (;;) {
           if (cmd.text !== null) {
-            const found = await this.evaluate<boolean>(`!!(document.body&&document.body.innerText.includes(${needle}))`).catch(() => false);
+            const found = await this.evaluate<boolean>(
+              `!!(document.body&&document.body.innerText.includes(${needle}))`,
+            ).catch(() => false);
             if (found) return { text: `found text ${needle}` };
           } else if (refId) {
             const snap = await this.takeSnapshot(false).catch(() => null);

@@ -11,9 +11,10 @@ const skipBuild = process.argv.includes('--no-build');
 
 function run(cmd, args, env = process.env) {
   // Single command string avoids Node's DEP0190 (args + shell:true); args here are static.
-  const r = process.platform === 'win32'
-    ? spawnSync([cmd, ...args].join(' '), { cwd: root, stdio: 'inherit', shell: true, env })
-    : spawnSync(cmd, args, { cwd: root, stdio: 'inherit', env });
+  const r =
+    process.platform === 'win32'
+      ? spawnSync([cmd, ...args].join(' '), { cwd: root, stdio: 'inherit', shell: true, env })
+      : spawnSync(cmd, args, { cwd: root, stdio: 'inherit', env });
   if (r.status !== 0) process.exit(r.status ?? 1);
 }
 

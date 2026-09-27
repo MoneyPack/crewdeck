@@ -25,6 +25,12 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
       - name: Rebuild better-sqlite3 for Electron ABI
         run: npx electron-rebuild -f -o better-sqlite3
 

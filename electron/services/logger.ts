@@ -59,7 +59,9 @@ export class Logger {
   }
 
   private write(level: LogLevel, args: unknown[]): void {
-    const text = args.map((a) => (typeof a === 'string' ? a : inspect(a, { depth: 4, breakLength: Infinity }))).join(' ');
+    const text = args
+      .map((a) => (typeof a === 'string' ? a : inspect(a, { depth: 4, breakLength: Infinity })))
+      .join(' ');
     const line = `${new Date().toISOString()} [${level}] ${text}\n`;
     if (this.echo) {
       const out = level === 'info' ? console.log : level === 'warn' ? console.warn : console.error;

@@ -18,11 +18,35 @@ const v = (value: unknown) => ({ type: 'string', value });
 function tree(): AXNode[] {
   return [
     { nodeId: '1', role: v('RootWebArea'), name: v('Page'), childIds: ['2', '3', '6', '8', '9'] },
-    { nodeId: '2', parentId: '1', role: v('heading'), name: v('Title'), backendDOMNodeId: 20, properties: [{ name: 'level', value: { type: 'integer', value: 1 } }], childIds: ['2a'] },
+    {
+      nodeId: '2',
+      parentId: '1',
+      role: v('heading'),
+      name: v('Title'),
+      backendDOMNodeId: 20,
+      properties: [{ name: 'level', value: { type: 'integer', value: 1 } }],
+      childIds: ['2a'],
+    },
     { nodeId: '2a', parentId: '2', role: v('StaticText'), name: v('Title') },
-    { nodeId: '3', parentId: '1', role: v('button'), name: v('Save'), backendDOMNodeId: 30, childIds: ['4'], properties: [{ name: 'disabled', value: { type: 'boolean', value: true } }] },
+    {
+      nodeId: '3',
+      parentId: '1',
+      role: v('button'),
+      name: v('Save'),
+      backendDOMNodeId: 30,
+      childIds: ['4'],
+      properties: [{ name: 'disabled', value: { type: 'boolean', value: true } }],
+    },
     { nodeId: '4', parentId: '3', role: v('StaticText'), name: v('Save') },
-    { nodeId: '6', parentId: '1', role: v('textbox'), name: v('Email'), value: v('a@b.c'), backendDOMNodeId: 60, properties: [{ name: 'focused', value: { type: 'boolean', value: true } }] },
+    {
+      nodeId: '6',
+      parentId: '1',
+      role: v('textbox'),
+      name: v('Email'),
+      value: v('a@b.c'),
+      backendDOMNodeId: 60,
+      properties: [{ name: 'focused', value: { type: 'boolean', value: true } }],
+    },
     { nodeId: '8', parentId: '1', role: v('StaticText'), name: v('hello   world') },
     { nodeId: '9', parentId: '1', ignored: true, role: v('button'), name: v('Hidden'), backendDOMNodeId: 90 },
   ];
@@ -54,7 +78,14 @@ test('buildSnapshot interactiveOnly and truncation', () => {
 test('buildSnapshot handles mixed checkbox, missing backend id, quotes', () => {
   const s = buildSnapshot([
     { nodeId: 'r', role: v('RootWebArea'), childIds: ['c', 'l'] },
-    { nodeId: 'c', parentId: 'r', role: v('checkbox'), name: v('All "x"'), backendDOMNodeId: 5, properties: [{ name: 'checked', value: { type: 'tristate', value: 'mixed' } }] },
+    {
+      nodeId: 'c',
+      parentId: 'r',
+      role: v('checkbox'),
+      name: v('All "x"'),
+      backendDOMNodeId: 5,
+      properties: [{ name: 'checked', value: { type: 'tristate', value: 'mixed' } }],
+    },
     { nodeId: 'l', parentId: 'r', role: v('link'), name: v('No backend') },
   ]);
   assert.equal(s.text, '@e1 checkbox "All \\"x\\"" [checked=mixed]\nlink "No backend"');
@@ -102,7 +133,10 @@ test('layoutAnnotations avoids overlap and filters offscreen', () => {
     { ref: 'e5', box: { x: 10, y: 10, width: 0, height: 10 } },
   ];
   const out = layoutAnnotations(targets, vp);
-  assert.deepEqual(out.map((a) => a.ref), ['e1', 'e2', 'e3']);
+  assert.deepEqual(
+    out.map((a) => a.ref),
+    ['e1', 'e2', 'e3'],
+  );
   for (let i = 0; i < out.length; i++) {
     const p = out[i]!.label;
     assert.ok(p.x >= 0 && p.y >= 0 && p.x + p.width <= vp.width && p.y + p.height <= vp.height);
@@ -147,8 +181,16 @@ test('parseBrowserCommand validates', () => {
   assert.equal(parseBrowserCommand({ action: 'open', url: 'javascript:1' }), null);
   assert.deepEqual(parseBrowserCommand({ action: 'click', ref: '@e2' }), { action: 'click', ref: 'e2' });
   assert.equal(parseBrowserCommand({ action: 'click', ref: 'nope' }), null);
-  assert.deepEqual(parseBrowserCommand({ action: 'fill', ref: 'e1', text: '' }), { action: 'fill', ref: 'e1', text: '' });
-  assert.deepEqual(parseBrowserCommand({ action: 'fill', ref: 'e1', value: 'x' }), { action: 'fill', ref: 'e1', text: 'x' });
+  assert.deepEqual(parseBrowserCommand({ action: 'fill', ref: 'e1', text: '' }), {
+    action: 'fill',
+    ref: 'e1',
+    text: '',
+  });
+  assert.deepEqual(parseBrowserCommand({ action: 'fill', ref: 'e1', value: 'x' }), {
+    action: 'fill',
+    ref: 'e1',
+    text: 'x',
+  });
   assert.deepEqual(parseBrowserCommand({ action: 'type', value: 'y' }), { action: 'type', text: 'y' });
   assert.equal(parseBrowserCommand({ action: 'type', text: '' }), null);
   assert.equal(parseBrowserCommand({ action: 'type', text: 'x'.repeat(20_001) }), null);
@@ -156,10 +198,19 @@ test('parseBrowserCommand validates', () => {
   assert.deepEqual(parseBrowserCommand({ action: 'scroll' }), { action: 'scroll', dx: 0, dy: 600, ref: null });
   assert.deepEqual(parseBrowserCommand({ action: 'scroll', ref: 'e1' }), { action: 'scroll', dx: 0, dy: 0, ref: 'e1' });
   assert.equal(parseBrowserCommand({ action: 'scroll', ref: 'bad' }), null);
-  assert.deepEqual(parseBrowserCommand({ action: 'wait', text: 'Done', timeoutMs: 99_999 }), { action: 'wait', text: 'Done', ref: null, timeoutMs: 30_000 });
+  assert.deepEqual(parseBrowserCommand({ action: 'wait', text: 'Done', timeoutMs: 99_999 }), {
+    action: 'wait',
+    text: 'Done',
+    ref: null,
+    timeoutMs: 30_000,
+  });
   assert.equal(parseBrowserCommand({ action: 'wait' }), null);
   assert.equal(parseBrowserCommand({ action: 'wait', text: '' }), null);
-  assert.deepEqual(parseBrowserCommand({ action: 'screenshot', annotate: 'true' }), { action: 'screenshot', fullPage: false, annotate: true });
+  assert.deepEqual(parseBrowserCommand({ action: 'screenshot', annotate: 'true' }), {
+    action: 'screenshot',
+    fullPage: false,
+    annotate: true,
+  });
   assert.equal(parseBrowserCommand({ action: 'eval' }), null);
   assert.equal(parseBrowserCommand(null), null);
 });
@@ -171,10 +222,19 @@ test('parseCliArgs', () => {
   assert.deepEqual(parseCliArgs(['scroll', 'up', '200']), { action: 'scroll', dx: 0, dy: -200, ref: null });
   assert.deepEqual(parseCliArgs(['scroll', '@e4', 'right']), { action: 'scroll', dx: 600, dy: 0, ref: 'e4' });
   assert.equal(parseCliArgs(['scroll', 'sideways']), null);
-  assert.deepEqual(parseCliArgs(['wait', 'Saved', 'ok', '--timeout=1000']), { action: 'wait', text: 'Saved ok', ref: null, timeoutMs: 1000 });
+  assert.deepEqual(parseCliArgs(['wait', 'Saved', 'ok', '--timeout=1000']), {
+    action: 'wait',
+    text: 'Saved ok',
+    ref: null,
+    timeoutMs: 1000,
+  });
   assert.deepEqual(parseCliArgs(['wait', '@e3']), { action: 'wait', text: null, ref: 'e3', timeoutMs: 5000 });
   assert.equal(parseCliArgs(['wait']), null);
-  assert.deepEqual(parseCliArgs(['screenshot', '--full', '--annotate']), { action: 'screenshot', fullPage: true, annotate: true });
+  assert.deepEqual(parseCliArgs(['screenshot', '--full', '--annotate']), {
+    action: 'screenshot',
+    fullPage: true,
+    annotate: true,
+  });
   assert.deepEqual(parseCliArgs(['console', '--clear']), { action: 'console', clear: true });
   assert.deepEqual(parseCliArgs(['back']), { action: 'back' });
   assert.equal(parseCliArgs([]), null);

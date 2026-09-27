@@ -8,7 +8,14 @@ const base = { kind: 'composer', fromLabel: 'you', targets: ['claude'], preview:
 test('accepts a well-formed input and copies targets', () => {
   const targets = ['claude', 'codex'];
   const out = parseRouteInput({ ...base, kind: 'forward', targets });
-  assert.deepEqual(out, { kind: 'forward', fromLabel: 'you', targets: ['claude', 'codex'], preview: 'hi', bytes: 2, viaFile: false });
+  assert.deepEqual(out, {
+    kind: 'forward',
+    fromLabel: 'you',
+    targets: ['claude', 'codex'],
+    preview: 'hi',
+    bytes: 2,
+    viaFile: false,
+  });
   assert.notEqual(out!.targets, targets);
 });
 

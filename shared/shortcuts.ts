@@ -49,11 +49,26 @@ export interface KeyLike {
 }
 
 export const SHORTCUTS: readonly Shortcut[] = [
-  { action: 'newTerminal', label: 'New terminal', group: 'Terminals', combos: [{ code: 'KeyT', mod: true, shift: true }] },
-  { action: 'closeTerminal', label: 'Close active terminal', group: 'Terminals', combos: [{ code: 'KeyW', mod: true, shift: true }] },
+  {
+    action: 'newTerminal',
+    label: 'New terminal',
+    group: 'Terminals',
+    combos: [{ code: 'KeyT', mod: true, shift: true }],
+  },
+  {
+    action: 'closeTerminal',
+    label: 'Close active terminal',
+    group: 'Terminals',
+    combos: [{ code: 'KeyW', mod: true, shift: true }],
+  },
   { action: 'nextTab', label: 'Next tab', group: 'Terminals', combos: [{ code: 'PageDown', mod: true }] },
   { action: 'prevTab', label: 'Previous tab', group: 'Terminals', combos: [{ code: 'PageUp', mod: true }] },
-  { action: 'focusComposer', label: 'Focus composer', group: 'Terminals', combos: [{ code: 'KeyM', mod: true, shift: true }] },
+  {
+    action: 'focusComposer',
+    label: 'Focus composer',
+    group: 'Terminals',
+    combos: [{ code: 'KeyM', mod: true, shift: true }],
+  },
   { action: 'layout1', label: 'Single pane', group: 'Layout', combos: [{ code: 'Digit1', alt: true, shift: true }] },
   { action: 'layout2', label: 'Two panes', group: 'Layout', combos: [{ code: 'Digit2', alt: true, shift: true }] },
   { action: 'layout4', label: 'Four panes', group: 'Layout', combos: [{ code: 'Digit4', alt: true, shift: true }] },
@@ -61,10 +76,30 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { action: 'focusPane2', label: 'Focus pane 2', group: 'Layout', combos: [{ code: 'Digit2', alt: true }] },
   { action: 'focusPane3', label: 'Focus pane 3', group: 'Layout', combos: [{ code: 'Digit3', alt: true }] },
   { action: 'focusPane4', label: 'Focus pane 4', group: 'Layout', combos: [{ code: 'Digit4', alt: true }] },
-  { action: 'toggleGit', label: 'Toggle git panel', group: 'Panels', combos: [{ code: 'KeyG', mod: true, shift: true }] },
-  { action: 'toggleLog', label: 'Toggle routing log', group: 'Panels', combos: [{ code: 'KeyL', mod: true, shift: true }] },
-  { action: 'toggleBrowser', label: 'Toggle browser pane', group: 'Panels', combos: [{ code: 'KeyB', mod: true, shift: true }] },
-  { action: 'help', label: 'Keyboard shortcuts', group: 'Panels', combos: [{ code: 'F1' }, { code: 'Slash', mod: true, shift: true }] },
+  {
+    action: 'toggleGit',
+    label: 'Toggle git panel',
+    group: 'Panels',
+    combos: [{ code: 'KeyG', mod: true, shift: true }],
+  },
+  {
+    action: 'toggleLog',
+    label: 'Toggle routing log',
+    group: 'Panels',
+    combos: [{ code: 'KeyL', mod: true, shift: true }],
+  },
+  {
+    action: 'toggleBrowser',
+    label: 'Toggle browser pane',
+    group: 'Panels',
+    combos: [{ code: 'KeyB', mod: true, shift: true }],
+  },
+  {
+    action: 'help',
+    label: 'Keyboard shortcuts',
+    group: 'Panels',
+    combos: [{ code: 'F1' }, { code: 'Slash', mod: true, shift: true }],
+  },
 ];
 
 export const SHORTCUT_GROUPS: readonly ShortcutGroup[] = ['Terminals', 'Layout', 'Panels'];
@@ -75,11 +110,7 @@ export function matchCombo(e: KeyLike, combo: Combo, mac = false): boolean {
   // The non-mod platform modifier (Cmd on Windows, Ctrl on macOS) must be up.
   const other = mac ? e.ctrlKey : e.metaKey;
   return (
-    e.code === combo.code &&
-    mod === !!combo.mod &&
-    e.shiftKey === !!combo.shift &&
-    e.altKey === !!combo.alt &&
-    !other
+    e.code === combo.code && mod === !!combo.mod && e.shiftKey === !!combo.shift && e.altKey === !!combo.alt && !other
   );
 }
 

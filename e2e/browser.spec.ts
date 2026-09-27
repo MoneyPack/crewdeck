@@ -111,14 +111,16 @@ test('browser pane is driven over the authenticated bridge', async () => {
       expect((await request(bridge, 'GET', '/state', { origin: 'https://evil.example' })).status).toBe(403);
       expect((await request(bridge, 'GET', '/nope')).status).toBe(404);
       expect((await request(bridge, 'GET', '/run')).status).toBe(405);
-      expect((await request(bridge, 'POST', '/run', { body: { command: { action: 'bogus' }, from: 'e2e' } })).status).toBe(400);
+      expect(
+        (await request(bridge, 'POST', '/run', { body: { command: { action: 'bogus' }, from: 'e2e' } })).status,
+      ).toBe(400);
     });
 
     const run = async (command: Record<string, unknown>) =>
       test.step(`run ${String(command.action)}`, async () => {
         const reply = await request(bridge, 'POST', '/run', { body: { command, from: 'e2e' } });
         console.log(`[e2e] ${String(command.action)} ->`, JSON.stringify(reply.body).slice(0, 600));
-      if (reply.body?.error) console.log('[e2e] error', String(reply.body.error));
+        if (reply.body?.error) console.log('[e2e] error', String(reply.body.error));
         expect(reply.status).toBe(200);
         expect(reply.body.ok).toBe(true);
         return reply.body;

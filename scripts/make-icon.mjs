@@ -128,14 +128,29 @@ function downsample(src, size) {
   const dst = new Uint8ClampedArray(h * h * 4);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < h; x++) {
-      let r = 0, g = 0, b = 0, a = 0;
-      for (const [ox, oy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+      let r = 0,
+        g = 0,
+        b = 0,
+        a = 0;
+      for (const [ox, oy] of [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ]) {
         const i = ((2 * y + oy) * size + 2 * x + ox) * 4;
         const al = src[i + 3];
-        r += src[i] * al; g += src[i + 1] * al; b += src[i + 2] * al; a += al;
+        r += src[i] * al;
+        g += src[i + 1] * al;
+        b += src[i + 2] * al;
+        a += al;
       }
       const o = (y * h + x) * 4;
-      if (a) { dst[o] = r / a; dst[o + 1] = g / a; dst[o + 2] = b / a; }
+      if (a) {
+        dst[o] = r / a;
+        dst[o + 1] = g / a;
+        dst[o + 2] = b / a;
+      }
       dst[o + 3] = a / 4;
     }
   return dst;

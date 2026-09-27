@@ -12,7 +12,14 @@ interface Props {
   onUrlChange?: (url: string | null) => void;
 }
 
-const EMPTY_STATE: BrowserState = { url: '', title: '', loading: false, canGoBack: false, canGoForward: false, visible: false };
+const EMPTY_STATE: BrowserState = {
+  url: '',
+  title: '',
+  loading: false,
+  canGoBack: false,
+  canGoForward: false,
+  visible: false,
+};
 const MAX_HISTORY = 50;
 
 function isBlank(url: string): boolean {
@@ -49,7 +56,10 @@ export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = n
   // Live state from the main-process engine.
   useEffect(() => {
     let alive = true;
-    void api.state().then((s) => alive && setState(s)).catch(() => undefined);
+    void api
+      .state()
+      .then((s) => alive && setState(s))
+      .catch(() => undefined);
     const off = api.onState((s) => setState(s));
     return () => {
       alive = false;
@@ -108,7 +118,12 @@ export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = n
         const r = el.getBoundingClientRect();
         const x = Math.round(r.left);
         const y = Math.round(r.top);
-        api.setBounds({ x, y, width: Math.max(0, Math.round(r.right) - x), height: Math.max(0, Math.round(r.bottom) - y) });
+        api.setBounds({
+          x,
+          y,
+          width: Math.max(0, Math.round(r.right) - x),
+          height: Math.max(0, Math.round(r.bottom) - y),
+        });
       });
     };
     push();
@@ -182,17 +197,39 @@ export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = n
   }
 
   return (
-    <aside className={state.loading ? 'browser-pane loading' : 'browser-pane'} aria-label="Browser" aria-busy={state.loading || busy}>
+    <aside
+      className={state.loading ? 'browser-pane loading' : 'browser-pane'}
+      aria-label="Browser"
+      aria-busy={state.loading || busy}
+    >
       <header className="browser-header">
         <span className="browser-title">Browser</span>
         <div className="browser-nav" role="group" aria-label="Navigation">
-          <button type="button" disabled={!state.canGoBack} onClick={() => void run({ action: 'back' })} title="Back" aria-label="Back">
+          <button
+            type="button"
+            disabled={!state.canGoBack}
+            onClick={() => void run({ action: 'back' })}
+            title="Back"
+            aria-label="Back"
+          >
             <i className="ri-arrow-left-line" aria-hidden />
           </button>
-          <button type="button" disabled={!state.canGoForward} onClick={() => void run({ action: 'forward' })} title="Forward" aria-label="Forward">
+          <button
+            type="button"
+            disabled={!state.canGoForward}
+            onClick={() => void run({ action: 'forward' })}
+            title="Forward"
+            aria-label="Forward"
+          >
             <i className="ri-arrow-right-line" aria-hidden />
           </button>
-          <button type="button" disabled={blank} onClick={() => void run({ action: 'reload' })} title="Reload" aria-label="Reload">
+          <button
+            type="button"
+            disabled={blank}
+            onClick={() => void run({ action: 'reload' })}
+            title="Reload"
+            aria-label="Reload"
+          >
             <i className="ri-refresh-line" aria-hidden />
           </button>
         </div>
@@ -219,13 +256,31 @@ export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = n
             }}
           />
         </form>
-        <button type="button" className="browser-action" disabled={busy || blank} onClick={() => void run({ action: 'snapshot', interactiveOnly: true })} title="Accessibility snapshot (interactive refs)">
+        <button
+          type="button"
+          className="browser-action"
+          disabled={busy || blank}
+          onClick={() => void run({ action: 'snapshot', interactiveOnly: true })}
+          title="Accessibility snapshot (interactive refs)"
+        >
           <i className="ri-focus-3-line" aria-hidden /> Snap
         </button>
-        <button type="button" className="browser-action" disabled={busy || blank} onClick={() => void run({ action: 'screenshot', fullPage: false, annotate: true })} title="Annotated screenshot">
+        <button
+          type="button"
+          className="browser-action"
+          disabled={busy || blank}
+          onClick={() => void run({ action: 'screenshot', fullPage: false, annotate: true })}
+          title="Annotated screenshot"
+        >
           <i className="ri-camera-line" aria-hidden /> Shot
         </button>
-        <button type="button" className="browser-close" onClick={onClose} title="Close browser" aria-label="Close browser">
+        <button
+          type="button"
+          className="browser-close"
+          onClick={onClose}
+          title="Close browser"
+          aria-label="Close browser"
+        >
           <i className="ri-close-line" aria-hidden />
         </button>
       </header>
@@ -243,7 +298,9 @@ export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = n
         {blank && (
           <div className="browser-empty">
             <strong>No page</strong>
-            <span>Type a URL above, or let an agent drive it with <code>crewdeck-browser open &lt;url&gt;</code>.</span>
+            <span>
+              Type a URL above, or let an agent drive it with <code>crewdeck-browser open &lt;url&gt;</code>.
+            </span>
           </div>
         )}
       </div>
@@ -255,7 +312,11 @@ export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = n
           {(state.loading || busy) && <span className="browser-busy">{state.loading ? 'loading' : 'running'}</span>}
         </div>
         {output && (
-          <pre className={output.ok ? 'browser-output' : 'browser-output error'} tabIndex={0} aria-label="Command output">
+          <pre
+            className={output.ok ? 'browser-output' : 'browser-output error'}
+            tabIndex={0}
+            aria-label="Command output"
+          >
             {output.text}
           </pre>
         )}

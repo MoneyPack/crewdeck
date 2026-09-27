@@ -160,8 +160,13 @@ export function buildSnapshot(nodes: readonly AXNode[], opts: SnapshotOptions = 
     const role = clean(node.role?.value, 40).toLowerCase();
     const name = clean(node.name?.value);
     const interactive = !node.ignored && INTERACTIVE_ROLES.has(role);
-    const contextual = !node.ignored && !opts.interactiveOnly && CONTEXT_ROLES.has(role) && (name !== '' || role === 'main' || role === 'dialog');
-    const textLeaf = !node.ignored && !opts.interactiveOnly && role === 'statictext' && name !== '' && !parentIsNamed(node);
+    const contextual =
+      !node.ignored &&
+      !opts.interactiveOnly &&
+      CONTEXT_ROLES.has(role) &&
+      (name !== '' || role === 'main' || role === 'dialog');
+    const textLeaf =
+      !node.ignored && !opts.interactiveOnly && role === 'statictext' && name !== '' && !parentIsNamed(node);
     let childDepth = depth;
     if (interactive || contextual || textLeaf) {
       if (lines.length >= maxLines) {
@@ -255,7 +260,8 @@ export function diffSnapshots(before: string, after: string): SnapshotDiff {
     const dp = new Uint32Array((n + 1) * w);
     for (let i = n - 1; i >= 0; i--) {
       for (let j = m - 1; j >= 0; j--) {
-        dp[i * w + j] = ka[i] === kb[j] ? dp[(i + 1) * w + j + 1]! + 1 : Math.max(dp[(i + 1) * w + j]!, dp[i * w + j + 1]!);
+        dp[i * w + j] =
+          ka[i] === kb[j] ? dp[(i + 1) * w + j + 1]! + 1 : Math.max(dp[(i + 1) * w + j]!, dp[i * w + j + 1]!);
       }
     }
     let i = 0;
@@ -517,7 +523,8 @@ const num = (v: unknown, dflt: number, lo: number, hi: number): number => {
   return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.round(n))) : dflt;
 };
 const bool = (v: unknown): boolean => v === true || v === 'true' || v === 1 || v === '1';
-const str = (v: unknown, max = MAX_BROWSER_TEXT): string | null => (typeof v === 'string' && v.length <= max ? v : null);
+const str = (v: unknown, max = MAX_BROWSER_TEXT): string | null =>
+  typeof v === 'string' && v.length <= max ? v : null;
 
 /** Validate untrusted input into a command. Returns null when malformed. */
 export function parseBrowserCommand(raw: unknown): BrowserCommand | null {
@@ -556,7 +563,12 @@ export function parseBrowserCommand(raw: unknown): BrowserCommand | null {
     case 'scroll': {
       const ref = o.ref === undefined || o.ref === null ? null : parseRef(o.ref);
       if (o.ref !== undefined && o.ref !== null && !ref) return null;
-      return { action: 'scroll', dx: num(o.dx, 0, -100_000, 100_000), dy: num(o.dy, ref ? 0 : 600, -100_000, 100_000), ref };
+      return {
+        action: 'scroll',
+        dx: num(o.dx, 0, -100_000, 100_000),
+        dy: num(o.dy, ref ? 0 : 600, -100_000, 100_000),
+        ref,
+      };
     }
     case 'wait': {
       const text = o.text === undefined || o.text === null ? null : str(o.text, 500);
@@ -585,7 +597,10 @@ export function parseCliArgs(argv: readonly string[]): BrowserCommand | null {
     case 'navigate':
       return parseBrowserCommand({ action: 'open', url: pos[0] });
     case 'snapshot':
-      return parseBrowserCommand({ action: 'snapshot', interactiveOnly: flags.has('--interactive') || flags.has('-i') || rest.includes('-i') });
+      return parseBrowserCommand({
+        action: 'snapshot',
+        interactiveOnly: flags.has('--interactive') || flags.has('-i') || rest.includes('-i'),
+      });
     case 'click':
     case 'hover':
       return parseBrowserCommand({ action, ref: pos[0] });
@@ -616,7 +631,11 @@ export function parseCliArgs(argv: readonly string[]): BrowserCommand | null {
       });
     }
     case 'screenshot':
-      return parseBrowserCommand({ action: 'screenshot', fullPage: flags.has('--full'), annotate: flags.has('--annotate') });
+      return parseBrowserCommand({
+        action: 'screenshot',
+        fullPage: flags.has('--full'),
+        annotate: flags.has('--annotate'),
+      });
     case 'console':
       return parseBrowserCommand({ action: 'console', clear: flags.has('--clear') });
     case 'back':

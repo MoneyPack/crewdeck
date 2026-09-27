@@ -46,7 +46,14 @@ export function ShortcutHelp({ mac, onClose }: ShortcutHelpProps) {
           <i className="ri-keyboard-box-line" aria-hidden="true" />
           <h2 id="shortcut-title">Keyboard</h2>
           <span className="spacer" />
-          <button ref={closeRef} type="button" className="icon-btn" title="Close (Esc)" aria-label="Close" onClick={onClose}>
+          <button
+            ref={closeRef}
+            type="button"
+            className="icon-btn"
+            title="Close (Esc)"
+            aria-label="Close"
+            onClick={onClose}
+          >
             <i className="ri-close-line" aria-hidden="true" />
           </button>
         </header>

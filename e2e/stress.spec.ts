@@ -69,8 +69,9 @@ test('stress: 4 panes, 3 flooding, interactive echo latency', async () => {
     // CREWDECK_STRESS_RENDERER=dom forces the DOM renderer for A/B comparison (read at pane mount).
     const renderer = process.env.CREWDECK_STRESS_RENDERER === 'dom' ? 'dom' : 'webgl';
     await page.evaluate((r) => {
-      const ls = (globalThis as unknown as { localStorage: { setItem(k: string, v: string): void; removeItem(k: string): void } })
-        .localStorage;
+      const ls = (
+        globalThis as unknown as { localStorage: { setItem(k: string, v: string): void; removeItem(k: string): void } }
+      ).localStorage;
       if (r === 'dom') ls.setItem('crewdeck.renderer', 'dom');
       else ls.removeItem('crewdeck.renderer');
     }, renderer);
@@ -84,7 +85,8 @@ test('stress: 4 panes, 3 flooding, interactive echo latency', async () => {
     }
     const panes = page.locator('.pane:not(.empty-slot)');
     // Wait for every shell prompt before driving input.
-    for (let i = 0; i < PANES; i++) await expect.poll(() => paneText(panes.nth(i)), { timeout: 30_000 }).toContain('PS ');
+    for (let i = 0; i < PANES; i++)
+      await expect.poll(() => paneText(panes.nth(i)), { timeout: 30_000 }).toContain('PS ');
 
     const memBefore = await memoryMb(app);
 

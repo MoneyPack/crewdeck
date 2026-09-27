@@ -121,7 +121,11 @@ export function registerGitIpc(): void {
     }
   });
 
-  const action = async (projectId: unknown, rel: unknown, fn: (root: string, rel: string) => Promise<void>): Promise<GitActionResult> => {
+  const action = async (
+    projectId: unknown,
+    rel: unknown,
+    fn: (root: string, rel: string) => Promise<void>,
+  ): Promise<GitActionResult> => {
     const dir = projectPath(projectId);
     if (!dir) return { ok: false, error: 'unknown project' };
     if (!isRelPath(rel)) return { ok: false, error: 'invalid path' };

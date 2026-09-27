@@ -34,10 +34,8 @@ server.registerTool(
   ({ url }) => exec({ action: 'open', url }),
 );
 for (const action of ['back', 'forward', 'reload', 'status'] as const) {
-  server.registerTool(
-    `browser_${action}`,
-    { description: `Browser ${action}.`, inputSchema: {} },
-    () => exec({ action }),
+  server.registerTool(`browser_${action}`, { description: `Browser ${action}.`, inputSchema: {} }, () =>
+    exec({ action }),
   );
 }
 server.registerTool(

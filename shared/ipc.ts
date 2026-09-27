@@ -202,14 +202,7 @@ export interface GitActionResult {
 export type GitDiffKind = 'staged' | 'unstaged' | 'untracked';
 
 export type GitFileState =
-  | 'untracked'
-  | 'conflicted'
-  | 'added'
-  | 'deleted'
-  | 'renamed'
-  | 'copied'
-  | 'typechange'
-  | 'modified';
+  'untracked' | 'conflicted' | 'added' | 'deleted' | 'renamed' | 'copied' | 'typechange' | 'modified';
 
 export interface GitFileStatus {
   /** Repo-relative path, forward slashes. */

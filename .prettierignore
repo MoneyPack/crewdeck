@@ -1,0 +1,10 @@
+dist
+dist-electron
+release
+out
+node_modules
+test-results
+playwright-report
+package-lock.json
+*.sql
+src/icons/icons.css

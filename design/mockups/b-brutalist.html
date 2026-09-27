@@ -1,429 +1,967 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>crewdeck / B / industrial terminal</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
-<style>
-  :root {
-    --ink: #0c0c0a;
-    --ink-2: #141412;
-    --ink-3: #1d1d1a;
-    --paper: #e8e4da;
-    --paper-dim: #9c978b;
-    --paper-mute: #5d5a52;
-    --signal: #ff4d00;
-    --ok: #c6f432;
-    --rule: #2c2b27;
-    --claude: #ff8a4c;
-    --codex: #3fe0ff;
-    --gemini: #b69cff;
-    --opencode: #c6f432;
-    --mono: "JetBrains Mono", ui-monospace, monospace;
-    --wide: "Archivo", system-ui, sans-serif;
-    --snap: cubic-bezier(0.7, 0, 0.2, 1);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
-  body {
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.01em;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-  /* blueprint grid + scanlines */
-  body::before {
-    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background-image:
-      linear-gradient(var(--ink-3) 1px, transparent 1px),
-      linear-gradient(90deg, var(--ink-3) 1px, transparent 1px);
-    background-size: 24px 24px;
-    opacity: 0.55;
-  }
-  body::after {
-    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
-    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 3px);
-    mix-blend-mode: multiply;
-  }
-  .app {
-    position: relative; z-index: 1; height: 100vh;
-    display: grid;
-    grid-template-rows: 44px 38px 1fr 150px 26px;
-    grid-template-columns: 1fr 360px;
-    grid-template-areas:
-      "top top"
-      "tabs tabs"
-      "panes side"
-      "composer side"
-      "status status";
-  }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>crewdeck / B / industrial terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #0c0c0a;
+        --ink-2: #141412;
+        --ink-3: #1d1d1a;
+        --paper: #e8e4da;
+        --paper-dim: #9c978b;
+        --paper-mute: #5d5a52;
+        --signal: #ff4d00;
+        --ok: #c6f432;
+        --rule: #2c2b27;
+        --claude: #ff8a4c;
+        --codex: #3fe0ff;
+        --gemini: #b69cff;
+        --opencode: #c6f432;
+        --mono: 'JetBrains Mono', ui-monospace, monospace;
+        --wide: 'Archivo', system-ui, sans-serif;
+        --snap: cubic-bezier(0.7, 0, 0.2, 1);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--ink);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.01em;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* blueprint grid + scanlines */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image:
+          linear-gradient(var(--ink-3) 1px, transparent 1px), linear-gradient(90deg, var(--ink-3) 1px, transparent 1px);
+        background-size: 24px 24px;
+        opacity: 0.55;
+      }
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 50;
+        background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
+        mix-blend-mode: multiply;
+      }
+      .app {
+        position: relative;
+        z-index: 1;
+        height: 100vh;
+        display: grid;
+        grid-template-rows: 44px 38px 1fr 150px 26px;
+        grid-template-columns: 1fr 360px;
+        grid-template-areas:
+          'top top'
+          'tabs tabs'
+          'panes side'
+          'composer side'
+          'status status';
+      }
 
-  /* ---------- top bar ---------- */
-  .top {
-    grid-area: top; display: flex; align-items: stretch;
-    border-bottom: 2px solid var(--paper);
-    background: var(--ink);
-  }
-  .brand {
-    display: flex; align-items: center; gap: 10px; padding: 0 18px;
-    background: var(--paper); color: var(--ink);
-    font-family: var(--wide); font-weight: 900; font-stretch: 125%;
-    font-size: 18px; letter-spacing: -0.02em; text-transform: uppercase;
-  }
-  .brand .sq { width: 12px; height: 12px; background: var(--signal); }
-  .top .cell {
-    display: flex; align-items: center; gap: 8px; padding: 0 16px;
-    border-right: 2px solid var(--rule); color: var(--paper-dim);
-    text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.12em;
-  }
-  .top .cell b { color: var(--paper); font-weight: 500; }
-  .cmd {
-    flex: 1; display: flex; align-items: center; gap: 10px; padding: 0 16px;
-    color: var(--paper-mute); border-right: 2px solid var(--rule);
-  }
-  .cmd .caret { width: 8px; height: 14px; background: var(--signal); animation: blink 1s steps(1) infinite; }
-  .cmd kbd {
-    margin-left: auto; font-family: var(--mono); font-size: 10px;
-    border: 1.5px solid var(--paper-mute); padding: 1px 6px; color: var(--paper-dim);
-  }
-  @keyframes blink { 50% { opacity: 0; } }
-  .winctl { display: flex; }
-  .winctl span {
-    width: 46px; display: grid; place-items: center; color: var(--paper-dim);
-    border-left: 2px solid var(--rule); font-size: 14px;
-  }
-  .winctl span:last-child:hover { background: var(--signal); color: var(--ink); }
+      /* ---------- top bar ---------- */
+      .top {
+        grid-area: top;
+        display: flex;
+        align-items: stretch;
+        border-bottom: 2px solid var(--paper);
+        background: var(--ink);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 18px;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--wide);
+        font-weight: 900;
+        font-stretch: 125%;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+      }
+      .brand .sq {
+        width: 12px;
+        height: 12px;
+        background: var(--signal);
+      }
+      .top .cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 16px;
+        border-right: 2px solid var(--rule);
+        color: var(--paper-dim);
+        text-transform: uppercase;
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+      }
+      .top .cell b {
+        color: var(--paper);
+        font-weight: 500;
+      }
+      .cmd {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 16px;
+        color: var(--paper-mute);
+        border-right: 2px solid var(--rule);
+      }
+      .cmd .caret {
+        width: 8px;
+        height: 14px;
+        background: var(--signal);
+        animation: blink 1s steps(1) infinite;
+      }
+      .cmd kbd {
+        margin-left: auto;
+        font-family: var(--mono);
+        font-size: 10px;
+        border: 1.5px solid var(--paper-mute);
+        padding: 1px 6px;
+        color: var(--paper-dim);
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      .winctl {
+        display: flex;
+      }
+      .winctl span {
+        width: 46px;
+        display: grid;
+        place-items: center;
+        color: var(--paper-dim);
+        border-left: 2px solid var(--rule);
+        font-size: 14px;
+      }
+      .winctl span:last-child:hover {
+        background: var(--signal);
+        color: var(--ink);
+      }
 
-  /* ---------- tabs ---------- */
-  .tabs {
-    grid-area: tabs; display: flex; align-items: stretch;
-    border-bottom: 2px solid var(--rule); background: var(--ink-2);
-  }
-  .tab {
-    position: relative; display: flex; align-items: center; gap: 10px;
-    padding: 0 16px 0 14px; border-right: 2px solid var(--rule);
-    color: var(--paper-dim); cursor: default; min-width: 210px;
-    transition: background 180ms var(--snap), color 180ms var(--snap);
-  }
-  .tab:hover { background: var(--ink-3); color: var(--paper); }
-  .tab .idx { font-family: var(--wide); font-weight: 800; font-stretch: 62%; font-size: 20px; color: var(--paper-mute); }
-  .tab .name { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-  .tab .br {
-    font-size: 10px; color: var(--ink); background: var(--c); padding: 1px 5px; font-weight: 700;
-  }
-  .tab.active { background: var(--ink); color: var(--paper); }
-  .tab.active::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--c); }
-  .tab.active .idx { color: var(--c); }
-  .tab .x { margin-left: auto; color: var(--paper-mute); }
-  .tabs .add {
-    width: 44px; display: grid; place-items: center; color: var(--paper-dim); font-size: 16px;
-    border-right: 2px solid var(--rule);
-  }
-  .tabs .fill {
-    flex: 1;
-    background: repeating-linear-gradient(-45deg, transparent 0 8px, var(--ink-3) 8px 10px);
-  }
+      /* ---------- tabs ---------- */
+      .tabs {
+        grid-area: tabs;
+        display: flex;
+        align-items: stretch;
+        border-bottom: 2px solid var(--rule);
+        background: var(--ink-2);
+      }
+      .tab {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 16px 0 14px;
+        border-right: 2px solid var(--rule);
+        color: var(--paper-dim);
+        cursor: default;
+        min-width: 210px;
+        transition:
+          background 180ms var(--snap),
+          color 180ms var(--snap);
+      }
+      .tab:hover {
+        background: var(--ink-3);
+        color: var(--paper);
+      }
+      .tab .idx {
+        font-family: var(--wide);
+        font-weight: 800;
+        font-stretch: 62%;
+        font-size: 20px;
+        color: var(--paper-mute);
+      }
+      .tab .name {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 500;
+      }
+      .tab .br {
+        font-size: 10px;
+        color: var(--ink);
+        background: var(--c);
+        padding: 1px 5px;
+        font-weight: 700;
+      }
+      .tab.active {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .tab.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 3px;
+        background: var(--c);
+      }
+      .tab.active .idx {
+        color: var(--c);
+      }
+      .tab .x {
+        margin-left: auto;
+        color: var(--paper-mute);
+      }
+      .tabs .add {
+        width: 44px;
+        display: grid;
+        place-items: center;
+        color: var(--paper-dim);
+        font-size: 16px;
+        border-right: 2px solid var(--rule);
+      }
+      .tabs .fill {
+        flex: 1;
+        background: repeating-linear-gradient(-45deg, transparent 0 8px, var(--ink-3) 8px 10px);
+      }
 
-  /* ---------- panes ---------- */
-  .panes {
-    grid-area: panes; display: grid; min-height: 0;
-    grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr 1fr;
-    gap: 0; border-right: 2px solid var(--paper);
-  }
-  .pane {
-    position: relative; display: flex; flex-direction: column; min-height: 0;
-    background: rgba(12,12,10,0.86);
-    border-right: 2px solid var(--rule); border-bottom: 2px solid var(--rule);
-  }
-  .pane.big { grid-row: span 2; }
-  .pane:nth-child(2), .pane:nth-child(3) { border-right: 0; }
-  .pane:nth-child(3) { border-bottom: 0; }
-  .pane.big { border-bottom: 0; }
-  .pane-head {
-    display: flex; align-items: stretch; height: 28px;
-    border-bottom: 2px solid var(--rule); font-size: 10.5px;
-    text-transform: uppercase; letter-spacing: 0.1em;
-  }
-  .pane-head .who {
-    display: flex; align-items: center; gap: 8px; padding: 0 10px;
-    background: var(--c); color: var(--ink); font-weight: 700;
-  }
-  .pane-head .meta { display: flex; align-items: center; gap: 14px; padding: 0 12px; color: var(--paper-mute); }
-  .pane-head .meta b { color: var(--paper-dim); font-weight: 500; }
-  .pane-head .state {
-    margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 0 12px; color: var(--paper-dim);
-  }
-  .led { width: 7px; height: 7px; background: var(--c); box-shadow: 0 0 10px var(--c); animation: led 1.4s steps(2) infinite; }
-  .led.idle { animation: none; background: var(--paper-mute); box-shadow: none; }
-  @keyframes led { 50% { opacity: 0.25; } }
-  .term {
-    flex: 1; overflow: hidden; padding: 12px 14px; line-height: 1.62; font-size: 12px;
-    white-space: pre; color: #cfcabe;
-  }
-  .term .p { color: var(--c); font-weight: 700; }
-  .term .d { color: var(--paper-mute); }
-  .term .g { color: var(--ok); }
-  .term .r { color: var(--signal); }
-  .term .hl { background: var(--paper); color: var(--ink); padding: 0 3px; }
-  .term .cur { display: inline-block; width: 8px; height: 14px; background: var(--c); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
-  .bar { display: inline-block; height: 8px; background: var(--c); vertical-align: 0; }
-  .crosshair { position: absolute; width: 11px; height: 11px; pointer-events: none; }
-  .crosshair::before, .crosshair::after { content: ""; position: absolute; background: var(--paper-mute); }
-  .crosshair::before { left: 5px; top: 0; width: 1px; height: 11px; }
-  .crosshair::after { top: 5px; left: 0; height: 1px; width: 11px; }
-  .crosshair.br { right: 6px; bottom: 6px; }
+      /* ---------- panes ---------- */
+      .panes {
+        grid-area: panes;
+        display: grid;
+        min-height: 0;
+        grid-template-columns: 1.25fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 0;
+        border-right: 2px solid var(--paper);
+      }
+      .pane {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: rgba(12, 12, 10, 0.86);
+        border-right: 2px solid var(--rule);
+        border-bottom: 2px solid var(--rule);
+      }
+      .pane.big {
+        grid-row: span 2;
+      }
+      .pane:nth-child(2),
+      .pane:nth-child(3) {
+        border-right: 0;
+      }
+      .pane:nth-child(3) {
+        border-bottom: 0;
+      }
+      .pane.big {
+        border-bottom: 0;
+      }
+      .pane-head {
+        display: flex;
+        align-items: stretch;
+        height: 28px;
+        border-bottom: 2px solid var(--rule);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .pane-head .who {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 10px;
+        background: var(--c);
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .pane-head .meta {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 0 12px;
+        color: var(--paper-mute);
+      }
+      .pane-head .meta b {
+        color: var(--paper-dim);
+        font-weight: 500;
+      }
+      .pane-head .state {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 12px;
+        color: var(--paper-dim);
+      }
+      .led {
+        width: 7px;
+        height: 7px;
+        background: var(--c);
+        box-shadow: 0 0 10px var(--c);
+        animation: led 1.4s steps(2) infinite;
+      }
+      .led.idle {
+        animation: none;
+        background: var(--paper-mute);
+        box-shadow: none;
+      }
+      @keyframes led {
+        50% {
+          opacity: 0.25;
+        }
+      }
+      .term {
+        flex: 1;
+        overflow: hidden;
+        padding: 12px 14px;
+        line-height: 1.62;
+        font-size: 12px;
+        white-space: pre;
+        color: #cfcabe;
+      }
+      .term .p {
+        color: var(--c);
+        font-weight: 700;
+      }
+      .term .d {
+        color: var(--paper-mute);
+      }
+      .term .g {
+        color: var(--ok);
+      }
+      .term .r {
+        color: var(--signal);
+      }
+      .term .hl {
+        background: var(--paper);
+        color: var(--ink);
+        padding: 0 3px;
+      }
+      .term .cur {
+        display: inline-block;
+        width: 8px;
+        height: 14px;
+        background: var(--c);
+        vertical-align: -2px;
+        animation: blink 1s steps(1) infinite;
+      }
+      .bar {
+        display: inline-block;
+        height: 8px;
+        background: var(--c);
+        vertical-align: 0;
+      }
+      .crosshair {
+        position: absolute;
+        width: 11px;
+        height: 11px;
+        pointer-events: none;
+      }
+      .crosshair::before,
+      .crosshair::after {
+        content: '';
+        position: absolute;
+        background: var(--paper-mute);
+      }
+      .crosshair::before {
+        left: 5px;
+        top: 0;
+        width: 1px;
+        height: 11px;
+      }
+      .crosshair::after {
+        top: 5px;
+        left: 0;
+        height: 1px;
+        width: 11px;
+      }
+      .crosshair.br {
+        right: 6px;
+        bottom: 6px;
+      }
 
-  /* ---------- composer ---------- */
-  .composer {
-    grid-area: composer; display: grid; grid-template-columns: 1fr 180px;
-    border-top: 2px solid var(--paper); border-right: 2px solid var(--paper);
-    background: var(--ink);
-  }
-  .comp-main { display: flex; flex-direction: column; padding: 12px 16px; gap: 10px; min-width: 0; }
-  .comp-label {
-    display: flex; align-items: center; gap: 12px; font-size: 10px; letter-spacing: 0.16em;
-    text-transform: uppercase; color: var(--paper-mute);
-  }
-  .comp-label .rule { flex: 1; height: 2px; background: var(--rule); }
-  .comp-input { flex: 1; font-size: 14px; line-height: 1.55; color: var(--paper); }
-  .comp-input .m {
-    background: var(--c); color: var(--ink); font-weight: 700; padding: 1px 6px; margin-right: 2px;
-  }
-  .comp-input .cur { display: inline-block; width: 9px; height: 17px; background: var(--signal); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
-  .comp-opts { display: flex; gap: 0; }
-  .opt {
-    display: flex; align-items: center; gap: 7px; padding: 5px 10px;
-    border: 2px solid var(--rule); margin-right: -2px; font-size: 10.5px;
-    text-transform: uppercase; letter-spacing: 0.08em; color: var(--paper-dim);
-    transition: all 160ms var(--snap);
-  }
-  .opt .box { width: 10px; height: 10px; border: 1.5px solid var(--paper-dim); }
-  .opt.on { border-color: var(--paper); color: var(--paper); z-index: 1; }
-  .opt.on .box { background: var(--signal); border-color: var(--signal); }
-  .route {
-    position: relative; display: flex; flex-direction: column; justify-content: space-between;
-    padding: 14px 16px; background: var(--signal); color: var(--ink); cursor: pointer;
-    font-family: var(--wide); overflow: hidden; transition: background 200ms var(--snap);
-  }
-  .route:hover { background: var(--paper); }
-  .route small { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; }
-  .route strong { font-weight: 900; font-stretch: 125%; font-size: 34px; letter-spacing: -0.03em; line-height: 0.9; text-transform: uppercase; }
-  .route .arrow { position: absolute; right: 14px; top: 12px; font-size: 22px; transition: transform 240ms var(--snap); }
-  .route:hover .arrow { transform: translate(4px,-4px); }
+      /* ---------- composer ---------- */
+      .composer {
+        grid-area: composer;
+        display: grid;
+        grid-template-columns: 1fr 180px;
+        border-top: 2px solid var(--paper);
+        border-right: 2px solid var(--paper);
+        background: var(--ink);
+      }
+      .comp-main {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 16px;
+        gap: 10px;
+        min-width: 0;
+      }
+      .comp-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--paper-mute);
+      }
+      .comp-label .rule {
+        flex: 1;
+        height: 2px;
+        background: var(--rule);
+      }
+      .comp-input {
+        flex: 1;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--paper);
+      }
+      .comp-input .m {
+        background: var(--c);
+        color: var(--ink);
+        font-weight: 700;
+        padding: 1px 6px;
+        margin-right: 2px;
+      }
+      .comp-input .cur {
+        display: inline-block;
+        width: 9px;
+        height: 17px;
+        background: var(--signal);
+        vertical-align: -3px;
+        animation: blink 1s steps(1) infinite;
+      }
+      .comp-opts {
+        display: flex;
+        gap: 0;
+      }
+      .opt {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 10px;
+        border: 2px solid var(--rule);
+        margin-right: -2px;
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--paper-dim);
+        transition: all 160ms var(--snap);
+      }
+      .opt .box {
+        width: 10px;
+        height: 10px;
+        border: 1.5px solid var(--paper-dim);
+      }
+      .opt.on {
+        border-color: var(--paper);
+        color: var(--paper);
+        z-index: 1;
+      }
+      .opt.on .box {
+        background: var(--signal);
+        border-color: var(--signal);
+      }
+      .route {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background: var(--signal);
+        color: var(--ink);
+        cursor: pointer;
+        font-family: var(--wide);
+        overflow: hidden;
+        transition: background 200ms var(--snap);
+      }
+      .route:hover {
+        background: var(--paper);
+      }
+      .route small {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      .route strong {
+        font-weight: 900;
+        font-stretch: 125%;
+        font-size: 34px;
+        letter-spacing: -0.03em;
+        line-height: 0.9;
+        text-transform: uppercase;
+      }
+      .route .arrow {
+        position: absolute;
+        right: 14px;
+        top: 12px;
+        font-size: 22px;
+        transition: transform 240ms var(--snap);
+      }
+      .route:hover .arrow {
+        transform: translate(4px, -4px);
+      }
 
-  /* ---------- side ---------- */
-  .side { grid-area: side; display: flex; flex-direction: column; min-height: 0; background: var(--ink-2); }
-  .sec-h {
-    display: flex; align-items: baseline; gap: 10px; padding: 12px 16px 10px;
-    border-bottom: 2px solid var(--rule);
-  }
-  .sec-h h2 {
-    font-family: var(--wide); font-weight: 900; font-stretch: 62%; font-size: 26px; line-height: 1;
-    text-transform: uppercase; letter-spacing: -0.01em;
-  }
-  .sec-h .n { color: var(--signal); font-size: 10px; letter-spacing: 0.14em; }
-  .sec-h .aside { margin-left: auto; color: var(--paper-mute); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
-  .branch {
-    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
-    padding: 10px 16px; border-bottom: 2px solid var(--rule); font-size: 11px;
-  }
-  .branch i { color: var(--claude); font-size: 15px; }
-  .branch .ab { color: var(--paper-mute); font-size: 10px; }
-  .branch .ab .g { color: var(--ok); }
-  .files { border-bottom: 2px solid var(--rule); }
-  .file {
-    display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: center;
-    padding: 6px 16px; font-size: 11.5px; color: var(--paper-dim);
-    transition: background 140ms var(--snap);
-  }
-  .file:hover { background: var(--ink-3); color: var(--paper); }
-  .file .st { font-weight: 700; text-align: center; }
-  .file .st.M { color: var(--codex); } .file .st.A { color: var(--ok); } .file .st.D { color: var(--signal); }
-  .file .delta { font-size: 10px; color: var(--paper-mute); }
-  .file .delta .g { color: var(--ok); } .file .delta .r { color: var(--signal); }
-  .git-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 2px solid var(--paper); }
-  .ga {
-    display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0;
-    border-right: 2px solid var(--rule); text-transform: uppercase; letter-spacing: 0.1em; font-size: 10.5px;
-    color: var(--paper-dim); transition: all 160ms var(--snap);
-  }
-  .ga:last-child { border-right: 0; background: var(--paper); color: var(--ink); font-weight: 700; }
-  .ga:hover { color: var(--paper); background: var(--ink-3); }
-  .ga:last-child:hover { background: var(--signal); color: var(--ink); }
-  .log { flex: 1; overflow: hidden; position: relative; }
-  .log::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 60px;
-    background: linear-gradient(transparent, var(--ink-2));
-  }
-  .ev {
-    display: grid; grid-template-columns: 54px 1fr; border-bottom: 1px dashed var(--rule);
-    font-size: 11px;
-  }
-  .ev time { padding: 9px 0 9px 16px; color: var(--paper-mute); font-size: 10px; }
-  .ev .body { padding: 8px 16px 9px 10px; border-left: 3px solid var(--c); color: var(--paper-dim); line-height: 1.5; }
-  .ev .body b { color: var(--paper); font-weight: 500; }
-  .ev .tag { display: inline-block; background: var(--c); color: var(--ink); font-weight: 700; font-size: 9.5px; padding: 0 4px; margin-right: 6px; text-transform: uppercase; }
+      /* ---------- side ---------- */
+      .side {
+        grid-area: side;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: var(--ink-2);
+      }
+      .sec-h {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 12px 16px 10px;
+        border-bottom: 2px solid var(--rule);
+      }
+      .sec-h h2 {
+        font-family: var(--wide);
+        font-weight: 900;
+        font-stretch: 62%;
+        font-size: 26px;
+        line-height: 1;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+      }
+      .sec-h .n {
+        color: var(--signal);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+      }
+      .sec-h .aside {
+        margin-left: auto;
+        color: var(--paper-mute);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .branch {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 16px;
+        border-bottom: 2px solid var(--rule);
+        font-size: 11px;
+      }
+      .branch i {
+        color: var(--claude);
+        font-size: 15px;
+      }
+      .branch .ab {
+        color: var(--paper-mute);
+        font-size: 10px;
+      }
+      .branch .ab .g {
+        color: var(--ok);
+      }
+      .files {
+        border-bottom: 2px solid var(--rule);
+      }
+      .file {
+        display: grid;
+        grid-template-columns: 18px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 16px;
+        font-size: 11.5px;
+        color: var(--paper-dim);
+        transition: background 140ms var(--snap);
+      }
+      .file:hover {
+        background: var(--ink-3);
+        color: var(--paper);
+      }
+      .file .st {
+        font-weight: 700;
+        text-align: center;
+      }
+      .file .st.M {
+        color: var(--codex);
+      }
+      .file .st.A {
+        color: var(--ok);
+      }
+      .file .st.D {
+        color: var(--signal);
+      }
+      .file .delta {
+        font-size: 10px;
+        color: var(--paper-mute);
+      }
+      .file .delta .g {
+        color: var(--ok);
+      }
+      .file .delta .r {
+        color: var(--signal);
+      }
+      .git-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        border-bottom: 2px solid var(--paper);
+      }
+      .ga {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 0;
+        border-right: 2px solid var(--rule);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 10.5px;
+        color: var(--paper-dim);
+        transition: all 160ms var(--snap);
+      }
+      .ga:last-child {
+        border-right: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .ga:hover {
+        color: var(--paper);
+        background: var(--ink-3);
+      }
+      .ga:last-child:hover {
+        background: var(--signal);
+        color: var(--ink);
+      }
+      .log {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+      }
+      .log::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 60px;
+        background: linear-gradient(transparent, var(--ink-2));
+      }
+      .ev {
+        display: grid;
+        grid-template-columns: 54px 1fr;
+        border-bottom: 1px dashed var(--rule);
+        font-size: 11px;
+      }
+      .ev time {
+        padding: 9px 0 9px 16px;
+        color: var(--paper-mute);
+        font-size: 10px;
+      }
+      .ev .body {
+        padding: 8px 16px 9px 10px;
+        border-left: 3px solid var(--c);
+        color: var(--paper-dim);
+        line-height: 1.5;
+      }
+      .ev .body b {
+        color: var(--paper);
+        font-weight: 500;
+      }
+      .ev .tag {
+        display: inline-block;
+        background: var(--c);
+        color: var(--ink);
+        font-weight: 700;
+        font-size: 9.5px;
+        padding: 0 4px;
+        margin-right: 6px;
+        text-transform: uppercase;
+      }
 
-  /* ---------- status ---------- */
-  .status {
-    grid-area: status; display: flex; align-items: stretch; background: var(--paper); color: var(--ink);
-    font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700;
-  }
-  .status span { display: flex; align-items: center; gap: 6px; padding: 0 12px; border-right: 2px solid var(--ink); }
-  .status .warn { background: var(--signal); }
-  .status .spacer { flex: 1; border-right: 0;
-    background: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(12,12,10,0.14) 6px 8px); }
-  .status i { font-size: 12px; }
+      /* ---------- status ---------- */
+      .status {
+        grid-area: status;
+        display: flex;
+        align-items: stretch;
+        background: var(--paper);
+        color: var(--ink);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 700;
+      }
+      .status span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 12px;
+        border-right: 2px solid var(--ink);
+      }
+      .status .warn {
+        background: var(--signal);
+      }
+      .status .spacer {
+        flex: 1;
+        border-right: 0;
+        background: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(12, 12, 10, 0.14) 6px 8px);
+      }
+      .status i {
+        font-size: 12px;
+      }
 
-  /* entrance */
-  .pane, .side > *, .composer { animation: slam 520ms var(--snap) both; }
-  .pane:nth-child(2) { animation-delay: 60ms; } .pane:nth-child(3) { animation-delay: 120ms; }
-  .composer { animation-delay: 160ms; }
-  @keyframes slam { from { opacity: 0; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
-</style>
-</head>
-<body>
-<div class="app">
-  <header class="top">
-    <div class="brand"><span class="sq"></span>Crewdeck</div>
-    <div class="cell">WS <b>parallel-refactor</b></div>
-    <div class="cmd"><span class="caret"></span>route, spawn, merge, search logs…<kbd>CTRL K</kbd></div>
-    <div class="cell"><i class="ri-cpu-line"></i> <b>3</b> live</div>
-    <div class="winctl"><span><i class="ri-subtract-line"></i></span><span><i class="ri-checkbox-blank-line"></i></span><span><i class="ri-close-line"></i></span></div>
-  </header>
+      /* entrance */
+      .pane,
+      .side > *,
+      .composer {
+        animation: slam 520ms var(--snap) both;
+      }
+      .pane:nth-child(2) {
+        animation-delay: 60ms;
+      }
+      .pane:nth-child(3) {
+        animation-delay: 120ms;
+      }
+      .composer {
+        animation-delay: 160ms;
+      }
+      @keyframes slam {
+        from {
+          opacity: 0;
+          clip-path: inset(0 0 100% 0);
+        }
+        to {
+          opacity: 1;
+          clip-path: inset(0 0 0 0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="brand"><span class="sq"></span>Crewdeck</div>
+        <div class="cell">WS <b>parallel-refactor</b></div>
+        <div class="cmd"><span class="caret"></span>route, spawn, merge, search logs…<kbd>CTRL K</kbd></div>
+        <div class="cell"><i class="ri-cpu-line"></i> <b>3</b> live</div>
+        <div class="winctl">
+          <span><i class="ri-subtract-line"></i></span><span><i class="ri-checkbox-blank-line"></i></span
+          ><span><i class="ri-close-line"></i></span>
+        </div>
+      </header>
 
-  <nav class="tabs">
-    <div class="tab active" style="--c:var(--claude)"><span class="idx">01</span><span class="name">claude</span><span class="br">claude-7f3a</span><i class="ri-close-line x"></i></div>
-    <div class="tab" style="--c:var(--codex)"><span class="idx">02</span><span class="name">codex</span><span class="br">codex-2b91</span><i class="ri-close-line x"></i></div>
-    <div class="tab" style="--c:var(--gemini)"><span class="idx">03</span><span class="name">gemini</span><i class="ri-close-line x"></i></div>
-    <div class="tab" style="--c:var(--opencode)"><span class="idx">04</span><span class="name">opencode</span><i class="ri-close-line x"></i></div>
-    <div class="add"><i class="ri-add-line"></i></div>
-    <div class="fill"></div>
-  </nav>
+      <nav class="tabs">
+        <div class="tab active" style="--c: var(--claude)">
+          <span class="idx">01</span><span class="name">claude</span><span class="br">claude-7f3a</span
+          ><i class="ri-close-line x"></i>
+        </div>
+        <div class="tab" style="--c: var(--codex)">
+          <span class="idx">02</span><span class="name">codex</span><span class="br">codex-2b91</span
+          ><i class="ri-close-line x"></i>
+        </div>
+        <div class="tab" style="--c: var(--gemini)">
+          <span class="idx">03</span><span class="name">gemini</span><i class="ri-close-line x"></i>
+        </div>
+        <div class="tab" style="--c: var(--opencode)">
+          <span class="idx">04</span><span class="name">opencode</span><i class="ri-close-line x"></i>
+        </div>
+        <div class="add"><i class="ri-add-line"></i></div>
+        <div class="fill"></div>
+      </nav>
 
-  <main class="panes">
-    <section class="pane big" style="--c:var(--claude)">
-      <div class="pane-head">
-        <div class="who"><i class="ri-terminal-box-line"></i>01 claude</div>
-        <div class="meta">PID <b>18240</b> · WT <b>crewdeck/claude-7f3a</b></div>
-        <div class="state"><span class="led"></span>writing</div>
-      </div>
-<div class="term"><span class="p">▌ claude</span> <span class="d">~/crewdeck/.worktrees/claude-7f3a</span>
-<span class="d">──────────────────────────────────────────────</span>
-<span class="d">›</span> refactor routing so broadcast respects isolation
+      <main class="panes">
+        <section class="pane big" style="--c: var(--claude)">
+          <div class="pane-head">
+            <div class="who"><i class="ri-terminal-box-line"></i>01 claude</div>
+            <div class="meta">PID <b>18240</b> · WT <b>crewdeck/claude-7f3a</b></div>
+            <div class="state"><span class="led"></span>writing</div>
+          </div>
+          <div class="term">
+            <span class="p">▌ claude</span> <span class="d">~/crewdeck/.worktrees/claude-7f3a</span>
+            <span class="d">──────────────────────────────────────────────</span>
+            <span class="d">›</span> refactor routing so broadcast respects isolation Reading
+            <span class="hl">electron/services/router.ts</span>
+            Reading shared/ipc.ts Reading src/components/Composer.tsx Plan
+            <span class="p">1</span> extract resolveTargets() from dispatch() <span class="p">2</span> thread worktree
+            cwd through PtyManager.write <span class="p">3</span> emit route:event with target branch
 
-  Reading <span class="hl">electron/services/router.ts</span>
-  Reading shared/ipc.ts
-  Reading src/components/Composer.tsx
+            <span class="g">✓</span> Edited router.ts <span class="g">+48</span> <span class="r">−21</span>
+            <span class="g">✓</span> Edited ipc.ts <span class="g">+6</span> <span class="r">−1</span>
+            <span class="p">●</span> Editing Composer.tsx <span class="bar" style="width: 84px"></span
+            ><span class="d"> 62%</span>
 
-  Plan
-  <span class="p">1</span>  extract resolveTargets() from dispatch()
-  <span class="p">2</span>  thread worktree cwd through PtyManager.write
-  <span class="p">3</span>  emit route:event with target branch
+            <span class="d">tokens 41.2k · 00:02:13 · $0.38</span>
+            <span class="cur"></span>
+          </div>
+          <span class="crosshair br"></span>
+        </section>
 
-  <span class="g">✓</span> Edited router.ts            <span class="g">+48</span> <span class="r">−21</span>
-  <span class="g">✓</span> Edited ipc.ts               <span class="g">+6</span>  <span class="r">−1</span>
-  <span class="p">●</span> Editing Composer.tsx        <span class="bar" style="width:84px"></span><span class="d"> 62%</span>
+        <section class="pane" style="--c: var(--codex)">
+          <div class="pane-head">
+            <div class="who"><i class="ri-terminal-box-line"></i>02 codex</div>
+            <div class="meta">WT <b>codex-2b91</b></div>
+            <div class="state"><span class="led"></span>testing</div>
+          </div>
+          <div class="term">
+            <span class="p">codex ›</span> add tests for worktree cleanup <span class="d">$</span> npm test -- worktree
 
-  <span class="d">tokens 41.2k · 00:02:13 · $0.38</span>
-<span class="cur"></span></div>
-      <span class="crosshair br"></span>
-    </section>
+            <span class="g">PASS</span> git.worktree.create <span class="g">PASS</span> git.worktree.remove.dirty
+            <span class="g">PASS</span> git.worktree.prune <span class="r">FAIL</span> git.worktree.merge.conflict
+            <span class="d">expected 'conflict' got 'merged'</span>
+            <span class="cur"></span>
+          </div>
+          <span class="crosshair br"></span>
+        </section>
 
-    <section class="pane" style="--c:var(--codex)">
-      <div class="pane-head">
-        <div class="who"><i class="ri-terminal-box-line"></i>02 codex</div>
-        <div class="meta">WT <b>codex-2b91</b></div>
-        <div class="state"><span class="led"></span>testing</div>
-      </div>
-<div class="term"><span class="p">codex ›</span> add tests for worktree cleanup
-<span class="d">$</span> npm test -- worktree
+        <section class="pane" style="--c: var(--gemini)">
+          <div class="pane-head">
+            <div class="who"><i class="ri-terminal-box-line"></i>03 gemini</div>
+            <div class="meta">CWD <b>main</b></div>
+            <div class="state"><span class="led idle"></span>idle</div>
+          </div>
+          <div class="term">
+            <span class="p">gemini ›</span> review docs/ARCHITECTURE.md Structure is sound. 3 notes:
+            <span class="p">·</span> IPC table lists git:merge twice <span class="p">·</span> no diagram for worktree
+            lifecycle <span class="p">·</span> migration 003 undocumented
 
-  <span class="g">PASS</span> git.worktree.create
-  <span class="g">PASS</span> git.worktree.remove.dirty
-  <span class="g">PASS</span> git.worktree.prune
-  <span class="r">FAIL</span> git.worktree.merge.conflict
-     <span class="d">expected 'conflict' got 'merged'</span>
-<span class="cur"></span></div>
-      <span class="crosshair br"></span>
-    </section>
+            <span class="d">awaiting input</span> <span class="cur"></span>
+          </div>
+          <span class="crosshair br"></span>
+        </section>
+      </main>
 
-    <section class="pane" style="--c:var(--gemini)">
-      <div class="pane-head">
-        <div class="who"><i class="ri-terminal-box-line"></i>03 gemini</div>
-        <div class="meta">CWD <b>main</b></div>
-        <div class="state"><span class="led idle"></span>idle</div>
-      </div>
-<div class="term"><span class="p">gemini ›</span> review docs/ARCHITECTURE.md
+      <section class="composer">
+        <div class="comp-main">
+          <div class="comp-label">Compose / route<span class="rule"></span>2 targets · 1 isolated</div>
+          <div class="comp-input">
+            <span class="m" style="--c: var(--claude)">@claude</span>
+            <span class="m" style="--c: var(--codex)">@codex</span> fix the merge-conflict test, then re-run the full
+            suite and report the diff<span class="cur"></span>
+          </div>
+          <div class="comp-opts">
+            <span class="opt on"><span class="box"></span>Isolate in worktree</span>
+            <span class="opt"><span class="box"></span>Broadcast all</span>
+            <span class="opt"><span class="box"></span>Attach selection</span>
+            <span class="opt"><span class="box"></span>Wait for idle</span>
+          </div>
+        </div>
+        <div class="route">
+          <small>Ctrl ⏎ / send</small><i class="ri-arrow-right-up-line arrow"></i><strong>Route</strong>
+        </div>
+      </section>
 
-  Structure is sound. 3 notes:
-  <span class="p">·</span> IPC table lists git:merge twice
-  <span class="p">·</span> no diagram for worktree lifecycle
-  <span class="p">·</span> migration 003 undocumented
+      <aside class="side">
+        <div class="sec-h">
+          <h2>Source</h2>
+          <span class="n">/05</span><span class="aside">claude-7f3a</span>
+        </div>
+        <div class="branch">
+          <i class="ri-git-branch-line"></i><span>crewdeck/claude-7f3a → main</span
+          ><span class="ab"><span class="g">↑3</span> ↓0</span>
+        </div>
+        <div class="files">
+          <div class="file">
+            <span class="st M">M</span><span>electron/services/router.ts</span
+            ><span class="delta"><span class="g">+48</span> <span class="r">−21</span></span>
+          </div>
+          <div class="file">
+            <span class="st M">M</span><span>shared/ipc.ts</span
+            ><span class="delta"><span class="g">+6</span> <span class="r">−1</span></span>
+          </div>
+          <div class="file">
+            <span class="st M">M</span><span>src/components/Composer.tsx</span
+            ><span class="delta"><span class="g">+19</span> <span class="r">−7</span></span>
+          </div>
+          <div class="file">
+            <span class="st A">A</span><span>scripts/route.test.mjs</span
+            ><span class="delta"><span class="g">+72</span></span>
+          </div>
+          <div class="file">
+            <span class="st D">D</span><span>src/legacy/broadcast.ts</span
+            ><span class="delta"><span class="r">−54</span></span>
+          </div>
+        </div>
+        <div class="git-actions">
+          <span class="ga"><i class="ri-file-list-3-line"></i>Diff</span>
+          <span class="ga"><i class="ri-git-commit-line"></i>Commit</span>
+          <span class="ga"><i class="ri-git-merge-line"></i>Merge</span>
+        </div>
 
-<span class="d">awaiting input</span> <span class="cur"></span></div>
-      <span class="crosshair br"></span>
-    </section>
-  </main>
+        <div class="sec-h">
+          <h2>Routing</h2>
+          <span class="n">/12</span><span class="aside">live</span>
+        </div>
+        <div class="log">
+          <div class="ev" style="--c: var(--claude)">
+            <time>14:02:11</time>
+            <div class="body"><span class="tag">claude</span><b>route</b> → worktree claude-7f3a · 2 targets</div>
+          </div>
+          <div class="ev" style="--c: var(--codex)">
+            <time>14:02:11</time>
+            <div class="body"><span class="tag">codex</span><b>route</b> → worktree codex-2b91</div>
+          </div>
+          <div class="ev" style="--c: var(--codex)">
+            <time>14:01:48</time>
+            <div class="body"><span class="tag">codex</span>exit <b>1</b> · 1 failing test</div>
+          </div>
+          <div class="ev" style="--c: var(--gemini)">
+            <time>13:59:02</time>
+            <div class="body"><span class="tag">gemini</span>idle after <b>38s</b> · review complete</div>
+          </div>
+          <div class="ev" style="--c: var(--claude)">
+            <time>13:57:30</time>
+            <div class="body"><span class="tag">claude</span><b>worktree</b> created from main@af58473</div>
+          </div>
+          <div class="ev" style="--c: var(--opencode)">
+            <time>13:55:14</time>
+            <div class="body"><span class="tag">opencode</span>spawned · shell pwsh 7</div>
+          </div>
+          <div class="ev" style="--c: var(--gemini)">
+            <time>13:54:40</time>
+            <div class="body"><span class="tag">gemini</span><b>broadcast</b> → all 4 tabs</div>
+          </div>
+        </div>
+      </aside>
 
-  <section class="composer">
-    <div class="comp-main">
-      <div class="comp-label">Compose / route<span class="rule"></span>2 targets · 1 isolated</div>
-      <div class="comp-input"><span class="m" style="--c:var(--claude)">@claude</span> <span class="m" style="--c:var(--codex)">@codex</span> fix the merge-conflict test, then re-run the full suite and report the diff<span class="cur"></span></div>
-      <div class="comp-opts">
-        <span class="opt on"><span class="box"></span>Isolate in worktree</span>
-        <span class="opt"><span class="box"></span>Broadcast all</span>
-        <span class="opt"><span class="box"></span>Attach selection</span>
-        <span class="opt"><span class="box"></span>Wait for idle</span>
-      </div>
+      <footer class="status">
+        <span><i class="ri-git-branch-line"></i>main@af58473</span>
+        <span class="warn"><i class="ri-error-warning-line"></i>1 test failing</span>
+        <span>4 agents · 2 worktrees</span>
+        <span class="spacer"></span>
+        <span>utf-8 · pwsh</span>
+        <span>v0.4.0</span>
+      </footer>
     </div>
-    <div class="route"><small>Ctrl ⏎ / send</small><i class="ri-arrow-right-up-line arrow"></i><strong>Route</strong></div>
-  </section>
-
-  <aside class="side">
-    <div class="sec-h"><h2>Source</h2><span class="n">/05</span><span class="aside">claude-7f3a</span></div>
-    <div class="branch"><i class="ri-git-branch-line"></i><span>crewdeck/claude-7f3a → main</span><span class="ab"><span class="g">↑3</span> ↓0</span></div>
-    <div class="files">
-      <div class="file"><span class="st M">M</span><span>electron/services/router.ts</span><span class="delta"><span class="g">+48</span> <span class="r">−21</span></span></div>
-      <div class="file"><span class="st M">M</span><span>shared/ipc.ts</span><span class="delta"><span class="g">+6</span> <span class="r">−1</span></span></div>
-      <div class="file"><span class="st M">M</span><span>src/components/Composer.tsx</span><span class="delta"><span class="g">+19</span> <span class="r">−7</span></span></div>
-      <div class="file"><span class="st A">A</span><span>scripts/route.test.mjs</span><span class="delta"><span class="g">+72</span></span></div>
-      <div class="file"><span class="st D">D</span><span>src/legacy/broadcast.ts</span><span class="delta"><span class="r">−54</span></span></div>
-    </div>
-    <div class="git-actions">
-      <span class="ga"><i class="ri-file-list-3-line"></i>Diff</span>
-      <span class="ga"><i class="ri-git-commit-line"></i>Commit</span>
-      <span class="ga"><i class="ri-git-merge-line"></i>Merge</span>
-    </div>
-
-    <div class="sec-h"><h2>Routing</h2><span class="n">/12</span><span class="aside">live</span></div>
-    <div class="log">
-      <div class="ev" style="--c:var(--claude)"><time>14:02:11</time><div class="body"><span class="tag">claude</span><b>route</b> → worktree claude-7f3a · 2 targets</div></div>
-      <div class="ev" style="--c:var(--codex)"><time>14:02:11</time><div class="body"><span class="tag">codex</span><b>route</b> → worktree codex-2b91</div></div>
-      <div class="ev" style="--c:var(--codex)"><time>14:01:48</time><div class="body"><span class="tag">codex</span>exit <b>1</b> · 1 failing test</div></div>
-      <div class="ev" style="--c:var(--gemini)"><time>13:59:02</time><div class="body"><span class="tag">gemini</span>idle after <b>38s</b> · review complete</div></div>
-      <div class="ev" style="--c:var(--claude)"><time>13:57:30</time><div class="body"><span class="tag">claude</span><b>worktree</b> created from main@af58473</div></div>
-      <div class="ev" style="--c:var(--opencode)"><time>13:55:14</time><div class="body"><span class="tag">opencode</span>spawned · shell pwsh 7</div></div>
-      <div class="ev" style="--c:var(--gemini)"><time>13:54:40</time><div class="body"><span class="tag">gemini</span><b>broadcast</b> → all 4 tabs</div></div>
-    </div>
-  </aside>
-
-  <footer class="status">
-    <span><i class="ri-git-branch-line"></i>main@af58473</span>
-    <span class="warn"><i class="ri-error-warning-line"></i>1 test failing</span>
-    <span>4 agents · 2 worktrees</span>
-    <span class="spacer"></span>
-    <span>utf-8 · pwsh</span>
-    <span>v0.4.0</span>
-  </footer>
-</div>
-</body>
+  </body>
 </html>

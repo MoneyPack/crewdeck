@@ -24,7 +24,11 @@ function toolPath(file: string): string {
 function writeShims(dir: string, name: string, script: string): void {
   const exe = process.execPath;
   const cmd = ['@echo off', 'setlocal', 'set ELECTRON_RUN_AS_NODE=1', `"${exe}" "${script}" %*`, ''].join('\r\n');
-  const sh = ['#!/bin/sh', `ELECTRON_RUN_AS_NODE=1 exec "${exe.replace(/\\/g, '/')}" "${script.replace(/\\/g, '/')}" "$@"`, ''].join('\n');
+  const sh = [
+    '#!/bin/sh',
+    `ELECTRON_RUN_AS_NODE=1 exec "${exe.replace(/\\/g, '/')}" "${script.replace(/\\/g, '/')}" "$@"`,
+    '',
+  ].join('\n');
   fs.writeFileSync(path.join(dir, `${name}.cmd`), cmd);
   fs.writeFileSync(path.join(dir, name), sh, { mode: 0o755 });
 }

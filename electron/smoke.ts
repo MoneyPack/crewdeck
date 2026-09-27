@@ -112,10 +112,19 @@ function dbChecks(): void {
       throws(() => g.raw.prepare("UPDATE projects SET layout = '{bad' WHERE id = ?").run(p1.id)),
       'json_valid CHECK did not reject invalid JSON',
     );
-    check(throws(() => g.startSession('no-such-terminal', null)), 'FK did not reject orphan session');
+    check(
+      throws(() => g.startSession('no-such-terminal', null)),
+      'FK did not reject orphan session',
+    );
 
     // routing log (CD-17): round-trip, newest-first, per-project, CHECK guards
-    const r1 = db.logRoute(p1.id, { kind: 'composer', fromLabel: 'composer', targets: [t1.id], preview: 'hi', bytes: 2 });
+    const r1 = db.logRoute(p1.id, {
+      kind: 'composer',
+      fromLabel: 'composer',
+      targets: [t1.id],
+      preview: 'hi',
+      bytes: 2,
+    });
     const r2 = db.logRoute(p1.id, {
       kind: 'forward',
       fromLabel: 'shell 2',
@@ -138,17 +147,39 @@ function dbChecks(): void {
            VALUES (lower(hex(randomblob(8))), ?, ?, 'x', ?, 'p', 0, 0, 0)`,
         )
         .run(p1.id, kind, targets);
-    check(throws(() => insertRaw('bogus', '["a"]')), 'kind CHECK');
-    check(throws(() => insertRaw('forward', '{bad')), 'targets json CHECK');
-    check(throws(() => g.logRoute('no-such-project', { kind: 'composer', fromLabel: 'x', targets: ['a'], preview: '' })), 'route FK');
+    check(
+      throws(() => insertRaw('bogus', '["a"]')),
+      'kind CHECK',
+    );
+    check(
+      throws(() => insertRaw('forward', '{bad')),
+      'targets json CHECK',
+    );
+    check(
+      throws(() => g.logRoute('no-such-project', { kind: 'composer', fromLabel: 'x', targets: ['a'], preview: '' })),
+      'route FK',
+    );
 
     // parseRouteInput guards
-    const parsed = parseRouteInput({ kind: 'forward', fromLabel: 'a'.repeat(300), targets: ['t'], preview: 'p'.repeat(400), bytes: 12.7, viaFile: 1 });
+    const parsed = parseRouteInput({
+      kind: 'forward',
+      fromLabel: 'a'.repeat(300),
+      targets: ['t'],
+      preview: 'p'.repeat(400),
+      bytes: 12.7,
+      viaFile: 1,
+    });
     check(
-      parsed?.fromLabel.length === MAX_ROUTE_LABEL && parsed.preview.length === ROUTE_PREVIEW_LIMIT && parsed.bytes === 12 && parsed.viaFile === false,
+      parsed?.fromLabel.length === MAX_ROUTE_LABEL &&
+        parsed.preview.length === ROUTE_PREVIEW_LIMIT &&
+        parsed.bytes === 12 &&
+        parsed.viaFile === false,
       'parseRouteInput normalises',
     );
-    check(parseRouteInput({ kind: 'composer', fromLabel: 'a', targets: ['t'], preview: '', bytes: -1 })?.bytes === 0, 'negative bytes');
+    check(
+      parseRouteInput({ kind: 'composer', fromLabel: 'a', targets: ['t'], preview: '', bytes: -1 })?.bytes === 0,
+      'negative bytes',
+    );
     for (const bad of [
       null,
       'x',
@@ -166,14 +197,19 @@ function dbChecks(): void {
     // project delete cascades to terminals, sessions and routing log
     db.raw.prepare('DELETE FROM projects WHERE id = ?').run(p1.id);
     const left = db.raw
-      .prepare('SELECT (SELECT count(*) FROM terminals) + (SELECT count(*) FROM sessions) + (SELECT count(*) FROM routing_log) AS n')
+      .prepare(
+        'SELECT (SELECT count(*) FROM terminals) + (SELECT count(*) FROM sessions) + (SELECT count(*) FROM routing_log) AS n',
+      )
       .get() as { n: number };
     check(left.n === 0, 'project delete cascade');
 
     // too-new schema is refused
     db.raw.pragma(`user_version = ${LATEST_SCHEMA_VERSION + 1}`);
     db.close();
-    check(throws(() => new CrewdeckDb(file)), 'newer schema not refused');
+    check(
+      throws(() => new CrewdeckDb(file)),
+      'newer schema not refused',
+    );
     console.log(`db ok (schema v${LATEST_SCHEMA_VERSION})`);
   } finally {
     if (db?.raw.open) db.close();
@@ -187,7 +223,10 @@ function scrollbackChecks(): void {
   for (let i = 0; i < 50; i++) ring.append(`line${i}\n`);
   const text = ring.toString();
   const lines = text.split('\n').filter(Boolean);
-  check(lines.length === 10 && lines[0] === 'line40' && lines[9] === 'line49', `ring cap: ${lines[0]}..${lines.length}`);
+  check(
+    lines.length === 10 && lines[0] === 'line40' && lines[9] === 'line49',
+    `ring cap: ${lines[0]}..${lines.length}`,
+  );
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-sb-'));
   try {
@@ -262,7 +301,8 @@ function mentionChecks(): void {
 
 // Output forwarding (CD-16): ANSI stripping, byte sizing, temp-file handoff.
 function ansiChecks(): void {
-  const raw = '\x1b[1;32mgreen\x1b[0m \x1b]0;title\x07ok\x1b]8;;http://x\x1b\\link\x1b]8;;\x1b\\\r\nline2\rline3\x1b(B\x07';
+  const raw =
+    '\x1b[1;32mgreen\x1b[0m \x1b]0;title\x07ok\x1b]8;;http://x\x1b\\link\x1b]8;;\x1b\\\r\nline2\rline3\x1b(B\x07';
   const clean = stripAnsi(raw);
   check(clean === 'green oklink\nline2\nline3', `stripAnsi -> ${JSON.stringify(clean)}`);
   check(stripAnsi('plain\ttext') === 'plain\ttext', 'stripAnsi keeps tabs');
@@ -276,8 +316,14 @@ function ansiChecks(): void {
     check(path.dirname(file) === path.join(dir, 'nested') && file.endsWith('.txt'), 'temp path');
     check(fs.readFileSync(file, 'utf8') === big, 'temp content');
     check(writeForwardTemp(big, path.join(dir, 'nested')) !== file, 'unique temp names');
-    check(throws(() => writeForwardTemp(42 as unknown as string, dir)), 'rejects non-string');
-    check(throws(() => writeForwardTemp('x'.repeat(8 * 1024 * 1024 + 1), dir)), 'rejects > 8 MB');
+    check(
+      throws(() => writeForwardTemp(42 as unknown as string, dir)),
+      'rejects non-string',
+    );
+    check(
+      throws(() => writeForwardTemp('x'.repeat(8 * 1024 * 1024 + 1), dir)),
+      'rejects > 8 MB',
+    );
     console.log('forward ok');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -291,8 +337,14 @@ async function gitChecks(): Promise<void> {
     '## main...origin/main [ahead 2, behind 1]\0 M a.txt\0M  b.txt\0R  new.txt\0old.txt\0?? u.txt\0UU c.txt\0!! ign\0',
   );
   check(p.branch === 'main' && p.upstream === 'origin/main' && p.ahead === 2 && p.behind === 1, 'porcelain branch');
-  check(p.files.map((f) => f.state).join() === 'modified,modified,renamed,untracked,conflicted', `porcelain states ${p.files.map((f) => f.state)}`);
-  check(!p.files[0].staged && p.files[0].unstaged && p.files[1].staged && !p.files[1].unstaged, 'porcelain staged flags');
+  check(
+    p.files.map((f) => f.state).join() === 'modified,modified,renamed,untracked,conflicted',
+    `porcelain states ${p.files.map((f) => f.state)}`,
+  );
+  check(
+    !p.files[0].staged && p.files[0].unstaged && p.files[1].staged && !p.files[1].unstaged,
+    'porcelain staged flags',
+  );
   check(p.files[2].path === 'new.txt' && p.files[2].oldPath === 'old.txt', 'porcelain rename');
   check(parsePorcelain('## No commits yet on dev\0').branch === 'dev', 'porcelain unborn');
   check(parsePorcelain('## HEAD (no branch)\0').branch === 'HEAD (detached)', 'porcelain detached');
@@ -312,7 +364,10 @@ async function gitChecks(): Promise<void> {
     check(toks.map((t) => t.text).join('') === line, `tokenize lossless ${file}: ${line}`);
   }
   const tsToks = tokenizeLine('const x = 1; // c', langForPath('a.ts'));
-  check(tsToks.some((t) => t.kind === 'kw' && t.text === 'const') && tsToks.some((t) => t.kind === 'com'), 'tokenize kinds');
+  check(
+    tsToks.some((t) => t.kind === 'kw' && t.text === 'const') && tsToks.some((t) => t.kind === 'com'),
+    'tokenize kinds',
+  );
 
   // path guard + watch filter
   const root = path.resolve(os.tmpdir(), 'repo');
@@ -321,7 +376,12 @@ async function gitChecks(): Promise<void> {
     check(resolveInRepo(root, bad) === null, `resolveInRepo accepted ${JSON.stringify(bad)}`);
   }
   check(isRelevantChange('src/a.ts') && isRelevantChange(null) && isRelevantChange('.git/index'), 'relevant');
-  check(!isRelevantChange('node_modules/x/y.js') && !isRelevantChange('.git/index.lock') && !isRelevantChange('.git/objects/ab/cd'), 'irrelevant');
+  check(
+    !isRelevantChange('node_modules/x/y.js') &&
+      !isRelevantChange('.git/index.lock') &&
+      !isRelevantChange('.git/objects/ab/cd'),
+    'irrelevant',
+  );
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-git-'));
   try {
@@ -371,9 +431,18 @@ async function gitChecks(): Promise<void> {
     const d3 = await gitDiff(root2, 'moved.txt', 'staged', 'move-me.txt');
     check(/^rename from move-me\.txt$/m.test(d3.patch), `rename diff ${d3.patch.slice(0, 120)}`);
     const d4 = await gitDiff(root2, 'sub/u.txt', 'untracked');
-    check(/^@@ -0,0 \+1,2 @@$/m.test(d4.patch) && /^\+no-eol$/m.test(d4.patch) && /No newline/.test(d4.patch), 'untracked diff');
+    check(
+      /^@@ -0,0 \+1,2 @@$/m.test(d4.patch) && /^\+no-eol$/m.test(d4.patch) && /No newline/.test(d4.patch),
+      'untracked diff',
+    );
     check((await gitDiff(root2, 'bin.dat', 'untracked')).binary, 'binary untracked');
-    check(await gitDiff(root2, '../escape', 'unstaged').then(() => false, () => true), 'diff path guard');
+    check(
+      await gitDiff(root2, '../escape', 'unstaged').then(
+        () => false,
+        () => true,
+      ),
+      'diff path guard',
+    );
 
     // CD-21 actions: stage / unstage / discard + guards
     const fileOf = async (p: string) => (await gitStatus(repo)).files.find((f) => f.path === p);
@@ -387,13 +456,34 @@ async function gitChecks(): Promise<void> {
     await gitStage(root2, 'moved.txt');
     await gitStage(root2, 'move-me.txt');
     await gitDiscard(root2, 'a.txt', false);
-    check(!(await fileOf('a.txt')) && fs.readFileSync(path.join(repo, 'a.txt'), 'utf8') === 'one\ntwo\n', 'discard tracked');
+    check(
+      !(await fileOf('a.txt')) && fs.readFileSync(path.join(repo, 'a.txt'), 'utf8') === 'one\ntwo\n',
+      'discard tracked',
+    );
     await gitDiscard(root2, 'bin.dat', true);
     check(!fs.existsSync(path.join(repo, 'bin.dat')), 'discard untracked');
-    check(await gitDiscard(root2, 'staged.txt', true).then(() => false, (e: Error) => /tracked/.test(e.message)), 'refuse delete tracked');
+    check(
+      await gitDiscard(root2, 'staged.txt', true).then(
+        () => false,
+        (e: Error) => /tracked/.test(e.message),
+      ),
+      'refuse delete tracked',
+    );
     check(fs.existsSync(path.join(repo, 'staged.txt')), 'tracked file kept');
-    check(await gitStage(root2, '../escape').then(() => false, () => true), 'stage path guard');
-    check(await gitDiscard(root2, '../escape', true).then(() => false, () => true), 'discard path guard');
+    check(
+      await gitStage(root2, '../escape').then(
+        () => false,
+        () => true,
+      ),
+      'stage path guard',
+    );
+    check(
+      await gitDiscard(root2, '../escape', true).then(
+        () => false,
+        () => true,
+      ),
+      'discard path guard',
+    );
 
     // unstage in a repo without HEAD
     const fresh = path.join(dir, 'fresh');
@@ -459,8 +549,14 @@ function loggerChecks(): void {
     const enoent = describeSpawnError('nope.exe', new Error('File not found: nope.exe'));
     check(enoent.includes('executable not found') && enoent.includes('nope.exe'), 'describeSpawnError ENOENT');
     check(describeSpawnError(undefined, new Error('boom')).includes('default shell'), 'describeSpawnError default');
-    const manager = new PtyManager(() => {}, () => {});
-    check(throws(() => manager.create({ shell: 'crewdeck-missing-shell.exe', cols: 80, rows: 24 })), 'spawn of missing shell throws');
+    const manager = new PtyManager(
+      () => {},
+      () => {},
+    );
+    check(
+      throws(() => manager.create({ shell: 'crewdeck-missing-shell.exe', cols: 80, rows: 24 })),
+      'spawn of missing shell throws',
+    );
     check(manager.size === 0, 'failed spawn leaves no session');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -509,7 +605,10 @@ async function run(): Promise<void> {
 
   manager.resize(id, 132, 40);
   output = '';
-  manager.write(id, "Write-Output ('SIZE=' + $Host.UI.RawUI.WindowSize.Width + 'x' + $Host.UI.RawUI.WindowSize.Height)\r");
+  manager.write(
+    id,
+    "Write-Output ('SIZE=' + $Host.UI.RawUI.WindowSize.Width + 'x' + $Host.UI.RawUI.WindowSize.Height)\r",
+  );
   await waitFor(/SIZE=132x40/, 'resized dimensions');
   console.log('resize ok');
 

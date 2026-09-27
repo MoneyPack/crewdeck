@@ -16,7 +16,10 @@ function withDb(fn: (db: CrewdeckDb) => void): void {
 test('fresh database applies every migration', () => {
   withDb((db) => {
     assert.equal(db.schemaVersion, LATEST_SCHEMA_VERSION);
-    assert.deepEqual(db.appliedMigrations, MIGRATIONS.map((m) => m.version));
+    assert.deepEqual(
+      db.appliedMigrations,
+      MIGRATIONS.map((m) => m.version),
+    );
     assert.equal(db.raw.pragma('user_version', { simple: true }), LATEST_SCHEMA_VERSION);
   });
 });
@@ -24,7 +27,10 @@ test('fresh database applies every migration', () => {
 test('migrate is idempotent and refuses newer schemas', () => {
   const raw = new Database(':memory:');
   try {
-    assert.deepEqual(migrate(raw), MIGRATIONS.map((m) => m.version));
+    assert.deepEqual(
+      migrate(raw),
+      MIGRATIONS.map((m) => m.version),
+    );
     assert.deepEqual(migrate(raw), []);
     raw.pragma(`user_version = ${LATEST_SCHEMA_VERSION + 1}`);
     assert.throws(() => migrate(raw), /newer than this build supports/);
@@ -43,7 +49,10 @@ test('failed migration rolls back its own step', () => {
     assert.throws(() => migrate(raw, bad));
     assert.equal(raw.pragma('user_version', { simple: true }), 1);
     const tables = raw.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[];
-    assert.deepEqual(tables.map((t) => t.name), ['a']);
+    assert.deepEqual(
+      tables.map((t) => t.name),
+      ['a'],
+    );
   } finally {
     raw.close();
   }
@@ -72,7 +81,13 @@ test('terminals: ordered replace keeps ids and cascades deletes', () => {
       { title: 'shell', profileId: 'shell', cwd: 'C:/p' },
       { title: 'claude', profileId: 'claude', cwd: 'C:/p', config: { yolo: true } },
     ]);
-    assert.deepEqual(first.map((t) => [t.title, t.position]), [['shell', 0], ['claude', 1]]);
+    assert.deepEqual(
+      first.map((t) => [t.title, t.position]),
+      [
+        ['shell', 0],
+        ['claude', 1],
+      ],
+    );
     assert.deepEqual(first[1].config, { yolo: true });
 
     const [shell, claude] = first;
@@ -81,7 +96,10 @@ test('terminals: ordered replace keeps ids and cascades deletes', () => {
       { id: claude.id, title: 'claude*', profileId: 'claude', cwd: 'C:/p' },
       { title: 'codex', profileId: 'codex', cwd: 'C:/p' },
     ]);
-    assert.deepEqual(second.map((t) => t.title), ['claude*', 'codex']);
+    assert.deepEqual(
+      second.map((t) => t.title),
+      ['claude*', 'codex'],
+    );
     assert.equal(second[0].id, claude.id);
     assert.equal(db.latestSession(shell.id), null, 'sessions cascade with their terminal');
     assert.equal((db.raw.prepare('SELECT COUNT(*) AS n FROM sessions WHERE id = ?').get(s.id) as { n: number }).n, 0);
@@ -150,13 +168,26 @@ test('routing log: round-trip, ordering, limit, project scope', () => {
     assert.equal(r1.bytes, 0);
     assert.equal(r1.viaFile, false);
     assert.deepEqual(r1.targets, ['claude', 'codex']);
-    const r2 = db.logRoute(p.id, { kind: 'forward', fromLabel: 'claude', targets: ['gemini'], preview: 'x', bytes: 9, viaFile: true });
+    const r2 = db.logRoute(p.id, {
+      kind: 'forward',
+      fromLabel: 'claude',
+      targets: ['gemini'],
+      preview: 'x',
+      bytes: 9,
+      viaFile: true,
+    });
     assert.equal(r2.viaFile, true);
     db.logRoute(q.id, { kind: 'composer', fromLabel: 'you', targets: ['codex'], preview: 'q' });
 
     const list = db.listRoutes(p.id);
-    assert.deepEqual(list.map((r) => r.id), [r2.id, r1.id]);
-    assert.deepEqual(db.listRoutes(p.id, 1).map((r) => r.id), [r2.id]);
+    assert.deepEqual(
+      list.map((r) => r.id),
+      [r2.id, r1.id],
+    );
+    assert.deepEqual(
+      db.listRoutes(p.id, 1).map((r) => r.id),
+      [r2.id],
+    );
     assert.equal(db.listRoutes(q.id).length, 1);
   });
 });

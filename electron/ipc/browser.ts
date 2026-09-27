@@ -31,13 +31,25 @@ export function registerBrowserIpc(): void {
         ? String((command as { action: string }).action).slice(0, 32)
         : 'unknown';
     if (!cmd) {
-      return { ok: false, action: rawAction as BrowserResult['action'], url: state.url, title: state.title, error: 'invalid command' };
+      return {
+        ok: false,
+        action: rawAction as BrowserResult['action'],
+        url: state.url,
+        title: state.title,
+        error: 'invalid command',
+      };
     }
     try {
       return await browserEngine.run(cmd, { projectId: isId(projectId) ? projectId : null, from: 'ui' });
     } catch (err) {
       const s = browserEngine.state();
-      return { ok: false, action: cmd.action, url: s.url, title: s.title, error: err instanceof Error ? err.message : String(err) };
+      return {
+        ok: false,
+        action: cmd.action,
+        url: s.url,
+        title: s.title,
+        error: err instanceof Error ? err.message : String(err),
+      };
     }
   });
 

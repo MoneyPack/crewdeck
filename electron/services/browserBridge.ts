@@ -97,7 +97,8 @@ export function startBrowserBridge(): Promise<BridgeHandle> {
       if (!tokenMatches(expected, req)) return send(res, 401, { ok: false, error: 'unauthorized' });
 
       const url = new URL(req.url ?? '/', 'http://127.0.0.1');
-      if (req.method === 'GET' && url.pathname === '/state') return send(res, 200, { ok: true, state: browserEngine.state() });
+      if (req.method === 'GET' && url.pathname === '/state')
+        return send(res, 200, { ok: true, state: browserEngine.state() });
       if (req.method === 'GET' && url.pathname === '/health') return send(res, 200, { ok: true });
       if (url.pathname !== '/run') return send(res, 404, { ok: false, error: 'not found' });
       if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'method not allowed' });
@@ -115,11 +116,20 @@ export function startBrowserBridge(): Promise<BridgeHandle> {
       const cmd = parseBrowserCommand(o.command);
       const s = browserEngine.state();
       if (!cmd) {
-        const result: BrowserResult = { ok: false, action: 'status', url: s.url, title: s.title, error: 'invalid command' };
+        const result: BrowserResult = {
+          ok: false,
+          action: 'status',
+          url: s.url,
+          title: s.title,
+          error: 'invalid command',
+        };
         return send(res, 400, result);
       }
       try {
-        const result = await browserEngine.run(cmd, { projectId: resolveProjectId(o.projectId), from: fromLabel(o.from) });
+        const result = await browserEngine.run(cmd, {
+          projectId: resolveProjectId(o.projectId),
+          from: fromLabel(o.from),
+        });
         return send(res, 200, result);
       } catch (err) {
         const now = browserEngine.state();

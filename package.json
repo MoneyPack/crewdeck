@@ -1,6 +1,6 @@
 {
   "name": "crewdeck",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Multi-agent AI development workspace",
   "author": "crewdeck",
@@ -25,7 +25,10 @@
     "icon": "node scripts/make-icon.mjs",
     "icons": "node scripts/build-icons.mjs",
     "dist": "npm run build && electron-builder --win --x64 --publish never",
-    "test:e2e:dist": "node scripts/e2e-dist.mjs"
+    "test:e2e:dist": "node scripts/e2e-dist.mjs",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@fontsource-variable/archivo": "5.3.0",
@@ -44,6 +47,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "4.2.0",
+    "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
     "@types/better-sqlite3": "9.6.0",
     "@types/node": "26.6.2",
@@ -53,8 +57,12 @@
     "electron": "44.4.3",
     "electron-builder": "26.15.3",
     "esbuild": "0.28.2",
+    "eslint": "10.11.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "prettier": "3.9.9",
     "subset-font": "2.9.0",
     "typescript": "7.0.2",
+    "typescript-eslint": "8.70.1",
     "vite": "8.3.0"
   },
   "build": {
@@ -100,5 +108,25 @@
   "allowScripts": {
     "electron@44.4.3": true,
     "esbuild@0.28.2": true
+  },
+  "overrides": {
+    "typescript-eslint": {
+      "typescript": "7.0.2"
+    },
+    "@typescript-eslint/eslint-plugin": {
+      "typescript": "7.0.2"
+    },
+    "@typescript-eslint/parser": {
+      "typescript": "7.0.2"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "typescript": "7.0.2"
+    },
+    "@typescript-eslint/type-utils": {
+      "typescript": "7.0.2"
+    },
+    "@typescript-eslint/utils": {
+      "typescript": "7.0.2"
+    }
   }
 }

@@ -7,7 +7,9 @@ import { findShortcut, shortcutHint, SHORTCUTS, type Combo, type ShortcutAction 
 // Side panels are off by default; keep them (and the diff highlighter) out of the startup bundle.
 const RoutingLog = lazy(() => import('./components/RoutingLog/RoutingLog').then((m) => ({ default: m.RoutingLog })));
 const GitPanel = lazy(() => import('./components/GitPanel/GitPanel').then((m) => ({ default: m.GitPanel })));
-const BrowserPane = lazy(() => import('./components/BrowserPane/BrowserPane').then((m) => ({ default: m.BrowserPane })));
+const BrowserPane = lazy(() =>
+  import('./components/BrowserPane/BrowserPane').then((m) => ({ default: m.BrowserPane })),
+);
 import { useGitAttribution, type LastRoute } from './hooks/useGitAttribution';
 import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
@@ -169,7 +171,8 @@ export function App() {
       .log(id, input)
       .then((entry) => {
         // Drop the result if the user switched projects while the write was in flight.
-        if (entry && projectIdRef.current === entry.projectId) setRouteLog((prev) => (prev.some((p) => p.id === entry.id) ? prev : [entry, ...prev]));
+        if (entry && projectIdRef.current === entry.projectId)
+          setRouteLog((prev) => (prev.some((p) => p.id === entry.id) ? prev : [entry, ...prev]));
       })
       .catch((err: unknown) => console.error('routing log write failed', err));
   }, []);
@@ -189,7 +192,8 @@ export function App() {
   const routeMessage = useCallback(
     (targets: MentionTarget[], message: string): string | void => {
       const idle = targets.filter((t) => !ptyIds.current.has(t.id));
-      if (idle.length) return `${idle.map((t) => `@${t.handle}`).join(', ')} ${idle.length > 1 ? 'are' : 'is'} not running`;
+      if (idle.length)
+        return `${idle.map((t) => `@${t.handle}`).join(', ')} ${idle.length > 1 ? 'are' : 'is'} not running`;
       for (const t of targets) submitToPty(ptyIds.current.get(t.id)!, message);
       // Attribution only credits unambiguous single-target routes.
       lastRoute.current = targets.length === 1 ? { terminalId: targets[0].id, at: Date.now() } : null;
@@ -216,7 +220,14 @@ export function App() {
       const bytes = utf8Length(clean);
       lastRoute.current = { terminalId: target.id, at: Date.now() };
       const log = (viaFile: boolean) =>
-        recordRoute({ kind: 'forward', fromLabel: fromTitle, targets: [target.handle], preview: clean, bytes, viaFile });
+        recordRoute({
+          kind: 'forward',
+          fromLabel: fromTitle,
+          targets: [target.handle],
+          preview: clean,
+          bytes,
+          viaFile,
+        });
       if (bytes <= INLINE_FORWARD_LIMIT) {
         submitToPty(ptyId, clean);
         log(false);
@@ -309,7 +320,9 @@ export function App() {
   useEffect(() => {
     if (!ready || !project) return;
     const id = project.id;
-    const payload: PersistedLayout = browserUrl ? { layout, slots, activeSlot, browserUrl } : { layout, slots, activeSlot };
+    const payload: PersistedLayout = browserUrl
+      ? { layout, slots, activeSlot, browserUrl }
+      : { layout, slots, activeSlot };
     return scheduleSave('layout', () => {
       window.crewdeck.project.saveLayout(id, payload).catch((err: unknown) => console.error(err));
     });
@@ -605,7 +618,12 @@ export function App() {
     <div className="app">
       <div className="toolbar">
         <span className="title">crewdeck</span>
-        <button type="button" className="project" onClick={() => void selectProject()} title={project?.path ?? 'Choose project folder'}>
+        <button
+          type="button"
+          className="project"
+          onClick={() => void selectProject()}
+          title={project?.path ?? 'Choose project folder'}
+        >
           <i className={project ? 'ri-folder-3-line' : 'ri-folder-open-line'} aria-hidden="true" />
           {project ? project.name : 'Open Project…'}
         </button>
@@ -623,7 +641,13 @@ export function App() {
             </button>
           ))}
         </div>
-        <button type="button" className="new-term" data-agent="shell" onClick={() => void openTerminal('shell')} title={withHint('New shell terminal', 'newTerminal')}>
+        <button
+          type="button"
+          className="new-term"
+          data-agent="shell"
+          onClick={() => void openTerminal('shell')}
+          title={withHint('New shell terminal', 'newTerminal')}
+        >
           <i className="ri-terminal-box-line" aria-hidden="true" />
           Terminal
         </button>
@@ -712,7 +736,13 @@ export function App() {
       {worktreeError && (
         <div className="banner error" role="alert">
           <span>{worktreeError}</span>
-          <button type="button" className="icon-btn" title="Dismiss" aria-label="Dismiss" onClick={() => setWorktreeError(null)}>
+          <button
+            type="button"
+            className="icon-btn"
+            title="Dismiss"
+            aria-label="Dismiss"
+            onClick={() => setWorktreeError(null)}
+          >
             <i className="ri-close-line" aria-hidden="true" />
           </button>
         </div>
@@ -777,143 +807,143 @@ export function App() {
       </div>
 
       <div className="workspace">
-      {terminals.length === 0 ? (
-        <div className="grid empty">
-          <section className="onboard" aria-labelledby="onboard-title">
-            <span className="kicker">
-              <i className={project ? 'ri-terminal-window-line' : 'ri-folder-open-line'} aria-hidden="true" />
-              {project ? 'Deck armed' : 'No project'}
-            </span>
-            <h1 id="onboard-title">
-              {project ? (
-                <>
-                  Spin up the <em>crew</em>.
-                </>
-              ) : (
-                <>
-                  Pick a <em>project</em>.
-                </>
-              )}
-            </h1>
-            <p>
-              {project
-                ? `Working in ${project.name}. Launch a shell or an agent, tile up to four panes, and route one message to many with @mentions in the composer.`
-                : 'crewdeck runs shells and coding agents side by side against one folder. Choose a project to start the deck.'}
-            </p>
-            <ol>
-              <li>
-                <span className="idx">01</span>
-                <span>
-                  <b>Open a terminal</b> — shell or agent, from the toolbar.
-                </span>
-                <Keys combo={comboFor('newTerminal')} mac={IS_MAC} />
-              </li>
-              <li>
-                <span className="idx">02</span>
-                <span>
-                  <b>Tile the deck</b> — one, two or four panes.
-                </span>
-                <Keys combo={comboFor('layout4')} mac={IS_MAC} />
-              </li>
-              <li>
-                <span className="idx">03</span>
-                <span>
-                  <b>Route a message</b> — @mention panes from the composer.
-                </span>
-                <Keys combo={comboFor('focusComposer')} mac={IS_MAC} />
-              </li>
-              <li>
-                <span className="idx">04</span>
-                <span>
-                  <b>Every shortcut</b> — the full sheet.
-                </span>
-                <Keys combo={comboFor('help')} mac={IS_MAC} />
-              </li>
-            </ol>
-            {project ? (
-              <button type="button" className="cta" onClick={() => void openTerminal('shell')}>
-                <i className="ri-terminal-box-line" aria-hidden="true" />
-                Open shell
-              </button>
-            ) : (
-              <button type="button" className="cta" onClick={() => void selectProject()}>
-                <i className="ri-folder-open-line" aria-hidden="true" />
-                Choose folder
-              </button>
-            )}
-          </section>
-        </div>
-      ) : (
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-            gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
-          }}
-        >
-          {/* Every terminal stays mounted so scrollback survives tab/layout switches. */}
-          {terminals.map((t) => {
-            const slot = visibleSlots.indexOf(t.id);
-            return (
-              <TerminalPane
-                key={t.id}
-                terminalId={project ? t.id : undefined}
-                title={t.title}
-                agent={t.profileId}
-                shell={t.shell}
-                args={t.args}
-                env={t.env}
-                cwd={t.cwd}
-                resumeCommand={t.resumeCommand}
-                style={paneStyle(t.id)}
-                active={slot >= 0 && slot === activeSlot}
-                headerExtra={slot >= 0 && layout > 1 ? slotPicker(slot) : undefined}
-                onActivate={() => slot >= 0 && setActiveSlot(slot)}
-                onClose={() => closeTerminal(t.id)}
-                onPtyId={(p) => (p ? ptyIds.current.set(t.id, p) : ptyIds.current.delete(t.id))}
-                sendTargets={mentionTargets.filter((m) => m.id !== t.id)}
-                onSendSelection={(target, text) => forwardSelection(t.title, target, text)}
-              />
-            );
-          })}
-          {visibleSlots.map((id, slot) =>
-            id === null ? (
-              <div
-                key={`empty-${slot}`}
-                className={slot === activeSlot ? 'pane empty-slot active' : 'pane empty-slot'}
-                style={{ gridColumn: (slot % cols) + 1, gridRow: Math.floor(slot / cols) + 1 }}
-                onMouseDown={() => setActiveSlot(slot)}
-              >
-                <div className="pane-header">
-                  <span className="pane-title">Empty pane</span>
-                  {slotPicker(slot)}
-                </div>
-                <div className="empty">
-                  <span>Pick a terminal, or open a new one.</span>
-                  <span className="hint">
-                    New <Keys combo={comboFor('newTerminal')} mac={IS_MAC} />
-                    <span aria-hidden="true">·</span>
-                    Focus <Keys combo={comboFor(`focusPane${slot + 1}` as ShortcutAction)} mac={IS_MAC} />
+        {terminals.length === 0 ? (
+          <div className="grid empty">
+            <section className="onboard" aria-labelledby="onboard-title">
+              <span className="kicker">
+                <i className={project ? 'ri-terminal-window-line' : 'ri-folder-open-line'} aria-hidden="true" />
+                {project ? 'Deck armed' : 'No project'}
+              </span>
+              <h1 id="onboard-title">
+                {project ? (
+                  <>
+                    Spin up the <em>crew</em>.
+                  </>
+                ) : (
+                  <>
+                    Pick a <em>project</em>.
+                  </>
+                )}
+              </h1>
+              <p>
+                {project
+                  ? `Working in ${project.name}. Launch a shell or an agent, tile up to four panes, and route one message to many with @mentions in the composer.`
+                  : 'crewdeck runs shells and coding agents side by side against one folder. Choose a project to start the deck.'}
+              </p>
+              <ol>
+                <li>
+                  <span className="idx">01</span>
+                  <span>
+                    <b>Open a terminal</b> — shell or agent, from the toolbar.
                   </span>
+                  <Keys combo={comboFor('newTerminal')} mac={IS_MAC} />
+                </li>
+                <li>
+                  <span className="idx">02</span>
+                  <span>
+                    <b>Tile the deck</b> — one, two or four panes.
+                  </span>
+                  <Keys combo={comboFor('layout4')} mac={IS_MAC} />
+                </li>
+                <li>
+                  <span className="idx">03</span>
+                  <span>
+                    <b>Route a message</b> — @mention panes from the composer.
+                  </span>
+                  <Keys combo={comboFor('focusComposer')} mac={IS_MAC} />
+                </li>
+                <li>
+                  <span className="idx">04</span>
+                  <span>
+                    <b>Every shortcut</b> — the full sheet.
+                  </span>
+                  <Keys combo={comboFor('help')} mac={IS_MAC} />
+                </li>
+              </ol>
+              {project ? (
+                <button type="button" className="cta" onClick={() => void openTerminal('shell')}>
+                  <i className="ri-terminal-box-line" aria-hidden="true" />
+                  Open shell
+                </button>
+              ) : (
+                <button type="button" className="cta" onClick={() => void selectProject()}>
+                  <i className="ri-folder-open-line" aria-hidden="true" />
+                  Choose folder
+                </button>
+              )}
+            </section>
+          </div>
+        ) : (
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+            }}
+          >
+            {/* Every terminal stays mounted so scrollback survives tab/layout switches. */}
+            {terminals.map((t) => {
+              const slot = visibleSlots.indexOf(t.id);
+              return (
+                <TerminalPane
+                  key={t.id}
+                  terminalId={project ? t.id : undefined}
+                  title={t.title}
+                  agent={t.profileId}
+                  shell={t.shell}
+                  args={t.args}
+                  env={t.env}
+                  cwd={t.cwd}
+                  resumeCommand={t.resumeCommand}
+                  style={paneStyle(t.id)}
+                  active={slot >= 0 && slot === activeSlot}
+                  headerExtra={slot >= 0 && layout > 1 ? slotPicker(slot) : undefined}
+                  onActivate={() => slot >= 0 && setActiveSlot(slot)}
+                  onClose={() => closeTerminal(t.id)}
+                  onPtyId={(p) => (p ? ptyIds.current.set(t.id, p) : ptyIds.current.delete(t.id))}
+                  sendTargets={mentionTargets.filter((m) => m.id !== t.id)}
+                  onSendSelection={(target, text) => forwardSelection(t.title, target, text)}
+                />
+              );
+            })}
+            {visibleSlots.map((id, slot) =>
+              id === null ? (
+                <div
+                  key={`empty-${slot}`}
+                  className={slot === activeSlot ? 'pane empty-slot active' : 'pane empty-slot'}
+                  style={{ gridColumn: (slot % cols) + 1, gridRow: Math.floor(slot / cols) + 1 }}
+                  onMouseDown={() => setActiveSlot(slot)}
+                >
+                  <div className="pane-header">
+                    <span className="pane-title">Empty pane</span>
+                    {slotPicker(slot)}
+                  </div>
+                  <div className="empty">
+                    <span>Pick a terminal, or open a new one.</span>
+                    <span className="hint">
+                      New <Keys combo={comboFor('newTerminal')} mac={IS_MAC} />
+                      <span aria-hidden="true">·</span>
+                      Focus <Keys combo={comboFor(`focusPane${slot + 1}` as ShortcutAction)} mac={IS_MAC} />
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ) : null,
-          )}
-        </div>
-      )}
-      <Suspense fallback={null}>
-        {showLog && <RoutingLog entries={routeLog} hasProject={!!project} onClose={() => setShowLog(false)} />}
-        {showGit && <GitPanel projectId={projectId} onClose={() => setShowGit(false)} attributions={attributions} />}
-        {showBrowser && (
-          <BrowserPane
-            projectId={projectId}
-            hidden={showHelp}
-            initialUrl={browserUrl}
-            onUrlChange={setBrowserUrl}
-            onClose={() => setShowBrowser(false)}
-          />
+              ) : null,
+            )}
+          </div>
         )}
-      </Suspense>
+        <Suspense fallback={null}>
+          {showLog && <RoutingLog entries={routeLog} hasProject={!!project} onClose={() => setShowLog(false)} />}
+          {showGit && <GitPanel projectId={projectId} onClose={() => setShowGit(false)} attributions={attributions} />}
+          {showBrowser && (
+            <BrowserPane
+              projectId={projectId}
+              hidden={showHelp}
+              initialUrl={browserUrl}
+              onUrlChange={setBrowserUrl}
+              onClose={() => setShowBrowser(false)}
+            />
+          )}
+        </Suspense>
       </div>
 
       <Composer ref={composerRef} terminals={mentionTerminals} onSend={routeMessage} />

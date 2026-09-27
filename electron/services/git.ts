@@ -329,8 +329,13 @@ function isInside(base: string, p: string): boolean {
  * Creates a worktree for one tab on a fresh `crewdeck/<agent>-<shortid>` branch based on HEAD.
  * `dir` is any path inside the repository.
  */
-export async function worktreeAdd(dir: string, tabId: string, agentId: string): Promise<{ path: string; branch: string }> {
-  if (!WORKTREE_SEGMENT.test(tabId) || !WORKTREE_SEGMENT.test(agentId)) throw new GitError('invalid tab or agent id', null, '');
+export async function worktreeAdd(
+  dir: string,
+  tabId: string,
+  agentId: string,
+): Promise<{ path: string; branch: string }> {
+  if (!WORKTREE_SEGMENT.test(tabId) || !WORKTREE_SEGMENT.test(agentId))
+    throw new GitError('invalid tab or agent id', null, '');
   const root = await repoRoot(dir);
   if (!root) throw new GitError('not a git repository', null, '');
   if (!(await hasHead(root))) throw new GitError('repository has no commits yet', null, '');
@@ -349,11 +354,16 @@ export type WorktreeRemoveOutcome = { removed: true } | { removed: false; reason
  * Removes a crewdeck worktree and deletes its `crewdeck/*` branch. Without `force`, refuses when the
  * worktree has uncommitted changes or its branch is not merged into the main checkout's HEAD.
  */
-export async function worktreeRemove(dir: string, worktreePath: string, force: boolean): Promise<WorktreeRemoveOutcome> {
+export async function worktreeRemove(
+  dir: string,
+  worktreePath: string,
+  force: boolean,
+): Promise<WorktreeRemoveOutcome> {
   const root = await repoRoot(dir);
   if (!root) throw new GitError('not a git repository', null, '');
   const base = worktreesBase(root);
-  if (typeof worktreePath !== 'string' || !isInside(base, worktreePath)) throw new GitError('not a crewdeck worktree', null, '');
+  if (typeof worktreePath !== 'string' || !isInside(base, worktreePath))
+    throw new GitError('not a crewdeck worktree', null, '');
   const target = path.resolve(worktreePath);
 
   let branch: string | null = null;

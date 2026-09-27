@@ -24,7 +24,12 @@ if (process.argv.includes('--test')) {
     .map((f) => `tests/${f}`);
   await build({ ...common, entryPoints, outdir: 'dist-electron/tests', logLevel: 'warning' });
 } else {
-  const entryPoints = ['electron/main.ts', 'electron/preload.ts', 'electron/cli/crewdeck-browser.ts', 'electron/cli/crewdeck-mcp.ts'];
+  const entryPoints = [
+    'electron/main.ts',
+    'electron/preload.ts',
+    'electron/cli/crewdeck-browser.ts',
+    'electron/cli/crewdeck-mcp.ts',
+  ];
   if (process.argv.includes('--smoke')) entryPoints.push('electron/smoke.ts');
 
   if (watch) {

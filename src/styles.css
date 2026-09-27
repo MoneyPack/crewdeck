@@ -55,8 +55,8 @@
   /* terminal (xterm palette; read at runtime by TerminalPane) */
   --term-selection: rgba(255, 77, 0, 0.28);
   --term-selection-inactive: rgba(255, 77, 0, 0.14);
-  --term-scrollbar: rgba(232, 228, 218, 0.10);
-  --term-scrollbar-hover: rgba(232, 228, 218, 0.20);
+  --term-scrollbar: rgba(232, 228, 218, 0.1);
+  --term-scrollbar-hover: rgba(232, 228, 218, 0.2);
   --term-scrollbar-active: rgba(255, 77, 0, 0.45);
   --term-blue: #5b9dff;
   --term-magenta: #b69cff;
@@ -98,15 +98,27 @@
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 0.01em;
-  font-feature-settings: 'calt' 1, 'zero' 1;
+  font-feature-settings:
+    'calt' 1,
+    'zero' 1;
   -webkit-font-smoothing: antialiased;
 }
 
-[data-agent='claude'] { --agent: var(--claude); }
-[data-agent='codex'] { --agent: var(--codex); }
-[data-agent='gemini'] { --agent: var(--gemini); }
-[data-agent='opencode'] { --agent: var(--opencode); }
-[data-agent='shell'] { --agent: var(--shell); }
+[data-agent='claude'] {
+  --agent: var(--claude);
+}
+[data-agent='codex'] {
+  --agent: var(--codex);
+}
+[data-agent='gemini'] {
+  --agent: var(--gemini);
+}
+[data-agent='opencode'] {
+  --agent: var(--opencode);
+}
+[data-agent='shell'] {
+  --agent: var(--shell);
+}
 
 *,
 *::before,
@@ -136,8 +148,7 @@ body::before {
   z-index: 0;
   opacity: 0.55;
   background-image:
-    linear-gradient(var(--ink-3) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ink-3) 1px, transparent 1px);
+    linear-gradient(var(--ink-3) 1px, transparent 1px), linear-gradient(90deg, var(--ink-3) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -157,11 +168,23 @@ body::after {
   color: var(--ink);
 }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--rule-hi); border-radius: 0; }
-::-webkit-scrollbar-thumb:hover { background: var(--paper-mute); }
-::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rule-hi);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--paper-mute);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
 
 :focus-visible {
   outline: var(--rule-w) solid var(--signal);
@@ -184,21 +207,37 @@ textarea {
 }
 
 @keyframes slam {
-  from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
-  to { clip-path: inset(0 0 0 0); opacity: 1; }
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.4;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
 }
 
 @keyframes rise {
-  from { transform: translateY(6px); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 @keyframes blink {
-  50% { opacity: 0.25; }
+  50% {
+    opacity: 0.25;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
   }
@@ -271,7 +310,9 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    background var(--t-fast) var(--snap);
 }
 
 .toolbar button:hover:not(:disabled),
@@ -321,7 +362,9 @@ textarea {
   background-image:
     linear-gradient(45deg, transparent 50%, var(--paper-dim) 50%),
     linear-gradient(135deg, var(--paper-dim) 50%, transparent 50%);
-  background-position: calc(100% - 13px) 50%, calc(100% - 9px) 50%;
+  background-position:
+    calc(100% - 13px) 50%,
+    calc(100% - 9px) 50%;
   background-size: 4px 4px;
   background-repeat: no-repeat;
 }
@@ -403,7 +446,9 @@ textarea {
   scrollbar-width: none;
 }
 
-.tabs::-webkit-scrollbar { display: none; }
+.tabs::-webkit-scrollbar {
+  display: none;
+}
 
 .tab {
   position: relative;
@@ -418,7 +463,9 @@ textarea {
   user-select: none;
   border-right: var(--rule-w) solid var(--rule);
   font-size: var(--fs-xs);
-  transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    background var(--t-fast) var(--snap);
   animation: rise var(--t-med) var(--glide) both;
 }
 
@@ -550,7 +597,9 @@ textarea {
   pointer-events: none;
   border: 0 solid var(--agent);
   opacity: 0;
-  transition: opacity var(--t-fast) var(--snap), transform var(--t-med) var(--snap);
+  transition:
+    opacity var(--t-fast) var(--snap),
+    transform var(--t-med) var(--snap);
 }
 
 .pane::before {
@@ -597,7 +646,9 @@ textarea {
   flex: none;
   background: var(--agent);
   opacity: 0.4;
-  transition: opacity var(--t-fast) var(--snap), width var(--t-med) var(--snap);
+  transition:
+    opacity var(--t-fast) var(--snap),
+    width var(--t-med) var(--snap);
 }
 
 .pane.active .pane-header {
@@ -656,7 +707,9 @@ textarea {
   border-radius: 0;
   color: var(--paper-mute);
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    background var(--t-fast) var(--snap);
 }
 
 .pane-header button:hover:not(:disabled) {
@@ -689,7 +742,9 @@ textarea {
   border: var(--rule-w) solid var(--rule);
   border-radius: 0;
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), border-color var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    border-color var(--t-fast) var(--snap);
 }
 
 .send-selection:hover:not(:disabled) {
@@ -784,9 +839,7 @@ textarea {
 }
 
 .empty-slot {
-  background:
-    repeating-linear-gradient(-45deg, transparent 0 10px, var(--stripe) 10px 20px),
-    var(--ink);
+  background: repeating-linear-gradient(-45deg, transparent 0 10px, var(--stripe) 10px 20px), var(--ink);
 }
 
 .empty-slot .empty {
@@ -878,9 +931,15 @@ textarea {
   animation: rise var(--t-med) var(--glide) both;
 }
 
-.onboard li:nth-child(2) { animation-delay: 60ms; }
-.onboard li:nth-child(3) { animation-delay: 120ms; }
-.onboard li:nth-child(4) { animation-delay: 180ms; }
+.onboard li:nth-child(2) {
+  animation-delay: 60ms;
+}
+.onboard li:nth-child(3) {
+  animation-delay: 120ms;
+}
+.onboard li:nth-child(4) {
+  animation-delay: 180ms;
+}
 
 .onboard li .idx {
   font-family: var(--wide);
@@ -911,7 +970,9 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   cursor: pointer;
-  transition: background var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
+  transition:
+    background var(--t-fast) var(--snap),
+    color var(--t-fast) var(--snap);
 }
 
 .onboard .cta:hover:not(:disabled) {
@@ -1018,7 +1079,9 @@ kbd {
   border: var(--rule-w) solid var(--rule);
   border-radius: var(--r);
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), border-color var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    border-color var(--t-fast) var(--snap);
 }
 
 .shortcut-sheet header .icon-btn:hover:not(:disabled),
@@ -1170,7 +1233,9 @@ kbd {
   border-radius: 0;
   appearance: none;
   cursor: pointer;
-  transition: border-color var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
+  transition:
+    border-color var(--t-fast) var(--snap),
+    color var(--t-fast) var(--snap);
 }
 
 .slot-picker:hover,
@@ -1237,7 +1302,9 @@ kbd {
   border: var(--rule-w) solid transparent;
   border-radius: 0;
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), border-color var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    border-color var(--t-fast) var(--snap);
 }
 
 .routing-log-header button:hover:not(:disabled) {
@@ -1270,8 +1337,7 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--paper-mute);
-  background:
-    repeating-linear-gradient(-45deg, transparent 0 10px, var(--stripe) 10px 20px);
+  background: repeating-linear-gradient(-45deg, transparent 0 10px, var(--stripe) 10px 20px);
 }
 
 .routing-log-list {
@@ -1430,7 +1496,9 @@ kbd {
   border-radius: 0;
   resize: none;
   caret-color: var(--signal);
-  transition: border-color var(--t-fast) var(--snap), box-shadow var(--t-fast) var(--snap);
+  transition:
+    border-color var(--t-fast) var(--snap),
+    box-shadow var(--t-fast) var(--snap);
 }
 
 .composer-input::placeholder {
@@ -1602,7 +1670,9 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    background var(--t-fast) var(--snap);
 }
 
 .git-panel-header button:hover:not(:disabled) {
@@ -1703,7 +1773,9 @@ kbd {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background var(--t-fast) var(--snap), border-color var(--t-fast) var(--snap);
+  transition:
+    background var(--t-fast) var(--snap),
+    border-color var(--t-fast) var(--snap);
 }
 
 .git-file:hover {
@@ -1758,19 +1830,29 @@ kbd {
 }
 
 .git-badge.modified,
-.git-badge.typechange { background: var(--warn); }
+.git-badge.typechange {
+  background: var(--warn);
+}
 .git-badge.added,
-.git-badge.untracked { background: var(--ok); }
-.git-badge.deleted { background: var(--err); }
+.git-badge.untracked {
+  background: var(--ok);
+}
+.git-badge.deleted {
+  background: var(--err);
+}
 .git-badge.renamed,
-.git-badge.copied { background: var(--info); }
+.git-badge.copied {
+  background: var(--info);
+}
 .git-badge.conflicted {
   background: var(--err);
   animation: pulse-err 1.2s var(--snap) infinite;
 }
 
 @keyframes pulse-err {
-  50% { box-shadow: 0 0 0 3px var(--err-glow); }
+  50% {
+    box-shadow: 0 0 0 3px var(--err-glow);
+  }
 }
 
 .git-actions {
@@ -1797,7 +1879,9 @@ kbd {
   border-radius: var(--r);
   color: var(--paper-dim);
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    background var(--t-fast) var(--snap);
 }
 
 .git-actions button:hover:not(:disabled) {
@@ -1944,8 +2028,12 @@ kbd {
   font-variant-numeric: tabular-nums;
 }
 
-.diff-stats .add { color: var(--ok); }
-.diff-stats .del { color: var(--err); }
+.diff-stats .add {
+  color: var(--ok);
+}
+.diff-stats .del {
+  color: var(--err);
+}
 
 .diff-truncated {
   margin-left: auto;
@@ -1982,7 +2070,9 @@ kbd {
   min-width: 100%;
 }
 
-.diff-line:hover { background: var(--ink-2); }
+.diff-line:hover {
+  background: var(--ink-2);
+}
 
 .diff-line.add {
   background: var(--ok-soft);
@@ -2018,8 +2108,12 @@ kbd {
   font-weight: 700;
 }
 
-.diff-line.add .diff-sign { color: var(--ok); }
-.diff-line.del .diff-sign { color: var(--err); }
+.diff-line.add .diff-sign {
+  color: var(--ok);
+}
+.diff-line.del .diff-sign {
+  color: var(--err);
+}
 
 .diff-text {
   white-space: pre;
@@ -2031,7 +2125,9 @@ kbd {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
-.diff-row > .diff-line { overflow: hidden; }
+.diff-row > .diff-line {
+  overflow: hidden;
+}
 
 .diff-row > .diff-line + .diff-line {
   border-left-width: 3px;
@@ -2045,14 +2141,32 @@ kbd {
 }
 
 /* syntax tokens — brutal palette, no GitHub pastel */
-.tok-kw { color: var(--signal); font-weight: 700; }
-.tok-str { color: var(--ok); }
-.tok-com { color: var(--paper-mute); font-style: italic; }
-.tok-num { color: var(--info); }
-.tok-fn { color: var(--gemini); }
-.tok-type { color: var(--warn); }
-.tok-punc { color: var(--paper-dim); }
-.tok-plain { color: inherit; }
+.tok-kw {
+  color: var(--signal);
+  font-weight: 700;
+}
+.tok-str {
+  color: var(--ok);
+}
+.tok-com {
+  color: var(--paper-mute);
+  font-style: italic;
+}
+.tok-num {
+  color: var(--info);
+}
+.tok-fn {
+  color: var(--gemini);
+}
+.tok-type {
+  color: var(--warn);
+}
+.tok-punc {
+  color: var(--paper-dim);
+}
+.tok-plain {
+  color: inherit;
+}
 
 /* ================================================================
    BANNER + BRANCH BADGE
@@ -2165,7 +2279,10 @@ kbd {
 }
 
 @keyframes browser-blink {
-  to { background: transparent; box-shadow: inset 0 0 0 2px var(--signal); }
+  to {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px var(--signal);
+  }
 }
 
 .browser-nav {
@@ -2188,7 +2305,9 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: color var(--t-fast) var(--snap), background var(--t-fast) var(--snap);
+  transition:
+    color var(--t-fast) var(--snap),
+    background var(--t-fast) var(--snap);
 }
 
 .browser-nav button {
@@ -2233,7 +2352,9 @@ kbd {
   padding: 0 var(--s2);
   border-left: var(--rule-w) solid var(--rule);
   color: var(--paper-mute);
-  transition: background var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
+  transition:
+    background var(--t-fast) var(--snap),
+    color var(--t-fast) var(--snap);
 }
 
 .browser-address:focus-within {
@@ -2297,8 +2418,7 @@ kbd {
   display: grid;
   place-items: center;
   background-image:
-    linear-gradient(var(--rule) 1px, transparent 1px),
-    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+    linear-gradient(var(--rule) 1px, transparent 1px), linear-gradient(90deg, var(--rule) 1px, transparent 1px);
   background-size: 24px 24px;
   background-position: -1px -1px;
 }
@@ -2461,7 +2581,9 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   cursor: pointer;
-  transition: background var(--t-fast) var(--snap), color var(--t-fast) var(--snap);
+  transition:
+    background var(--t-fast) var(--snap),
+    color var(--t-fast) var(--snap);
 }
 
 .crash button:hover:not(:disabled) {
@@ -2473,4 +2595,3 @@ kbd {
   outline: var(--rule-w) solid var(--signal);
   outline-offset: -2px;
 }
-

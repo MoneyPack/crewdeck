@@ -100,6 +100,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 > All Overseer work sits behind the `overseer.enabled` flag (off by default). Provider: Claude (`@anthropic-ai/sdk`). Every writing run gets its own worktree/branch and merges only after diff review. Push and release always require explicit approval.
 
 ## Overseer Phase 0 — Spikes
+
 - **CD-27 SDK tool-loop spike** (0.5d)
   AC: a throwaway script shows Claude calling a tool via `@anthropic-ai/sdk` and using the result in its answer.
 - **CD-28 CLI headless/MCP spike** (1d)
@@ -108,6 +109,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 ---
 
 ## Overseer Phase 1 — Run model
+
 - **CD-29 Migration `004_overseer.sql`** (0.5d)
   AC: new tables for runs, tool calls, approvals, audit and memory (TEXT UUIDs, epoch-ms, `json_valid()` checks); applied by `db.ts`; `schema.sql` untouched.
 - **CD-30 Service skeleton + flag** (0.5d)
@@ -120,6 +122,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 ---
 
 ## Overseer Phase 2 — Tools, policy, audit
+
 - **CD-33 ToolRegistry** (1d)
   AC: tools register with a schema and a risk class (`read`, `write-local`, `exec`, `git-local`, `network`, `git-remote`, `release`); invalid input rejected before execution.
 - **CD-34 Policy** (0.5d)
@@ -132,6 +135,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 ---
 
 ## Overseer Phase 3 — Claude runtime and panel
+
 - **CD-37 API key storage** (0.5d)
   AC: Anthropic key stored encrypted via `safeStorage`; never written to logs or the renderer.
 - **CD-38 ApiRuntime** (2d)
@@ -146,6 +150,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 ---
 
 ## Overseer Phase 4 — Safe changes
+
 - **CD-42 Worktree per run** (0.5d)
   AC: each writing run works in its own git worktree and branch; cleaned up after merge or discard.
 - **CD-43 Write tools** (1d)
@@ -158,6 +163,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 ---
 
 ## Overseer Phase 5 — CLI runtimes
+
 - **CD-46 Per-run bridge tokens** (0.5d)
   AC: each run gets its own short-lived bridge token scoped to its allowed tools; revoked when the run ends.
 - **CD-47 Extend `crewdeck-mcp`** (1d)
@@ -168,6 +174,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 ---
 
 ## Overseer Phase 6 — Test, build and hand-off
+
 - **CD-49 Exec tools** (1d)
   AC: typecheck, `npm test` and build runnable inside the run's worktree; `exec` risk; output captured in the audit trail.
 - **CD-50 `@overseer` and hand-off** (1.5d)
@@ -176,6 +183,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 ---
 
 ## Overseer Phase 7 — Push, PR, release
+
 - **CD-51 Push and PR** (1d)
   AC: push branch and open a PR only after approval; force-push always denied.
 - **CD-52 Release** (1d)
@@ -188,5 +196,6 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 **Overseer totals:** Phases 0–4 ≈ 17.5d; Phases 5–7 ≈ 9.5d; ≈ 27d overall.
 
 ## Explicitly out of MVP
+
 Embedded browser (CDP), workflow/chart canvas (`@xyflow/react`), multi-project, collaboration,
 tunnels, SSO, audit logging, macOS/Linux builds, licensing/monetization.

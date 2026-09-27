@@ -1,5 +1,11 @@
 import { useImperativeHandle, useMemo, useRef, useState, type KeyboardEvent, type Ref } from 'react';
-import { mentionCompletions, mentionHandles, parseMention, type MentionTarget, type MentionTerminal } from '../../../shared/mention';
+import {
+  mentionCompletions,
+  mentionHandles,
+  parseMention,
+  type MentionTarget,
+  type MentionTerminal,
+} from '../../../shared/mention';
 
 const HISTORY_MAX = 100;
 
@@ -171,7 +177,9 @@ export function Composer({ terminals, onSend, ref }: ComposerProps) {
         spellCheck={false}
         value={text}
         placeholder={
-          handles.length ? `@${handles[0].handle} message…  (Enter send · Shift+Enter newline · ↑↓ history)` : 'Open a terminal to send messages'
+          handles.length
+            ? `@${handles[0].handle} message…  (Enter send · Shift+Enter newline · ↑↓ history)`
+            : 'Open a terminal to send messages'
         }
         onChange={(e) => {
           setText(e.target.value);

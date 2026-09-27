@@ -70,8 +70,7 @@ type XtermThemeKey = (typeof XTERM_THEME_TOKENS)[number][0];
 
 /** Resolve design tokens to concrete colors (xterm cannot consume var()). */
 function readXtermTheme(): Record<XtermThemeKey, string> {
-  const style =
-    typeof document === 'undefined' ? null : getComputedStyle(document.documentElement);
+  const style = typeof document === 'undefined' ? null : getComputedStyle(document.documentElement);
   const theme = {} as Record<XtermThemeKey, string>;
   for (const [key, prop, fallback] of XTERM_THEME_TOKENS) {
     theme[key] = style?.getPropertyValue(prop).trim() || fallback;
@@ -100,9 +99,31 @@ function sanitizeReplay(data: string): string {
 /** A nonzero exit this soon after spawn almost always means the command could not start. */
 const FAST_EXIT_MS = 1500;
 
-type Status = { kind: 'starting' } | { kind: 'running'; pid: number } | { kind: 'exited'; code: number } | { kind: 'error'; message: string };
+type Status =
+  | { kind: 'starting' }
+  | { kind: 'running'; pid: number }
+  | { kind: 'exited'; code: number }
+  | { kind: 'error'; message: string };
 
-export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeCommand, restoredFrom, active, style, headerExtra, onActivate, onClose, onPtyId, sendTargets, onSendSelection, agent }: TerminalPaneProps) {
+export function TerminalPane({
+  title,
+  shell,
+  args,
+  cwd,
+  env,
+  terminalId,
+  resumeCommand,
+  restoredFrom,
+  active,
+  style,
+  headerExtra,
+  onActivate,
+  onClose,
+  onPtyId,
+  sendTargets,
+  onSendSelection,
+  agent,
+}: TerminalPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const onPtyIdRef = useRef(onPtyId);
   onPtyIdRef.current = onPtyId;
@@ -277,7 +298,17 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
     replay
       .then(() => {
         if (disposed) throw new Error('disposed');
-        return api.create({ shell, args, cwd, env, terminalId, resumeCommand, restoredFrom, cols: term.cols, rows: term.rows });
+        return api.create({
+          shell,
+          args,
+          cwd,
+          env,
+          terminalId,
+          resumeCommand,
+          restoredFrom,
+          cols: term.cols,
+          rows: term.rows,
+        });
       })
       .then((result) => {
         if (disposed) {
@@ -354,7 +385,13 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
         {sendNote && <span className="send-note">{sendNote}</span>}
         <span className="status">{describe(status)}</span>
         {onClose && (
-          <button type="button" className="icon-btn" title="Close terminal" aria-label="Close terminal" onClick={onClose}>
+          <button
+            type="button"
+            className="icon-btn"
+            title="Close terminal"
+            aria-label="Close terminal"
+            onClick={onClose}
+          >
             <i className="ri-close-line" aria-hidden="true" />
           </button>
         )}

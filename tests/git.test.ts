@@ -58,7 +58,10 @@ test('parsePorcelain: file states and staged/unstaged flags', () => {
   );
   const by = Object.fromEntries(r.files.map((f) => [f.path, f]));
   assert.equal(by['ignored.log'], undefined);
-  assert.deepEqual([by['staged.ts'].state, by['staged.ts'].staged, by['staged.ts'].unstaged], ['modified', true, false]);
+  assert.deepEqual(
+    [by['staged.ts'].state, by['staged.ts'].staged, by['staged.ts'].unstaged],
+    ['modified', true, false],
+  );
   assert.deepEqual([by['dirty.ts'].state, by['dirty.ts'].staged, by['dirty.ts'].unstaged], ['modified', false, true]);
   assert.deepEqual([by['both.ts'].staged, by['both.ts'].unstaged], [true, true]);
   assert.equal(by['new.ts'].state, 'added');
@@ -67,7 +70,10 @@ test('parsePorcelain: file states and staged/unstaged flags', () => {
     [by['untracked file.txt'].state, by['untracked file.txt'].staged, by['untracked file.txt'].unstaged],
     ['untracked', false, true],
   );
-  assert.deepEqual([by['conflict.ts'].state, by['conflict.ts'].staged, by['conflict.ts'].unstaged], ['conflicted', false, true]);
+  assert.deepEqual(
+    [by['conflict.ts'].state, by['conflict.ts'].staged, by['conflict.ts'].unstaged],
+    ['conflicted', false, true],
+  );
   assert.equal(by['both-added.ts'].state, 'conflicted');
   assert.equal(by['link'].state, 'typechange');
 });
@@ -83,7 +89,10 @@ test('parsePorcelain: renames consume the next NUL field as oldPath', () => {
 
 test('parsePorcelain: truncates past maxFiles and skips junk', () => {
   const r = parsePorcelain(z(' M a', ' M b', 'xy', ' M c'), 2);
-  assert.deepEqual(r.files.map((f) => f.path), ['a', 'b']);
+  assert.deepEqual(
+    r.files.map((f) => f.path),
+    ['a', 'b'],
+  );
   assert.equal(r.truncated, true);
   assert.deepEqual(parsePorcelain('').files, []);
 });
@@ -92,7 +101,17 @@ test('resolveInRepo rejects escapes and git internals', () => {
   const root = path.resolve(os.tmpdir(), 'repo');
   assert.equal(resolveInRepo(root, 'src/a.ts'), path.join(root, 'src', 'a.ts'));
   assert.equal(resolveInRepo(root, 'src/../b.ts'), path.join(root, 'b.ts'));
-  for (const bad of ['', '..', '../x', 'a/../../x', 'a\0b', '.git/config', '.GIT\\HEAD', 'x'.repeat(4097), path.resolve(root, 'a')]) {
+  for (const bad of [
+    '',
+    '..',
+    '../x',
+    'a/../../x',
+    'a\0b',
+    '.git/config',
+    '.GIT\\HEAD',
+    'x'.repeat(4097),
+    path.resolve(root, 'a'),
+  ]) {
     assert.equal(resolveInRepo(root, bad), null, JSON.stringify(bad.slice(0, 40)));
   }
   assert.equal(resolveInRepo(root, '.'), null);
@@ -172,77 +191,81 @@ test('gitStatus/gitStage/gitDiff against a real repo', { skip: !hasGit() && 'git
   }
 });
 
-test('worktreeAdd/worktreeRemove lifecycle against a real repo', { skip: !hasGit() && 'git not installed' }, async () => {
-  // Parent dir holds both the repo and its sibling .crewdeck-worktrees folder, so one rm cleans all.
-  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-wt-'));
-  const dir = path.join(parent, 'proj');
-  fs.mkdirSync(dir);
-  try {
-    const git = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, stdio: 'pipe' }).toString();
-    git(dir, 'init', '-q', '-b', 'main');
-    git(dir, 'config', 'user.email', 't@example.com');
-    git(dir, 'config', 'user.name', 'T');
-    git(dir, 'config', 'core.autocrlf', 'false');
-    git(dir, 'config', 'core.fsmonitor', 'false');
-
-    await assert.rejects(worktreeAdd(dir, 'tab1', 'claude'), /no commits yet/);
-    fs.writeFileSync(path.join(dir, 'a.txt'), 'one\n');
-    git(dir, 'add', 'a.txt');
-    git(dir, 'commit', '-q', '-m', 'init');
-
-    await assert.rejects(worktreeAdd(dir, '../evil', 'claude'), /invalid tab or agent id/);
-    await assert.rejects(worktreeAdd(dir, 'tab1', 'bad agent'), /invalid tab or agent id/);
-
-    const root = (await gitStatus(dir)).root!;
-    const base = worktreesBase(root);
-
-    // Clean worktree: add then remove without force, branch deleted.
-    const wt = await worktreeAdd(dir, 'tab1', 'Claude');
-    assert.equal(wt.path, path.join(base, 'tab1'));
-    assert.match(wt.branch, /^crewdeck\/claude-[0-9a-f]{6}$/);
-    assert.ok(fs.existsSync(path.join(wt.path, 'a.txt')));
-    assert.equal(git(wt.path, 'rev-parse', '--abbrev-ref', 'HEAD').trim(), wt.branch);
-    await assert.rejects(worktreeAdd(dir, 'tab1', 'claude'), /already exists/);
-    assert.deepEqual(await worktreeRemove(dir, wt.path, false), { removed: true });
-    assert.equal(fs.existsSync(wt.path), false);
-    assert.equal(git(root, 'branch', '--list', wt.branch).trim(), '');
-
-    // Dirty worktree: refused without force, removed with force.
-    const dirty = await worktreeAdd(dir, 'tab2', 'codex');
-    fs.writeFileSync(path.join(dirty.path, 'scratch.txt'), 'wip\n');
-    const refused = await worktreeRemove(dir, dirty.path, false);
-    assert.deepEqual(refused, { removed: false, reason: 'worktree has uncommitted changes', needsForce: true });
-    assert.ok(fs.existsSync(dirty.path));
-    assert.deepEqual(await worktreeRemove(dir, dirty.path, true), { removed: true });
-    assert.equal(fs.existsSync(dirty.path), false);
-    assert.equal(git(root, 'branch', '--list', dirty.branch).trim(), '');
-
-    // Unmerged commits: refused without force.
-    const ahead = await worktreeAdd(dir, 'tab3', 'gemini');
-    fs.writeFileSync(path.join(ahead.path, 'b.txt'), 'b\n');
-    git(ahead.path, 'add', 'b.txt');
-    git(ahead.path, '-c', 'user.email=t@example.com', '-c', 'user.name=T', 'commit', '-q', '-m', 'work');
-    const unmerged = await worktreeRemove(dir, ahead.path, false);
-    assert.equal(unmerged.removed, false);
-    assert.ok(!unmerged.removed && unmerged.needsForce && /not merged/.test(unmerged.reason));
-    assert.deepEqual(await worktreeRemove(dir, ahead.path, true), { removed: true });
-
-    // Folder deleted out from under git: remove prunes instead of failing.
-    const gone = await worktreeAdd(dir, 'tab4', 'claude');
-    fs.rmSync(gone.path, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
-    assert.deepEqual(await worktreeRemove(dir, gone.path, false), { removed: true });
-    assert.doesNotMatch(git(root, 'worktree', 'list', '--porcelain'), /tab4/);
-
-    // Paths outside the crewdeck base are never touched.
-    for (const bad of [root, base, path.join(base, '..', 'other', 'x'), path.join(parent, 'elsewhere')]) {
-      await assert.rejects(worktreeRemove(dir, bad, true), /not a crewdeck worktree/, bad);
-    }
-    assert.ok(fs.existsSync(path.join(root, 'a.txt')));
-  } finally {
+test(
+  'worktreeAdd/worktreeRemove lifecycle against a real repo',
+  { skip: !hasGit() && 'git not installed' },
+  async () => {
+    // Parent dir holds both the repo and its sibling .crewdeck-worktrees folder, so one rm cleans all.
+    const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-wt-'));
+    const dir = path.join(parent, 'proj');
+    fs.mkdirSync(dir);
     try {
-      fs.rmSync(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
-    } catch {
-      /* temp dir leak is harmless */
+      const git = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, stdio: 'pipe' }).toString();
+      git(dir, 'init', '-q', '-b', 'main');
+      git(dir, 'config', 'user.email', 't@example.com');
+      git(dir, 'config', 'user.name', 'T');
+      git(dir, 'config', 'core.autocrlf', 'false');
+      git(dir, 'config', 'core.fsmonitor', 'false');
+
+      await assert.rejects(worktreeAdd(dir, 'tab1', 'claude'), /no commits yet/);
+      fs.writeFileSync(path.join(dir, 'a.txt'), 'one\n');
+      git(dir, 'add', 'a.txt');
+      git(dir, 'commit', '-q', '-m', 'init');
+
+      await assert.rejects(worktreeAdd(dir, '../evil', 'claude'), /invalid tab or agent id/);
+      await assert.rejects(worktreeAdd(dir, 'tab1', 'bad agent'), /invalid tab or agent id/);
+
+      const root = (await gitStatus(dir)).root!;
+      const base = worktreesBase(root);
+
+      // Clean worktree: add then remove without force, branch deleted.
+      const wt = await worktreeAdd(dir, 'tab1', 'Claude');
+      assert.equal(wt.path, path.join(base, 'tab1'));
+      assert.match(wt.branch, /^crewdeck\/claude-[0-9a-f]{6}$/);
+      assert.ok(fs.existsSync(path.join(wt.path, 'a.txt')));
+      assert.equal(git(wt.path, 'rev-parse', '--abbrev-ref', 'HEAD').trim(), wt.branch);
+      await assert.rejects(worktreeAdd(dir, 'tab1', 'claude'), /already exists/);
+      assert.deepEqual(await worktreeRemove(dir, wt.path, false), { removed: true });
+      assert.equal(fs.existsSync(wt.path), false);
+      assert.equal(git(root, 'branch', '--list', wt.branch).trim(), '');
+
+      // Dirty worktree: refused without force, removed with force.
+      const dirty = await worktreeAdd(dir, 'tab2', 'codex');
+      fs.writeFileSync(path.join(dirty.path, 'scratch.txt'), 'wip\n');
+      const refused = await worktreeRemove(dir, dirty.path, false);
+      assert.deepEqual(refused, { removed: false, reason: 'worktree has uncommitted changes', needsForce: true });
+      assert.ok(fs.existsSync(dirty.path));
+      assert.deepEqual(await worktreeRemove(dir, dirty.path, true), { removed: true });
+      assert.equal(fs.existsSync(dirty.path), false);
+      assert.equal(git(root, 'branch', '--list', dirty.branch).trim(), '');
+
+      // Unmerged commits: refused without force.
+      const ahead = await worktreeAdd(dir, 'tab3', 'gemini');
+      fs.writeFileSync(path.join(ahead.path, 'b.txt'), 'b\n');
+      git(ahead.path, 'add', 'b.txt');
+      git(ahead.path, '-c', 'user.email=t@example.com', '-c', 'user.name=T', 'commit', '-q', '-m', 'work');
+      const unmerged = await worktreeRemove(dir, ahead.path, false);
+      assert.equal(unmerged.removed, false);
+      assert.ok(!unmerged.removed && unmerged.needsForce && /not merged/.test(unmerged.reason));
+      assert.deepEqual(await worktreeRemove(dir, ahead.path, true), { removed: true });
+
+      // Folder deleted out from under git: remove prunes instead of failing.
+      const gone = await worktreeAdd(dir, 'tab4', 'claude');
+      fs.rmSync(gone.path, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+      assert.deepEqual(await worktreeRemove(dir, gone.path, false), { removed: true });
+      assert.doesNotMatch(git(root, 'worktree', 'list', '--porcelain'), /tab4/);
+
+      // Paths outside the crewdeck base are never touched.
+      for (const bad of [root, base, path.join(base, '..', 'other', 'x'), path.join(parent, 'elsewhere')]) {
+        await assert.rejects(worktreeRemove(dir, bad, true), /not a crewdeck worktree/, bad);
+      }
+      assert.ok(fs.existsSync(path.join(root, 'a.txt')));
+    } finally {
+      try {
+        fs.rmSync(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+      } catch {
+        /* temp dir leak is harmless */
+      }
     }
-  }
-});
+  },
+);

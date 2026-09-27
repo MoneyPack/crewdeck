@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DiffViewer, type DiffMode } from './DiffViewer';
-import type { GitActionResult, GitDiffKind, GitDiffResult, GitFileState, GitFileStatus, GitStatus } from '../../../shared/ipc';
+import type {
+  GitActionResult,
+  GitDiffKind,
+  GitDiffResult,
+  GitFileState,
+  GitFileStatus,
+  GitStatus,
+} from '../../../shared/ipc';
 
 type Section = 'staged' | 'unstaged';
 
@@ -40,7 +47,14 @@ function badgeFor(f: GitFileStatus, section: Section): { letter: string; label: 
     return { ...b, cls: f.state };
   }
   const col = section === 'staged' ? f.index : f.worktree;
-  const byCol: Record<string, GitFileState> = { A: 'added', D: 'deleted', R: 'renamed', C: 'copied', T: 'typechange', M: 'modified' };
+  const byCol: Record<string, GitFileState> = {
+    A: 'added',
+    D: 'deleted',
+    R: 'renamed',
+    C: 'copied',
+    T: 'typechange',
+    M: 'modified',
+  };
   const state = byCol[col] ?? f.state;
   return { ...STATE_BADGE[state], cls: state };
 }
@@ -221,7 +235,12 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
                     </button>
                   )}
                   {section === 'unstaged' ? (
-                    <button type="button" title="Stage" disabled={busy} onClick={() => void runAction(() => window.crewdeck.git.stage(projectId!, f.path))}>
+                    <button
+                      type="button"
+                      title="Stage"
+                      disabled={busy}
+                      onClick={() => void runAction(() => window.crewdeck.git.stage(projectId!, f.path))}
+                    >
                       +
                     </button>
                   ) : (
@@ -285,10 +304,18 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
         <span className="spacer" />
         {isOpen && (
           <div className="diff-mode" role="group" aria-label="Diff layout">
-            <button type="button" className={mode === 'unified' ? 'selected' : undefined} onClick={() => setMode('unified')}>
+            <button
+              type="button"
+              className={mode === 'unified' ? 'selected' : undefined}
+              onClick={() => setMode('unified')}
+            >
               Unified
             </button>
-            <button type="button" className={mode === 'split' ? 'selected' : undefined} onClick={() => setMode('split')}>
+            <button
+              type="button"
+              className={mode === 'split' ? 'selected' : undefined}
+              onClick={() => setMode('split')}
+            >
               Split
             </button>
           </div>
@@ -307,7 +334,15 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
             <div className="git-diff-path" title={selectedFile.path}>
               {selectedFile.oldPath && selected?.section === 'staged' ? `${selectedFile.oldPath} → ` : ''}
               {selectedFile.path}
-              <span className="muted"> · {selected?.section === 'staged' ? 'staged' : selectedFile.state === 'untracked' ? 'untracked' : 'unstaged'}</span>
+              <span className="muted">
+                {' '}
+                ·{' '}
+                {selected?.section === 'staged'
+                  ? 'staged'
+                  : selectedFile.state === 'untracked'
+                    ? 'untracked'
+                    : 'unstaged'}
+              </span>
             </div>
             <DiffViewer diff={diff} loading={diffLoading} error={diffError} mode={mode} />
           </div>

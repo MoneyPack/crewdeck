@@ -77,6 +77,5 @@ test('no duplicate combos and every group is known', () => {
 
 test('shortcuts avoid plain terminal control keys', () => {
   // Ctrl+<letter> without Shift is reserved for the shell (^C, ^D, ^R, ...).
-  for (const s of SHORTCUTS)
-    for (const c of s.combos) assert.ok(!(c.mod && !c.shift && /^Key/.test(c.code)), s.action);
+  for (const s of SHORTCUTS) for (const c of s.combos) assert.ok(!(c.mod && !c.shift && /^Key/.test(c.code)), s.action);
 });
