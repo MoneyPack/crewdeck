@@ -37,36 +37,55 @@ export interface TerminalPaneProps {
   agent?: string;
 }
 
-/** xterm palette derived from the design tokens in styles.css (ink/paper/signal). */
-const XTERM_THEME = {
-  background: '#0c0c0a',
-  foreground: '#e8e4da',
-  cursor: '#ff4d00',
-  cursorAccent: '#0c0c0a',
-  selectionBackground: 'rgba(255, 77, 0, 0.28)',
-  selectionInactiveBackground: 'rgba(255, 77, 0, 0.14)',
-  scrollbarSliderBackground: 'rgba(232, 228, 218, 0.10)',
-  scrollbarSliderHoverBackground: 'rgba(232, 228, 218, 0.20)',
-  scrollbarSliderActiveBackground: 'rgba(255, 77, 0, 0.45)',
-  black: '#1d1d1a',
-  red: '#ff3b3b',
-  green: '#c6f432',
-  yellow: '#ffc233',
-  blue: '#5b9dff',
-  magenta: '#b69cff',
-  cyan: '#3fe0ff',
-  white: '#c9c4b8',
-  brightBlack: '#5d5a52',
-  brightRed: '#ff6b5b',
-  brightGreen: '#d8ff6a',
-  brightYellow: '#ffd466',
-  brightBlue: '#8bbaff',
-  brightMagenta: '#cfbcff',
-  brightCyan: '#7cecff',
-  brightWhite: '#f4f1ea',
-} as const;
+/** xterm palette from styles.css design tokens: [xterm key, CSS custom property, fallback literal]. */
+const XTERM_THEME_TOKENS = [
+  ['background', '--ink', '#0c0c0a'],
+  ['foreground', '--paper', '#e8e4da'],
+  ['cursor', '--signal', '#ff4d00'],
+  ['cursorAccent', '--ink', '#0c0c0a'],
+  ['selectionBackground', '--term-selection', 'rgba(255, 77, 0, 0.28)'],
+  ['selectionInactiveBackground', '--term-selection-inactive', 'rgba(255, 77, 0, 0.14)'],
+  ['scrollbarSliderBackground', '--term-scrollbar', 'rgba(232, 228, 218, 0.10)'],
+  ['scrollbarSliderHoverBackground', '--term-scrollbar-hover', 'rgba(232, 228, 218, 0.20)'],
+  ['scrollbarSliderActiveBackground', '--term-scrollbar-active', 'rgba(255, 77, 0, 0.45)'],
+  ['black', '--ink-3', '#1d1d1a'],
+  ['red', '--err', '#ff3b3b'],
+  ['green', '--ok', '#c6f432'],
+  ['yellow', '--warn', '#ffc233'],
+  ['blue', '--term-blue', '#5b9dff'],
+  ['magenta', '--term-magenta', '#b69cff'],
+  ['cyan', '--info', '#3fe0ff'],
+  ['white', '--term-white', '#c9c4b8'],
+  ['brightBlack', '--paper-mute', '#5d5a52'],
+  ['brightRed', '--term-bright-red', '#ff6b5b'],
+  ['brightGreen', '--term-bright-green', '#d8ff6a'],
+  ['brightYellow', '--term-bright-yellow', '#ffd466'],
+  ['brightBlue', '--term-bright-blue', '#8bbaff'],
+  ['brightMagenta', '--term-bright-magenta', '#cfbcff'],
+  ['brightCyan', '--term-bright-cyan', '#7cecff'],
+  ['brightWhite', '--term-bright-white', '#f4f1ea'],
+] as const;
+
+type XtermThemeKey = (typeof XTERM_THEME_TOKENS)[number][0];
+
+/** Resolve design tokens to concrete colors (xterm cannot consume var()). */
+function readXtermTheme(): Record<XtermThemeKey, string> {
+  const style =
+    typeof document === 'undefined' ? null : getComputedStyle(document.documentElement);
+  const theme = {} as Record<XtermThemeKey, string>;
+  for (const [key, prop, fallback] of XTERM_THEME_TOKENS) {
+    theme[key] = style?.getPropertyValue(prop).trim() || fallback;
+  }
+  return theme;
+}
 
 const XTERM_FONT = "'JetBrains Mono Variable', 'JetBrains Mono', monospace";
+
+/** Terminal font from the `--mono` token, falling back to XTERM_FONT. */
+function readXtermFont(): string {
+  if (typeof document === 'undefined') return XTERM_FONT;
+  return getComputedStyle(document.documentElement).getPropertyValue('--mono').trim() || XTERM_FONT;
+}
 
 /**
  * Make recorded output safe to replay into a fresh terminal: drop alternate-screen switches
@@ -129,7 +148,7 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
 
     const api = window.crewdeck.terminal;
     const term = new Terminal({
-      fontFamily: XTERM_FONT,
+      fontFamily: readXtermFont(),
       fontSize: 13,
       lineHeight: 1.15,
       cursorBlink: true,
@@ -142,7 +161,7 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
       // history into scrollback instead of erasing it.
       scrollOnEraseInDisplay: true,
       windowsPty: window.crewdeck.platform === 'win32' ? { backend: 'conpty' } : undefined,
-      theme: XTERM_THEME,
+      theme: readXtermTheme(),
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
@@ -183,7 +202,7 @@ export function TerminalPane({ title, shell, args, cwd, env, terminalId, resumeC
         if (disposed) return;
         // xterm skips no-op option writes, so bounce the value to force a glyph re-measure.
         term.options.fontFamily = 'monospace';
-        term.options.fontFamily = XTERM_FONT;
+        term.options.fontFamily = readXtermFont();
         safeFit(fit);
       });
     }
