@@ -410,7 +410,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 6px 0 12px;
+  padding: 0 6px 0 var(--s3);
   background: transparent;
   color: var(--paper-mute);
   cursor: pointer;
@@ -492,7 +492,7 @@ textarea {
   border: none;
   color: var(--paper-mute);
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0 var(--s1);
   border-radius: 0;
 }
 
@@ -1105,7 +1105,7 @@ kbd {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: var(--s1);
   padding: var(--s2) var(--s4);
   border-top: var(--rule-w) solid var(--rule);
   color: var(--paper-mute);
@@ -1133,7 +1133,7 @@ kbd {
   place-items: center;
   min-width: 18px;
   height: 16px;
-  padding: 0 4px;
+  padding: 0 var(--s1);
   font-size: var(--fs-2xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -1286,7 +1286,7 @@ kbd {
 
 .route {
   position: relative;
-  padding: var(--s2) var(--s3) var(--s2) calc(var(--s3) + 4px);
+  padding: var(--s2) var(--s3) var(--s2) calc(var(--s3) + var(--s1));
   border-bottom: var(--rule-w) solid var(--rule);
   counter-increment: route;
   animation: slam var(--t-med) var(--snap) both;
@@ -1445,7 +1445,7 @@ kbd {
 
 .composer-error {
   margin-bottom: 6px;
-  padding: 4px var(--s2);
+  padding: var(--s1) var(--s2);
   font-size: var(--fs-xs);
   color: var(--err);
   border-left: 3px solid var(--err);
@@ -1564,7 +1564,7 @@ kbd {
 .git-branch {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s1);
   max-width: 220px;
   padding: 1px 6px;
   overflow: hidden;
@@ -1589,7 +1589,7 @@ kbd {
 .git-panel-header button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s1);
   height: 100%;
   padding: 0 var(--s3);
   background: transparent;
@@ -1694,7 +1694,7 @@ kbd {
   align-items: center;
   gap: var(--s2);
   width: 100%;
-  padding: 4px var(--s3);
+  padding: var(--s1) var(--s3);
   background: transparent;
   border: none;
   border-left: 3px solid transparent;
@@ -1866,7 +1866,7 @@ kbd {
 .git-warning.error button,
 .banner button {
   margin-left: auto;
-  padding: 0 4px;
+  padding: 0 var(--s1);
   background: transparent;
   border: none;
   color: inherit;
@@ -1937,7 +1937,7 @@ kbd {
   display: flex;
   gap: var(--s3);
   align-items: center;
-  padding: 4px var(--s3);
+  padding: var(--s1) var(--s3);
   background: var(--ink-2);
   border-bottom: var(--rule-w) solid var(--rule);
   font-weight: 700;
@@ -2088,7 +2088,7 @@ kbd {
 .tab button.branch-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s1);
   max-width: 170px;
   height: 18px;
   padding: 0 6px;
@@ -2175,7 +2175,7 @@ kbd {
 .browser-header button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s1);
   height: 100%;
   padding: 0 var(--s3);
   background: transparent;
@@ -2278,7 +2278,7 @@ kbd {
 
 .browser-warning button {
   margin-left: auto;
-  padding: 0 4px;
+  padding: 0 var(--s1);
   background: transparent;
   border: none;
   color: inherit;
@@ -2326,7 +2326,7 @@ kbd {
 }
 
 .browser-empty code {
-  padding: 0 4px;
+  padding: 0 var(--s1);
   background: var(--ink);
   color: var(--signal);
   font-family: var(--mono);
