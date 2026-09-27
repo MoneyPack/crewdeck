@@ -11,9 +11,7 @@ export async function launch(): Promise<{ app: ElectronApplication; page: Page }
   fs.mkdirSync(project, { recursive: true });
   const exe = process.env.CREWDECK_E2E_EXE;
   const app = await electron.launch({
-    ...(exe
-      ? { executablePath: path.resolve(exe), args: [] }
-      : { args: [path.resolve('dist-electron/main.cjs')] }),
+    ...(exe ? { executablePath: path.resolve(exe), args: [] } : { args: [path.resolve('dist-electron/main.cjs')] }),
     env: { ...process.env, CREWDECK_USER_DATA: userData, CREWDECK_TEST_PROJECT: project } as Record<string, string>,
   });
   const page = await app.firstWindow();
