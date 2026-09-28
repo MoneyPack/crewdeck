@@ -10,6 +10,7 @@ import { registerTerminalIpc } from './ipc/terminal';
 import { browserEngine } from './services/browserEngine';
 import { startBrowserTooling, stopBrowserTooling } from './services/browserTooling';
 import { log } from './services/logger';
+import { autoUpdater } from 'electron-updater';
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
 
@@ -102,6 +103,7 @@ function initDatabase(): boolean {
 }
 
 app.whenReady().then(() => {
+  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(() => {});
   if (!initDatabase()) {
     app.exit(1);
     return;
