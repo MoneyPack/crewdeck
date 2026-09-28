@@ -17,10 +17,16 @@ import { browserEngine } from './browserEngine';
 import { getDatabase } from './db';
 
 const MAX_BODY_BYTES = 64 * 1024;
+const ROTATE_MS = 12 * 60 * 60_000;
+const GRACE_MS = ROTATE_MS;
+const RATE_PER_SEC = 50;
+const RATE_BURST = 100;
 
 export interface BridgeHandle {
   readonly url: string;
   readonly token: string;
+  rotate(): void;
+  onRotate(cb: (token: string) => void): () => void;
   close(): Promise<void>;
 }
 
@@ -86,15 +92,47 @@ function fromLabel(v: unknown): string {
 }
 
 export function startBrowserBridge(): Promise<BridgeHandle> {
-  const token = randomBytes(32).toString('base64url');
-  const expected = Buffer.from(token, 'utf8');
+  let token = randomBytes(32).toString('base64url');
+  let expected = Buffer.from(token, 'utf8');
+  let prevExpected: Buffer | null = null;
+  let prevUntil = 0;
+  const listeners = new Set<(t: string) => void>();
+  const rotate = (): void => {
+    prevExpected = expected;
+    prevUntil = Date.now() + GRACE_MS;
+    token = randomBytes(32).toString('base64url');
+    expected = Buffer.from(token, 'utf8');
+    for (const cb of listeners) {
+      try {
+        cb(token);
+      } catch {
+        /* ignore listener errors */
+      }
+    }
+  };
+  const rotateTimer = setInterval(rotate, ROTATE_MS);
+  rotateTimer.unref();
+  let bucket = RATE_BURST;
+  let lastRefill = Date.now();
+  const allow = (): boolean => {
+    const now = Date.now();
+    bucket = Math.min(RATE_BURST, bucket + ((now - lastRefill) / 1000) * RATE_PER_SEC);
+    lastRefill = now;
+    if (bucket < 1) return false;
+    bucket -= 1;
+    return true;
+  };
   let hostOk = new Set<string>();
 
   const server = http.createServer((req, res) => {
     void (async () => {
       if (!hostOk.has(req.headers.host ?? '')) return send(res, 421, { ok: false, error: 'bad host' });
       if (req.headers.origin !== undefined) return send(res, 403, { ok: false, error: 'origin not allowed' });
-      if (!tokenMatches(expected, req)) return send(res, 401, { ok: false, error: 'unauthorized' });
+      if (!allow()) return send(res, 429, { ok: false, error: 'rate limited' });
+      const authed =
+        tokenMatches(expected, req) ||
+        (prevExpected !== null && Date.now() < prevUntil && tokenMatches(prevExpected, req));
+      if (!authed) return send(res, 401, { ok: false, error: 'unauthorized' });
 
       const url = new URL(req.url ?? '/', 'http://127.0.0.1');
       if (req.method === 'GET' && url.pathname === '/state')
@@ -157,9 +195,17 @@ export function startBrowserBridge(): Promise<BridgeHandle> {
       hostOk = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
       resolve({
         url: `http://127.0.0.1:${port}`,
-        token,
+        get token() {
+          return token;
+        },
+        rotate,
+        onRotate: (cb: (t: string) => void) => {
+          listeners.add(cb);
+          return () => listeners.delete(cb);
+        },
         close: () =>
           new Promise<void>((done) => {
+            clearInterval(rotateTimer);
             server.closeAllConnections();
             server.close(() => done());
           }),

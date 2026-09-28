@@ -44,6 +44,12 @@ export async function startBrowserTooling(): Promise<void> {
   writeShims(shimDir, 'crewdeck-mcp', mcpPath);
 
   setExtraPtyEnv({ CREWDECK_BROWSER_URL: bridge.url, CREWDECK_BROWSER_TOKEN: bridge.token }, shimDir);
+  const bridgeUrl = bridge.url;
+  bridge.onRotate((t) => {
+    setExtraPtyEnv({ CREWDECK_BROWSER_URL: bridgeUrl, CREWDECK_BROWSER_TOKEN: t }, shimDir);
+    const hook = (globalThis as unknown as { __crewdeckBridge?: { token: string } }).__crewdeckBridge;
+    if (hook) hook.token = t;
+  });
   const url = bridge.url;
   setBrowserBridgeInfo(() => ({ url, cliPath, mcpPath }));
   // Test-only hook: exposes the bridge to Playwright's main-process evaluate. Never set in production.
