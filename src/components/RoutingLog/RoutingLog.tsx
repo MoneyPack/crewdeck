@@ -34,7 +34,7 @@ export function RoutingLog({ entries, hasProject, onClose }: Props) {
           {hasProject ? 'No routed messages yet.' : 'Open a project to record routed messages.'}
         </div>
       ) : (
-        <ol className="routing-log-list">
+        <ol className="routing-log-list" role="log" aria-live="polite">
           {entries.map((e) => (
             <li key={e.id} className={`route ${e.kind}`}>
               <div className="route-meta">

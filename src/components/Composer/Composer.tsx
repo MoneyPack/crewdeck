@@ -151,10 +151,11 @@ export function Composer({ terminals, onSend, ref }: ComposerProps) {
   return (
     <div className="composer">
       {suggest && (
-        <ul className="composer-suggest" role="listbox">
+        <ul className="composer-suggest" role="listbox" id="composer-suggest" aria-label="Mention suggestions">
           {suggest.items.map((h, i) => (
             <li
               key={h}
+              id={`composer-opt-${i}`}
               role="option"
               aria-selected={i === suggest.index}
               className={i === suggest.index ? 'selected' : undefined}
@@ -169,10 +170,20 @@ export function Composer({ terminals, onSend, ref }: ComposerProps) {
           ))}
         </ul>
       )}
-      {error && <div className="composer-error">{error}</div>}
+      {error && (
+        <div className="composer-error" role="alert">
+          {error}
+        </div>
+      )}
       <textarea
         ref={inputRef}
         className="composer-input"
+        aria-label="Message terminals"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={!!suggest}
+        aria-controls="composer-suggest"
+        aria-activedescendant={suggest ? `composer-opt-${suggest.index}` : undefined}
         rows={rows}
         spellCheck={false}
         value={text}

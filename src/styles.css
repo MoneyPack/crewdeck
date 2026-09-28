@@ -2780,3 +2780,15 @@ kbd {
     transition: none !important;
   }
 }
+
+/* a11y: keyboard focus */
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[role='option']:focus-visible,
+[tabindex]:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: -2px;
+}
