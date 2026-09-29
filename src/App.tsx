@@ -136,6 +136,21 @@ export function App() {
   }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
+  const [showTip, setShowTip] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('crewdeck.onboarded') !== '1';
+    } catch {
+      return false;
+    }
+  });
+  const dismissTip = () => {
+    setShowTip(false);
+    try {
+      localStorage.setItem('crewdeck.onboarded', '1');
+    } catch {
+      /* ignore */
+    }
+  };
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   // Saves are suppressed until the last session has been restored (or restore found nothing).
@@ -1059,6 +1074,46 @@ export function App() {
           void refreshAgents(true);
         }}
       />
+      {showTip && (
+        <div className="onboard-tip" role="note" aria-label="Getting started">
+          <div className="onboard-title">Welcome to crewdeck</div>
+          <ul className="onboard-list">
+            <li>
+              <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> command palette
+            </li>
+            <li>
+              <kbd>Ctrl</kbd>+<kbd>,</kbd> settings
+            </li>
+            <li>Bring your own keys (BYOK) and agents (BYOA)</li>
+          </ul>
+          <div className="onboard-actions">
+            <button
+              type="button"
+              className="onboard-btn"
+              onClick={() => {
+                dismissTip();
+                setPaletteOpen(true);
+              }}
+            >
+              Open palette
+            </button>
+            <button
+              type="button"
+              className="onboard-btn"
+              onClick={() => {
+                dismissTip();
+                setSettingsTab('agents');
+                setSettingsOpen(true);
+              }}
+            >
+              Add agent
+            </button>
+            <button type="button" className="onboard-btn primary" onClick={dismissTip}>
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
       <Palette open={paletteOpen} actions={paletteActions} onClose={() => setPaletteOpen(false)} />
     </div>
   );
