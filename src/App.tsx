@@ -592,10 +592,15 @@ export function App() {
   };
 
   // The listener is installed once; it always dispatches through the latest render's closure.
+  const layoutRef = useRef(changeLayout);
+
+  layoutRef.current = changeLayout;
+
   const shortcutRef = useRef(runShortcut);
   const paletteActions: PaletteAction[] = [
     ...LAYOUTS.map((n) => ({
       id: `layout-${n}`,
+      hint: `Ctrl+Alt+${n}`,
       label: `Layout: ${n} pane${n > 1 ? 's' : ''}`,
       run: () => changeLayout(n),
     })),
@@ -620,6 +625,21 @@ export function App() {
         e.preventDefault();
         e.stopPropagation();
         setPaletteOpen((v) => !v);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.altKey && !e.shiftKey) {
+        const n = e.code === 'Digit1' ? 1 : e.code === 'Digit2' ? 2 : e.code === 'Digit4' ? 4 : 0;
+        if (n) {
+          e.preventDefault();
+          e.stopPropagation();
+          layoutRef.current(n as LayoutSize);
+          return;
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key === ',') {
+        e.preventDefault();
+        e.stopPropagation();
+        setSettingsOpen(true);
         return;
       }
       const action = findShortcut(e, IS_MAC);
