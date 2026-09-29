@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { AGENT_PROFILES, type AgentDetection, type AgentInstallResult } from '../../../shared/agents';
 import type { AppSettings, ProviderKeyInfo } from '../../../shared/ipc';
 
-type Tab = 'general' | 'keys' | 'agents';
+export type Tab = 'general' | 'keys' | 'agents';
 
 interface Props {
+  initialTab?: Tab;
   open: boolean;
   detections: AgentDetection[];
   onClose: () => void;
@@ -13,8 +14,11 @@ interface Props {
 
 const PROVIDERS = ['anthropic_api_key', 'openai_api_key', 'gemini_api_key', 'openrouter_api_key', 'dashscope_api_key'];
 
-export function Settings({ open, detections, onClose, onChange }: Props) {
+export function Settings({ open, detections, onClose, onChange, initialTab }: Props) {
   const [tab, setTab] = useState<Tab>('general');
+  useEffect(() => {
+    if (open && initialTab) setTab(initialTab);
+  }, [open, initialTab]);
   const [s, setS] = useState<AppSettings | null>(null);
   const [keys, setKeys] = useState<ProviderKeyInfo[]>([]);
   const [provider, setProvider] = useState(PROVIDERS[0]);

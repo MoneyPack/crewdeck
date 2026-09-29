@@ -15,7 +15,7 @@ import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
 import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId, type AgentProfile } from '../shared/agents';
 import { Splash } from './components/Splash/Splash';
-import { Settings } from './components/Settings/Settings';
+import { Settings, type Tab as SettingsTab } from './components/Settings/Settings';
 import { Palette, type PaletteAction } from './components/Palette/Palette';
 import type {
   PersistedLayout,
@@ -135,6 +135,7 @@ export function App() {
       .catch(() => setCustomProfiles([]));
   }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   // Saves are suppressed until the last session has been restored (or restore found nothing).
@@ -608,7 +609,28 @@ export function App() {
       id: 'settings',
       label: 'Open settings',
       hint: 'Ctrl+,  ·  General, keys, agents',
-      run: () => setSettingsOpen(true),
+      run: () => {
+        setSettingsTab('general');
+        setSettingsOpen(true);
+      },
+    },
+    {
+      id: 'settings-keys',
+      label: 'Settings: API keys (BYOK)',
+      hint: 'Anthropic, OpenAI, Gemini, OpenRouter',
+      run: () => {
+        setSettingsTab('keys');
+        setSettingsOpen(true);
+      },
+    },
+    {
+      id: 'settings-agents',
+      label: 'Settings: Agents (BYOA)',
+      hint: 'Add your own agent command',
+      run: () => {
+        setSettingsTab('agents');
+        setSettingsOpen(true);
+      },
     },
     { id: 'help', label: 'Keyboard shortcuts', run: () => setShowHelp(true) },
     { id: 'project', label: 'Select project folder', run: () => void selectProject() },
@@ -645,6 +667,7 @@ export function App() {
       if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key === ',') {
         e.preventDefault();
         e.stopPropagation();
+        setSettingsTab('general');
         setSettingsOpen(true);
         return;
       }
@@ -805,7 +828,10 @@ export function App() {
           className="icon-btn"
           aria-label="Settings"
           title="Settings"
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => {
+            setSettingsTab('general');
+            setSettingsOpen(true);
+          }}
         >
           <span aria-hidden="true">⚙</span>
         </button>
@@ -1022,6 +1048,7 @@ export function App() {
       {showHelp && <ShortcutHelp mac={IS_MAC} onClose={() => setShowHelp(false)} />}
       <Settings
         open={settingsOpen}
+        initialTab={settingsTab}
         detections={detections ?? []}
         onClose={() => setSettingsOpen(false)}
         onChange={() => {
