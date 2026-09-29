@@ -4,7 +4,7 @@
   "private": true,
   "description": "Multi-agent AI development workspace",
   "author": "crewdeck",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/moneypack/crewdeck.git"

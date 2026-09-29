@@ -6,7 +6,7 @@ A Windows desktop app for running several coding-agent CLIs (Claude Code, Codex,
 
 ## Install
 
-Download `crewdeck Setup <version>.exe` from the [Releases](https://github.com/MoneyPack/crewdeck/releases) page and run it. The installer is not code-signed yet, so Windows SmartScreen may warn on first launch ("More info" → "Run anyway").
+Download `crewdeck Setup <version>.exe` from the [Releases](https://github.com/MoneyPack/crewdeck/releases) page and run it. Until code signing is live, Windows SmartScreen may warn on first launch ("More info" → "Run anyway").
 
 ## Usage
 
@@ -95,3 +95,15 @@ npm run dist       # build the Windows installer into release/
 ## License
 
 UNLICENSED. All rights reserved.
+
+## Code signing
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+## Privacy
+
+crewdeck runs entirely on your machine and collects no telemetry or user data. The only network request it makes on its own is the update check against GitHub Releases.
+
+## License
+
+[MIT](LICENSE)
