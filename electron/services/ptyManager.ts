@@ -1,3 +1,4 @@
+import { keyEnv } from './settings';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import os from 'node:os';
@@ -35,7 +36,13 @@ export function setExtraPtyEnv(env: Record<string, string>, prependPath: string 
 }
 
 function withExtraEnv(base: Record<string, string>): Record<string, string> {
-  const env = { ...base, ...extraEnv };
+  let keys: Record<string, string> = {};
+  try {
+    keys = keyEnv();
+  } catch {
+    keys = {};
+  }
+  const env = { ...base, ...keys, ...extraEnv };
   if (extraPath) {
     const key = Object.keys(env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH';
     const current = env[key] ?? '';

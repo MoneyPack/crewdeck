@@ -13,8 +13,10 @@ const BrowserPane = lazy(() =>
 import { useGitAttribution, type LastRoute } from './hooks/useGitAttribution';
 import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
-import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId } from '../shared/agents';
+import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId, type AgentProfile } from '../shared/agents';
 import { Splash } from './components/Splash/Splash';
+import { Settings } from './components/Settings/Settings';
+import { Palette, type PaletteAction } from './components/Palette/Palette';
 import type {
   PersistedLayout,
   PersistedTerminal,
@@ -59,8 +61,9 @@ function buildSpec(
   cwd: string | undefined,
   detections: AgentDetection[],
   restored = false,
+  extra: AgentProfile[] = [],
 ): TermSpec {
-  const profile = getProfile(profileId);
+  const profile = getProfile(profileId, extra);
   const launch = detections.find((d) => d.id === profileId)?.launch;
   // Resume args only apply when the agent itself is launched (not the shell fallback).
   const resume = restored && launch && profile.resumeArgs?.length ? profile.resumeArgs : null;
@@ -124,6 +127,15 @@ export function App() {
   const [slots, setSlots] = useState<(string | null)[]>(() => Array(SLOT_COUNT).fill(null));
   const [activeSlot, setActiveSlot] = useState(0);
   const [detections, setDetections] = useState<AgentDetection[] | null>(null);
+  const [customProfiles, setCustomProfiles] = useState<AgentProfile[]>([]);
+  useEffect(() => {
+    window.crewdeck.settings
+      .get()
+      .then((s) => setCustomProfiles(s.customAgents.map((a) => ({ ...a, custom: true }))))
+      .catch(() => setCustomProfiles([]));
+  }, []);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   // Saves are suppressed until the last session has been restored (or restore found nothing).
   const [ready, setReady] = useState(false);
@@ -259,7 +271,7 @@ export function App() {
   /** Replaces all state with a restored project snapshot. */
   const applyRestore = useCallback((r: RestoreResult, dets: AgentDetection[]) => {
     const specs = r.terminals.map((t) => {
-      const spec = buildSpec(t.id, t.title, t.profileId, t.cwd, dets, true);
+      const spec = buildSpec(t.id, t.title, t.profileId, t.cwd, dets, true, customProfiles);
       return t.worktree ? { ...spec, worktree: t.worktree } : spec;
     });
     setProject(r.project);
@@ -361,7 +373,7 @@ export function App() {
   };
 
   const openTerminal = async (profileId: AgentId) => {
-    const profile = getProfile(profileId);
+    const profile = getProfile(profileId, customProfiles);
     const dets = detections ?? [];
     const detection = dets.find((d) => d.id === profileId);
     if (profileId !== 'shell' && !detection?.launch) return;
@@ -382,7 +394,15 @@ export function App() {
       }
     }
     setWorktreeError(null);
-    const base = buildSpec(id, `${profile.name} ${n}`, profileId, worktree?.path ?? project?.path, dets);
+    const base = buildSpec(
+      id,
+      `${profile.name} ${n}`,
+      profileId,
+      worktree?.path ?? project?.path,
+      dets,
+      false,
+      customProfiles,
+    );
     const spec: TermSpec = worktree ? { ...base, worktree } : base;
     // Persist the row before the pane mounts so its session can reference it (FK).
     if (project) {
@@ -573,12 +593,30 @@ export function App() {
 
   // The listener is installed once; it always dispatches through the latest render's closure.
   const shortcutRef = useRef(runShortcut);
+  const paletteActions: PaletteAction[] = [
+    { id: 'settings', label: 'Open settings', hint: 'General, keys, agents', run: () => setSettingsOpen(true) },
+    { id: 'help', label: 'Keyboard shortcuts', run: () => setShowHelp(true) },
+    { id: 'project', label: 'Select project folder', run: () => void selectProject() },
+    { id: 'refresh', label: 'Refresh agent detection', run: () => void refreshAgents(true) },
+    ...[...AGENT_PROFILES, ...customProfiles].map((p) => ({
+      id: `open-${p.id}`,
+      label: `Open terminal: ${p.name}`,
+      hint: p.command,
+      run: () => void openTerminal(p.id),
+    })),
+  ];
   shortcutRef.current = runShortcut;
   const helpOpenRef = useRef(showHelp);
   helpOpenRef.current = showHelp;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.repeat) return;
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        e.stopPropagation();
+        setPaletteOpen((v) => !v);
+        return;
+      }
       const action = findShortcut(e, IS_MAC);
       if (!action) return;
       // While the help sheet is open only its own toggle works; Escape is handled by the sheet.
@@ -628,7 +666,6 @@ export function App() {
           onClick={() => void selectProject()}
           title={project?.path ?? 'Choose project folder'}
         >
-          <i className={project ? 'ri-folder-3-line' : 'ri-folder-open-line'} aria-hidden="true" />
           {project ? project.name : 'Open Project…'}
         </button>
         <span className="spacer" />
@@ -652,7 +689,6 @@ export function App() {
           onClick={() => void openTerminal('shell')}
           title={withHint('New shell terminal', 'newTerminal')}
         >
-          <i className="ri-terminal-box-line" aria-hidden="true" />
           Terminal
         </button>
         <select
@@ -664,14 +700,16 @@ export function App() {
           disabled={!detections}
         >
           <option value="">{detections ? '+ Agent…' : 'Detecting agents…'}</option>
-          {AGENT_PROFILES.filter((p) => p.id !== 'shell').map((p) => {
-            const installed = detections?.find((d) => d.id === p.id)?.installed ?? false;
-            return (
-              <option key={p.id} value={p.id} disabled={!installed}>
-                {installed ? p.name : `${p.name} (not installed)`}
-              </option>
-            );
-          })}
+          {[...AGENT_PROFILES, ...customProfiles]
+            .filter((p) => p.id !== 'shell')
+            .map((p) => {
+              const installed = detections?.find((d) => d.id === p.id)?.installed ?? false;
+              return (
+                <option key={p.id} value={p.id} disabled={!installed}>
+                  {installed ? p.name : `${p.name} (not installed)`}
+                </option>
+              );
+            })}
         </select>
         <label
           className="worktree-toggle"
@@ -683,7 +721,6 @@ export function App() {
             disabled={!project}
             onChange={(e) => setIsolateNext(e.target.checked)}
           />
-          <i className="ri-git-branch-line" aria-hidden="true" />
           Worktree
         </label>
         <button
@@ -702,7 +739,6 @@ export function App() {
           title={withHint('Routing log', 'toggleLog')}
           onClick={() => setShowLog((v) => !v)}
         >
-          <i className="ri-route-line" aria-hidden="true" />
           Log{routeLog.length ? ` (${routeLog.length})` : ''}
         </button>
         <button
@@ -712,7 +748,6 @@ export function App() {
           title={withHint('Git changes', 'toggleGit')}
           onClick={() => setShowGit((v) => !v)}
         >
-          <i className="ri-git-commit-line" aria-hidden="true" />
           Git
         </button>
         <button
@@ -722,7 +757,6 @@ export function App() {
           title={withHint('Browser', 'toggleBrowser')}
           onClick={() => setShowBrowser((v) => !v)}
         >
-          <i className="ri-global-line" aria-hidden="true" />
           Browser
         </button>
         <button
@@ -734,6 +768,15 @@ export function App() {
           onClick={() => setShowHelp((v) => !v)}
         >
           <i className="ri-question-line" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Settings"
+          title="Settings"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <span aria-hidden="true">⚙</span>
         </button>
       </div>
 
@@ -790,7 +833,6 @@ export function App() {
                   void removeWorktree(t.id);
                 }}
               >
-                <i className="ri-git-branch-line" aria-hidden="true" />
                 {t.worktree.branch.replace(/^crewdeck\//, '')}
               </button>
             )}
@@ -814,10 +856,7 @@ export function App() {
         {terminals.length === 0 ? (
           <div className="grid empty">
             <section className="onboard" aria-labelledby="onboard-title">
-              <span className="kicker">
-                <i className={project ? 'ri-terminal-window-line' : 'ri-folder-open-line'} aria-hidden="true" />
-                {project ? 'Deck armed' : 'No project'}
-              </span>
+              <span className="kicker">{project ? 'Deck armed' : 'No project'}</span>
               <h1 id="onboard-title">
                 {project ? (
                   <>
@@ -866,12 +905,10 @@ export function App() {
               </ol>
               {project ? (
                 <button type="button" className="cta" onClick={() => void openTerminal('shell')}>
-                  <i className="ri-terminal-box-line" aria-hidden="true" />
                   Open shell
                 </button>
               ) : (
                 <button type="button" className="cta" onClick={() => void selectProject()}>
-                  <i className="ri-folder-open-line" aria-hidden="true" />
                   Choose folder
                 </button>
               )}
@@ -952,6 +989,19 @@ export function App() {
 
       <Composer ref={composerRef} terminals={mentionTerminals} onSend={routeMessage} />
       {showHelp && <ShortcutHelp mac={IS_MAC} onClose={() => setShowHelp(false)} />}
+      <Settings
+        open={settingsOpen}
+        detections={detections ?? []}
+        onClose={() => setSettingsOpen(false)}
+        onChange={() => {
+          window.crewdeck.settings
+            .get()
+            .then((st) => setCustomProfiles(st.customAgents.map((a) => ({ ...a, custom: true }))))
+            .catch(() => undefined);
+          void refreshAgents(true);
+        }}
+      />
+      <Palette open={paletteOpen} actions={paletteActions} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

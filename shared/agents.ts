@@ -1,32 +1,51 @@
-// Built-in agent profiles. `command` is resolved on PATH by the main process
-// (where.exe on Windows); the renderer never guesses executable paths.
-
-export type AgentId = 'shell' | 'claude' | 'codex' | 'gemini';
+export type AgentId = string;
 
 export interface AgentProfile {
   id: AgentId;
   name: string;
-  /** Bare command looked up on PATH. Empty for the default shell. */
   command: string;
-  args: string[];
-  env: Record<string, string>;
-  /**
-   * Extra args appended when a terminal is re-spawned after an app restart, so the agent
-   * resumes its previous conversation (e.g. `claude --continue`). Live process state itself
-   * is never preserved: the process is restarted, only the agent's own history is reloaded.
-   */
-  resumeArgs?: string[];
+  args: readonly string[];
+  env: Readonly<Record<string, string>>;
+  resumeArgs?: readonly string[];
+  /** One-line install command (run through the system shell). */
+  install?: string;
+  homepage?: string;
+  custom?: boolean;
 }
+
+const npm = (pkg: string) => `npm i -g ${pkg}`;
 
 export const AGENT_PROFILES: readonly AgentProfile[] = [
   { id: 'shell', name: 'Shell', command: '', args: [], env: {} },
-  { id: 'claude', name: 'Claude Code', command: 'claude', args: [], env: {}, resumeArgs: ['--continue'] },
-  { id: 'codex', name: 'Codex', command: 'codex', args: [], env: {} },
-  { id: 'gemini', name: 'Gemini CLI', command: 'gemini', args: [], env: {} },
+  {
+    id: 'claude',
+    name: 'Claude Code',
+    command: 'claude',
+    args: [],
+    env: {},
+    resumeArgs: ['--continue'],
+    install: npm('@anthropic-ai/claude-code'),
+    homepage: 'https://docs.anthropic.com/claude-code',
+  },
+  { id: 'codex', name: 'Codex', command: 'codex', args: [], env: {}, install: npm('@openai/codex') },
+  { id: 'gemini', name: 'Gemini CLI', command: 'gemini', args: [], env: {}, install: npm('@google/gemini-cli') },
+  { id: 'opencode', name: 'OpenCode', command: 'opencode', args: [], env: {}, install: npm('opencode-ai') },
+  { id: 'qwen', name: 'Qwen Code', command: 'qwen', args: [], env: {}, install: npm('@qwen-code/qwen-code') },
+  { id: 'amp', name: 'Amp', command: 'amp', args: [], env: {}, install: npm('@sourcegraph/amp') },
+  { id: 'copilot', name: 'Copilot CLI', command: 'copilot', args: [], env: {}, install: npm('@github/copilot') },
+  {
+    id: 'aider',
+    name: 'Aider',
+    command: 'aider',
+    args: [],
+    env: {},
+    install: 'pip install -U aider-install && aider-install',
+  },
+  { id: 'goose', name: 'Goose', command: 'goose', args: [], env: {}, install: 'pipx install goose-ai' },
 ];
 
-export function getProfile(id: AgentId): AgentProfile {
-  const profile = AGENT_PROFILES.find((p) => p.id === id);
+export function getProfile(id: AgentId, extra: readonly AgentProfile[] = []): AgentProfile {
+  const profile = [...AGENT_PROFILES, ...extra].find((p) => p.id === id);
   if (!profile) throw new Error(`Unknown agent profile: ${id}`);
   return profile;
 }
@@ -34,8 +53,12 @@ export function getProfile(id: AgentId): AgentProfile {
 export interface AgentDetection {
   id: AgentId;
   installed: boolean;
-  /** Resolved executable path, when installed. */
   path?: string;
-  /** How to spawn it (e.g. .cmd shims go through cmd.exe). Omitted for the default shell. */
   launch?: { shell: string; args: string[] };
+}
+
+export interface AgentInstallResult {
+  id: AgentId;
+  ok: boolean;
+  output: string;
 }

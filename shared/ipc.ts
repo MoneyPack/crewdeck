@@ -1,5 +1,5 @@
 // Types and channel names shared between main, preload and renderer.
-import type { AgentDetection, AgentId } from './agents';
+import type { AgentDetection, AgentId, AgentInstallResult } from './agents';
 import type { BrowserResult, BrowserState } from './browser';
 
 export const TerminalChannels = {
@@ -66,6 +66,7 @@ export interface CrewdeckTerminalApi {
 
 export const AgentChannels = {
   detect: 'agents:detect',
+  install: 'agents:install',
 } as const;
 
 export const ProjectChannels = {
@@ -78,6 +79,7 @@ export const ProjectChannels = {
 export interface CrewdeckAgentsApi {
   /** Detects which built-in agent CLIs are installed. Cached in main after the first call unless `refresh`. */
   detect(refresh?: boolean): Promise<AgentDetection[]>;
+  install(ids: string[]): Promise<AgentInstallResult[]>;
 }
 
 export interface ProjectInfo {
@@ -295,9 +297,53 @@ export interface CrewdeckBrowserApi {
   bridge(): Promise<BrowserBridgeInfo | null>;
 }
 
+export interface CustomAgent {
+  id: string;
+  name: string;
+  command: string;
+  args: string[];
+  env: Record<string, string>;
+}
+
+export interface AppSettings {
+  theme: 'dark' | 'light' | 'system';
+  animations: boolean;
+  fontSize: number;
+  defaultAgent: string;
+  confirmOnClose: boolean;
+  autoUpdate: boolean;
+  telemetry: boolean;
+  shell: string;
+  customAgents: CustomAgent[];
+}
+
+export interface ProviderKeyInfo {
+  provider: string;
+  hint: string;
+}
+
+export const SettingsChannels = {
+  get: 'settings:get',
+  update: 'settings:update',
+  listKeys: 'settings:listKeys',
+  setKey: 'settings:setKey',
+  saveAgent: 'settings:saveAgent',
+  removeAgent: 'settings:removeAgent',
+} as const;
+
+export interface CrewdeckSettingsApi {
+  get(): Promise<AppSettings>;
+  update(patch: Partial<AppSettings>): Promise<AppSettings>;
+  listKeys(): Promise<ProviderKeyInfo[]>;
+  setKey(provider: string, value: string): Promise<ProviderKeyInfo[]>;
+  saveAgent(agent: Omit<CustomAgent, 'id'> & { id?: string }): Promise<AppSettings>;
+  removeAgent(id: string): Promise<AppSettings>;
+}
+
 export interface CrewdeckApi {
   terminal: CrewdeckTerminalApi;
   agents: CrewdeckAgentsApi;
+  settings: CrewdeckSettingsApi;
   project: CrewdeckProjectApi;
   routing: CrewdeckRoutingApi;
   git: CrewdeckGitApi;

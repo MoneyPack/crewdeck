@@ -1,4 +1,5 @@
-import { app, BrowserWindow, dialog, session, shell } from 'electron';
+import { registerSettingsIpc } from './ipc/settings';
+import { app, BrowserWindow, dialog, Menu, session, shell } from 'electron';
 import path from 'node:path';
 import { closeDatabase, openDatabase } from './services/db';
 import { registerAgentIpc } from './ipc/agents';
@@ -41,7 +42,9 @@ function applyContentSecurityPolicy(): void {
 }
 
 function createWindow(): BrowserWindow {
+  Menu.setApplicationMenu(null);
   const win = new BrowserWindow({
+    autoHideMenuBar: true,
     width: 1280,
     height: 800,
     backgroundColor: '#0f1115',
@@ -79,6 +82,7 @@ registerProjectIpc();
 registerRoutingIpc();
 registerGitIpc();
 registerBrowserIpc();
+registerSettingsIpc();
 
 function initDatabase(): boolean {
   const file = path.join(app.getPath('userData'), 'crewdeck.db');

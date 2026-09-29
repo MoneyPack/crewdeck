@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import {
   AgentChannels,
   BrowserChannels,
+  SettingsChannels,
   GitChannels,
   ProjectChannels,
   RoutingChannels,
@@ -40,6 +41,7 @@ const api: CrewdeckApi = {
   },
   agents: {
     detect: (refresh) => ipcRenderer.invoke(AgentChannels.detect, refresh === true),
+    install: (ids) => ipcRenderer.invoke(AgentChannels.install, ids),
   },
   project: {
     select: () => ipcRenderer.invoke(ProjectChannels.select),
@@ -85,6 +87,14 @@ const api: CrewdeckApi = {
       ipcRenderer.on(BrowserChannels.stateChanged, handler);
       return () => ipcRenderer.removeListener(BrowserChannels.stateChanged, handler);
     },
+  },
+  settings: {
+    get: () => ipcRenderer.invoke(SettingsChannels.get),
+    update: (patch) => ipcRenderer.invoke(SettingsChannels.update, patch),
+    listKeys: () => ipcRenderer.invoke(SettingsChannels.listKeys),
+    setKey: (provider, value) => ipcRenderer.invoke(SettingsChannels.setKey, provider, value),
+    saveAgent: (agent) => ipcRenderer.invoke(SettingsChannels.saveAgent, agent),
+    removeAgent: (id) => ipcRenderer.invoke(SettingsChannels.removeAgent, id),
   },
 };
 
