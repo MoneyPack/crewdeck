@@ -3557,3 +3557,110 @@ button:not(:disabled):active {
     transition: none;
   }
 }
+
+/* ---- onestrix pop pass ---- */
+.onboard .kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  background: var(--pop-grad);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cd-shimmer 6s linear infinite;
+}
+.onboard .kicker-state {
+  letter-spacing: 0.08em;
+  font-size: 0.8em;
+  padding: 0.15em 0.7em;
+  border-radius: 999px;
+  border: var(--rule-w) solid var(--pop-b);
+  color: var(--pop-b);
+  -webkit-text-fill-color: var(--pop-b);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--pop-b) 40%, transparent);
+}
+.onboard li.card {
+  position: relative;
+  border-radius: 10px;
+  padding: 0.7em 0.9em;
+  transition:
+    transform var(--t-med) var(--glide),
+    box-shadow var(--t-med) var(--glide);
+  animation: cd-fade-up var(--t-med) var(--glide) both;
+}
+.onboard li.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--rule-w);
+  background: var(--pop-grad);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity var(--t-fast) var(--snap);
+}
+.onboard li.card:hover {
+  transform: translateY(var(--lift));
+  box-shadow: var(--pop-glow);
+}
+.onboard li.card:hover::before {
+  opacity: 1;
+}
+.onboard li.card:nth-child(1) {
+  animation-delay: 60ms;
+}
+.onboard li.card:nth-child(2) {
+  animation-delay: 120ms;
+}
+.onboard li.card:nth-child(3) {
+  animation-delay: 180ms;
+}
+.onboard li.card:nth-child(4) {
+  animation-delay: 240ms;
+}
+.onboard .chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  padding: 0;
+  margin: 1em 0;
+}
+.onboard .chips li {
+  padding: 0.3em 0.9em;
+  border-radius: 999px;
+  border: var(--rule-w) solid color-mix(in srgb, var(--pop-a) 60%, transparent);
+  font-size: 0.85em;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pop-b) 25%, transparent), transparent);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  transition:
+    transform var(--t-fast) var(--snap),
+    border-color var(--t-fast) var(--snap);
+  animation: cd-fade-up var(--t-med) var(--glide) 300ms both;
+}
+.onboard .chips li:hover {
+  transform: translateY(var(--lift));
+  border-color: var(--pop-c);
+  animation: cd-shimmer 1.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboard .kicker,
+  .onboard li.card,
+  .onboard .chips li,
+  .onboard .chips li:hover {
+    animation: none;
+  }
+  .onboard li.card:hover,
+  .onboard .chips li:hover {
+    transform: none;
+  }
+}

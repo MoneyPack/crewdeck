@@ -928,7 +928,10 @@ export function App() {
         {terminals.length === 0 ? (
           <div className="grid empty">
             <section className="onboard" aria-labelledby="onboard-title">
-              <span className="kicker">{project ? 'Deck armed' : 'No project'}</span>
+              <span className="kicker">
+                FAST · FOCUSED · MULTI-AGENT{' '}
+                <span className="kicker-state">{project ? 'Deck armed' : 'No project'}</span>
+              </span>
               <h1 id="onboard-title">
                 {project ? (
                   <>
@@ -946,28 +949,28 @@ export function App() {
                   : 'crewdeck runs shells and coding agents side by side against one folder. Choose a project to start the deck.'}
               </p>
               <ol>
-                <li>
+                <li className="card">
                   <span className="idx">01</span>
                   <span>
                     <b>Open a terminal</b> — shell or agent, from the toolbar.
                   </span>
                   <Keys combo={comboFor('newTerminal')} mac={IS_MAC} />
                 </li>
-                <li>
+                <li className="card">
                   <span className="idx">02</span>
                   <span>
                     <b>Tile the deck</b> — one, two or four panes.
                   </span>
                   <Keys combo={comboFor('layout4')} mac={IS_MAC} />
                 </li>
-                <li>
+                <li className="card">
                   <span className="idx">03</span>
                   <span>
                     <b>Route a message</b> — @mention panes from the composer.
                   </span>
                   <Keys combo={comboFor('focusComposer')} mac={IS_MAC} />
                 </li>
-                <li>
+                <li className="card">
                   <span className="idx">04</span>
                   <span>
                     <b>Every shortcut</b> — the full sheet.
@@ -975,6 +978,11 @@ export function App() {
                   <Keys combo={comboFor('help')} mac={IS_MAC} />
                 </li>
               </ol>
+              <ul className="chips" aria-label="Features">
+                {['Multi-agent', 'BYOK', 'BYOA', 'Worktrees', '@mention routing', 'Local-only'].map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
               {project ? (
                 <button type="button" className="cta" onClick={() => void openTerminal('shell')}>
                   Open shell
