@@ -3400,3 +3400,160 @@ button:not(:disabled):active {
     transform: none;
   }
 }
+
+/* ---- interaction polish pass ---- */
+.toolbar > * {
+  animation: cd-fade-up var(--t-med) var(--glide) both;
+}
+.toolbar > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+.toolbar > *:nth-child(2) {
+  animation-delay: 80ms;
+}
+.toolbar > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+.toolbar > *:nth-child(4) {
+  animation-delay: 160ms;
+}
+.toolbar > *:nth-child(5) {
+  animation-delay: 200ms;
+}
+.toolbar > *:nth-child(6) {
+  animation-delay: 240ms;
+}
+.toolbar > *:nth-child(7) {
+  animation-delay: 280ms;
+}
+.toolbar > *:nth-child(n + 8) {
+  animation-delay: 320ms;
+}
+
+.new-term,
+.agent-picker,
+.worktree-toggle,
+.layout-picker button,
+.icon-btn,
+.cta {
+  transition:
+    transform var(--t-fast) var(--snap),
+    box-shadow var(--t-med) var(--glide),
+    color var(--t-fast) var(--snap),
+    background-color var(--t-fast) var(--snap);
+}
+.new-term:hover:not(:disabled),
+.cta:hover:not(:disabled) {
+  transform: translateY(calc(var(--lift) * -1));
+  box-shadow: var(--pop-glow);
+}
+.new-term:active:not(:disabled),
+.cta:active:not(:disabled),
+.icon-btn:active:not(:disabled),
+.layout-picker button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.icon-btn:hover:not(:disabled) {
+  transform: rotate(-8deg) scale(1.12);
+  color: var(--pop-b);
+}
+.agent-picker:hover,
+.worktree-toggle:hover {
+  box-shadow: 0 0 0 var(--rule-w) var(--pop-a);
+}
+.layout-picker button:hover:not(:disabled) {
+  color: var(--pop-b);
+  transform: translateY(-1px);
+}
+
+.tabs [role='tab'] {
+  position: relative;
+  transition:
+    color var(--t-fast) var(--snap),
+    background-color var(--t-fast) var(--snap);
+}
+.tabs [role='tab']::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  height: 2px;
+  background: var(--pop-grad);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--t-med) var(--glide);
+}
+.tabs [role='tab']:hover::after {
+  transform: scaleX(0.6);
+}
+.tabs [role='tab'][aria-selected='true']::after {
+  transform: scaleX(1);
+}
+.tab-close {
+  transition:
+    transform var(--t-fast) var(--snap),
+    color var(--t-fast) var(--snap);
+}
+.tab-close:hover {
+  transform: rotate(90deg);
+  color: var(--pop-c);
+}
+.branch-badge {
+  transition: box-shadow var(--t-med) var(--glide);
+}
+.tabs [role='tab']:hover .branch-badge {
+  box-shadow: 0 0 10px var(--pop-a);
+}
+
+.onboard > * {
+  animation: cd-fade-up var(--t-med) var(--glide) both;
+}
+.onboard > *:nth-child(2) {
+  animation-delay: 90ms;
+}
+.onboard > *:nth-child(3) {
+  animation-delay: 180ms;
+}
+.onboard > *:nth-child(4) {
+  animation-delay: 270ms;
+}
+.onboard > *:nth-child(n + 5) {
+  animation-delay: 360ms;
+}
+.onboard .idx {
+  display: inline-block;
+  transition:
+    transform var(--t-fast) var(--snap),
+    color var(--t-fast) var(--snap);
+}
+.onboard li:hover .idx,
+.onboard *:hover > .idx {
+  transform: scale(1.25);
+  color: var(--pop-c);
+}
+.onboard .cta {
+  background-size: 200% 100%;
+  animation:
+    cd-fade-up var(--t-med) var(--glide) both,
+    cd-pulse 2.8s ease-in-out 1.2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar > *,
+  .onboard > *,
+  .onboard .cta {
+    animation: none !important;
+  }
+  .new-term:hover,
+  .cta:hover,
+  .icon-btn:hover,
+  .tab-close:hover,
+  .layout-picker button:hover,
+  .onboard .idx {
+    transform: none !important;
+  }
+  .tabs [role='tab']::after {
+    transition: none;
+  }
+}
