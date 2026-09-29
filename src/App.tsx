@@ -594,6 +594,11 @@ export function App() {
   // The listener is installed once; it always dispatches through the latest render's closure.
   const shortcutRef = useRef(runShortcut);
   const paletteActions: PaletteAction[] = [
+    ...LAYOUTS.map((n) => ({
+      id: `layout-${n}`,
+      label: `Layout: ${n} pane${n > 1 ? 's' : ''}`,
+      run: () => changeLayout(n),
+    })),
     { id: 'settings', label: 'Open settings', hint: 'General, keys, agents', run: () => setSettingsOpen(true) },
     { id: 'help', label: 'Keyboard shortcuts', run: () => setShowHelp(true) },
     { id: 'project', label: 'Select project folder', run: () => void selectProject() },
