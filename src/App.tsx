@@ -604,10 +604,16 @@ export function App() {
       label: `Layout: ${n} pane${n > 1 ? 's' : ''}`,
       run: () => changeLayout(n),
     })),
-    { id: 'settings', label: 'Open settings', hint: 'Ctrl+,  ·  General, keys, agents', run: () => setSettingsOpen(true) },
+    {
+      id: 'settings',
+      label: 'Open settings',
+      hint: 'Ctrl+,  ·  General, keys, agents',
+      run: () => setSettingsOpen(true),
+    },
     { id: 'help', label: 'Keyboard shortcuts', run: () => setShowHelp(true) },
     { id: 'project', label: 'Select project folder', run: () => void selectProject() },
     { id: 'refresh', label: 'Refresh agent detection', run: () => void refreshAgents(true) },
+    { id: 'log', label: 'Toggle routing log', run: () => setShowLog((v) => !v) },
     ...[...AGENT_PROFILES, ...customProfiles].map((p) => ({
       id: `open-${p.id}`,
       label: `Open terminal: ${p.name}`,

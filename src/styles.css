@@ -3290,3 +3290,39 @@ button:disabled {
     transform: none;
   }
 }
+
+/* ---- hover/pop polish ---- */
+.palette li[role='option'] {
+  transition:
+    transform var(--t-fast) var(--snap),
+    background var(--t-fast) var(--glide);
+}
+.palette li[role='option']:hover,
+.palette li[aria-selected='true'] {
+  transform: translateX(4px);
+}
+button:not(:disabled) {
+  transition:
+    transform var(--t-fast) var(--snap),
+    box-shadow var(--t-med) var(--glide),
+    filter var(--t-fast) var(--glide);
+}
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+button:not(:disabled):active {
+  transform: translateY(0) scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .palette li[role='option'],
+  button:not(:disabled) {
+    transition: none;
+  }
+  .palette li[role='option']:hover,
+  .palette li[aria-selected='true'],
+  button:not(:disabled):hover,
+  button:not(:disabled):active {
+    transform: none;
+  }
+}
