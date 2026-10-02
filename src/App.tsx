@@ -320,7 +320,10 @@ export function App() {
         if (r) applyRestore(r, dets);
       })
       .catch((err: unknown) => console.error('restore failed', err))
-      .finally(() => setReady(true));
+      .finally(() => {
+        setReady(true);
+        window.crewdeck.settings.get().then((s) => { if (s.startup === 'palette') setPaletteOpen(true); }).catch(() => {});
+      });
   }, [detections, applyRestore]);
 
   /** Debounces `fn` under `key`; a newer call for the same key replaces the pending one. */

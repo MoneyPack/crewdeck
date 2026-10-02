@@ -1,4 +1,4 @@
-import { keyEnv } from './settings';
+import { getSettings, keyEnv } from './settings';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import os from 'node:os';
@@ -61,6 +61,14 @@ export function resolveDefaultShell(): string {
   return candidates.find((c) => existsSync(c)) ?? 'powershell.exe';
 }
 
+function resolveDefaultCwd(): string {
+  try {
+    const d = getSettings().defaultCwd;
+    if (d && existsSync(d)) return d;
+  } catch {}
+  return os.homedir();
+}
+
 export class PtyManager {
   private readonly sessions = new Map<string, Session>();
 
@@ -71,7 +79,7 @@ export class PtyManager {
 
   create(options: TerminalCreateOptions = {}): TerminalCreateResult {
     const shell = options.shell ?? resolveDefaultShell();
-    const cwd = options.cwd && existsSync(options.cwd) ? options.cwd : os.homedir();
+    const cwd = options.cwd && existsSync(options.cwd) ? options.cwd : resolveDefaultCwd();
     const env = withExtraEnv({
       ...(process.env as Record<string, string>),
       ...options.env,

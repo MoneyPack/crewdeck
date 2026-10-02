@@ -12,6 +12,7 @@ import {
 } from '../../shared/ipc';
 import { getDatabase, type Json } from '../services/db';
 import { normalizeUrl } from '../../shared/browser';
+import { getSettings } from '../services/settings';
 
 const AGENT_IDS = new Set<string>(AGENT_PROFILES.map((p) => p.id));
 const MAX_TERMINALS = 64;
@@ -42,6 +43,8 @@ export function registerProjectIpc(): void {
   });
 
   ipcMain.handle(ProjectChannels.restore, (e): RestoreResult | null => {
+    const settings = getSettings();
+    if (settings.startup !== 'last') return null;
     const db = getDatabase();
     const row = db.getLastProject();
     if (!row) return null;
@@ -50,7 +53,7 @@ export function registerProjectIpc(): void {
     // Bump last_opened_at so the restored project stays "last".
     db.openProject(row.path, row.name);
 
-    const terminals: PersistedTerminal[] = db.listTerminals(row.id).map((t) => {
+    const terminals: PersistedTerminal[] = !settings.restoreSessions ? [] : db.listTerminals(row.id).map((t) => {
       const worktree = parseWorktree(t.config.worktree);
       const liveWorktree = worktree && isDirectory(worktree.path) ? worktree : undefined;
       return {
