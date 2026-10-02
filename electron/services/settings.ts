@@ -25,7 +25,7 @@ const DEFAULTS: StoredSettings = {
   accent: '#7c5cff',
   density: 'comfortable',
   restoreSessions: true,
-  startup: 'empty',
+  startup: 'last',
   notifications: true,
   sound: false,
   updateChannel: 'stable',

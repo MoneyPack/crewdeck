@@ -1,4 +1,5 @@
 import { registerSettingsIpc } from './ipc/settings';
+import { getSettings } from './services/settings';
 import { app, BrowserWindow, dialog, Menu, session, shell } from 'electron';
 import path from 'node:path';
 import { closeDatabase, openDatabase } from './services/db';
@@ -107,7 +108,8 @@ function initDatabase(): boolean {
 }
 
 app.whenReady().then(() => {
-  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+  // ponytail: channel read once at startup; changing it applies on next launch.
+  if (app.isPackaged) { autoUpdater.allowPrerelease = getSettings().updateChannel === 'beta'; autoUpdater.checkForUpdatesAndNotify().catch(() => {}); }
   if (!initDatabase()) {
     app.exit(1);
     return;

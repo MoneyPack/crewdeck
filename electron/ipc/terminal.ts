@@ -1,4 +1,5 @@
-import { app, ipcMain, type WebContents } from 'electron';
+import { app, BrowserWindow, ipcMain, Notification, shell, type WebContents } from 'electron';
+import { getSettings } from '../services/settings';
 import path from 'node:path';
 import { RESTORED_DIVIDER, TerminalChannels, type TerminalCreateOptions } from '../../shared/ipc';
 import { getDatabase, type Json } from '../services/db';
@@ -41,6 +42,9 @@ export function registerTerminalIpc(): TerminalIpc {
           log.warn('[terminal] endSession failed:', err);
         }
       }
+      const s = getSettings();
+      if (s.notifications && !BrowserWindow.getFocusedWindow() && Notification.isSupported()) new Notification({ title: 'Terminal exited', body: `exit code ${event.exitCode}` }).show();
+      if (s.sound) shell.beep();
       if (owner && !owner.isDestroyed()) owner.send(TerminalChannels.exit, event);
     },
   );
