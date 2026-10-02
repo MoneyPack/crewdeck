@@ -4013,3 +4013,85 @@ button:not(:disabled):active {
     transform: none !important;
   }
 }
+
+/* ---- settings interactions pass ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .settings-tabs button,
+  .settings .icon-btn,
+  .settings .btn-pop,
+  .onboard-btn,
+  .settings-row,
+  .settings-list li,
+  .agent-catalog li,
+  .settings .switch {
+    transition:
+      transform var(--t-fast) var(--snap),
+      box-shadow var(--t-med) var(--glide),
+      background-color var(--t-fast) var(--glide),
+      border-color var(--t-fast) var(--glide),
+      color var(--t-fast) var(--glide);
+  }
+  .settings-tabs button:hover,
+  .settings .btn-pop:hover,
+  .onboard-btn:hover {
+    transform: translateY(calc(var(--lift) * -1));
+    box-shadow: var(--pop-glow);
+  }
+  .settings .icon-btn:hover {
+    transform: rotate(90deg) scale(1.08);
+    color: var(--pop-c);
+  }
+  .settings-row:hover,
+  .settings-list li:hover,
+  .agent-catalog li:hover {
+    transform: translateX(2px);
+    border-color: var(--pop-a);
+    box-shadow: inset 3px 0 0 var(--pop-a);
+  }
+  .settings .switch:hover {
+    box-shadow: 0 0 0 var(--rule-w) var(--pop-b);
+  }
+  .settings-tabs button:active,
+  .settings .btn-pop:active,
+  .settings .icon-btn:active,
+  .onboard-btn:active,
+  .settings .switch:active {
+    transform: scale(0.96);
+  }
+  .onboard-btn.primary {
+    background-image: var(--pop-grad);
+    background-size: 200% 100%;
+    animation: cd-shimmer 4s linear infinite;
+  }
+  .onboard-btn.primary:hover {
+    animation: cd-pulse 1.2s var(--glide) infinite;
+  }
+  .onboard-tip {
+    animation: cd-fade-up var(--t-med) var(--glide) both;
+  }
+  .settings {
+    animation: cd-fade-up var(--t-med) var(--glide) both;
+  }
+  .settings-section {
+    animation: cd-fade-up var(--t-med) var(--glide) both;
+  }
+}
+.settings-tabs button:focus-visible,
+.settings .icon-btn:focus-visible,
+.settings .btn-pop:focus-visible,
+.settings .switch:focus-visible,
+.settings input:focus-visible,
+.settings select:focus-visible,
+.settings textarea:focus-visible,
+.agent-search:focus-visible,
+.onboard-btn:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: 2px;
+}
+.settings input:focus,
+.settings select:focus,
+.settings textarea:focus,
+.agent-search:focus {
+  border-color: var(--pop-b);
+  box-shadow: 0 0 0 var(--rule-w) var(--pop-b);
+}
