@@ -18,6 +18,7 @@ import { Splash } from './components/Splash/Splash';
 import { Settings, type Tab as SettingsTab } from './components/Settings/Settings';
 import { Palette, type PaletteAction } from './components/Palette/Palette';
 import type {
+  AppSettings,
   PersistedLayout,
   PersistedTerminal,
   ProjectInfo,
@@ -128,10 +129,14 @@ export function App() {
   const [activeSlot, setActiveSlot] = useState(0);
   const [detections, setDetections] = useState<AgentDetection[] | null>(null);
   const [customProfiles, setCustomProfiles] = useState<AgentProfile[]>([]);
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   useEffect(() => {
     window.crewdeck.settings
       .get()
-      .then((s) => setCustomProfiles(s.customAgents.map((a) => ({ ...a, custom: true }))))
+      .then((s) => {
+        setAppSettings(s);
+        setCustomProfiles(s.customAgents.map((a) => ({ ...a, custom: true })));
+      })
       .catch(() => setCustomProfiles([]));
   }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -725,7 +730,10 @@ export function App() {
   );
 
   return (
-    <div className="app">
+    <div
+      className={`app${appSettings?.density === 'compact' ? ' density-compact' : ''}${appSettings?.reduceMotion ? ' reduce-motion' : ''}`}
+      style={appSettings?.accent ? ({ '--accent': appSettings.accent } as CSSProperties) : undefined}
+    >
       {splash && <Splash onDone={endSplash} />}
       <div className="toolbar">
         <span className="title">crewdeck</span>
@@ -1024,6 +1032,7 @@ export function App() {
                   onPtyId={(p) => (p ? ptyIds.current.set(t.id, p) : ptyIds.current.delete(t.id))}
                   sendTargets={mentionTargets.filter((m) => m.id !== t.id)}
                   onSendSelection={(target, text) => forwardSelection(t.title, target, text)}
+                  terminalSettings={appSettings ?? undefined}
                 />
               );
             })}
@@ -1077,7 +1086,10 @@ export function App() {
         onChange={() => {
           window.crewdeck.settings
             .get()
-            .then((st) => setCustomProfiles(st.customAgents.map((a) => ({ ...a, custom: true }))))
+            .then((st) => {
+              setAppSettings(st);
+              setCustomProfiles(st.customAgents.map((a) => ({ ...a, custom: true })));
+            })
             .catch(() => undefined);
           void refreshAgents(true);
         }}

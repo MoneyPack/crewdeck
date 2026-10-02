@@ -3,7 +3,12 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { WebglAddon } from '@xterm/addon-webgl';
-import { RESTORED_DIVIDER, type TerminalDataEvent, type TerminalExitEvent } from '../../../shared/ipc';
+import { RESTORED_DIVIDER, type AppSettings, type TerminalDataEvent, type TerminalExitEvent } from '../../../shared/ipc';
+
+export type TerminalSettings = Pick<
+  AppSettings,
+  'fontSize' | 'cursorStyle' | 'cursorBlink' | 'scrollback' | 'fontFamily' | 'lineHeight'
+>;
 import type { MentionTarget } from '../../../shared/mention';
 import { findShortcut } from '../../../shared/shortcuts';
 
@@ -35,6 +40,7 @@ export interface TerminalPaneProps {
   onSendSelection?: (target: MentionTarget, text: string) => Promise<string | void> | string | void;
   /** Agent profile id; drives the pane's accent color via `[data-agent]`. */
   agent?: string;
+  terminalSettings?: TerminalSettings;
 }
 
 /** xterm palette from styles.css design tokens: [xterm key, CSS custom property, fallback literal]. */
@@ -123,10 +129,13 @@ export function TerminalPane({
   sendTargets,
   onSendSelection,
   agent,
+  terminalSettings,
 }: TerminalPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const onPtyIdRef = useRef(onPtyId);
   onPtyIdRef.current = onPtyId;
+  const terminalSettingsRef = useRef(terminalSettings);
+  terminalSettingsRef.current = terminalSettings;
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'starting' });
@@ -163,20 +172,40 @@ export function TerminalPane({
     return () => cancelAnimationFrame(frame);
   }, [active, hidden]);
 
+  // Apply terminal settings changes live to the existing xterm instance.
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term) return;
+    term.options.fontSize = terminalSettings?.fontSize ?? 13;
+    term.options.lineHeight = terminalSettings?.lineHeight ?? 1.15;
+    term.options.cursorBlink = terminalSettings?.cursorBlink ?? true;
+    term.options.cursorStyle = terminalSettings?.cursorStyle ?? 'block';
+    term.options.scrollback = terminalSettings?.scrollback ?? 10_000;
+    term.options.fontFamily = terminalSettings?.fontFamily || readXtermFont();
+    if (fitRef.current) safeFit(fitRef.current);
+  }, [
+    terminalSettings?.fontSize,
+    terminalSettings?.lineHeight,
+    terminalSettings?.cursorBlink,
+    terminalSettings?.cursorStyle,
+    terminalSettings?.scrollback,
+    terminalSettings?.fontFamily,
+  ]);
+
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
 
     const api = window.crewdeck.terminal;
     const term = new Terminal({
-      fontFamily: readXtermFont(),
-      fontSize: 13,
-      lineHeight: 1.15,
-      cursorBlink: true,
-      cursorStyle: 'block',
+      fontFamily: terminalSettingsRef.current?.fontFamily || readXtermFont(),
+      fontSize: terminalSettingsRef.current?.fontSize ?? 13,
+      lineHeight: terminalSettingsRef.current?.lineHeight ?? 1.15,
+      cursorBlink: terminalSettingsRef.current?.cursorBlink ?? true,
+      cursorStyle: terminalSettingsRef.current?.cursorStyle ?? 'block',
       cursorInactiveStyle: 'outline',
       minimumContrastRatio: 1,
-      scrollback: 10_000,
+      scrollback: terminalSettingsRef.current?.scrollback ?? 10_000,
       allowProposedApi: false,
       // ConPTY clears the screen (ESC[2J) when a new session starts; push the replayed
       // history into scrollback instead of erasing it.

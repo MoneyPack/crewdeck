@@ -212,6 +212,94 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
                 />
               </label>
               <label>
+                Cursor style
+                <select
+                  value={s.cursorStyle}
+                  onChange={(e) => update({ cursorStyle: e.target.value as AppSettings['cursorStyle'] })}
+                >
+                  <option value="block">Block</option>
+                  <option value="bar">Bar</option>
+                  <option value="underline">Underline</option>
+                </select>
+              </label>
+              <label>
+                Scrollback lines
+                <input
+                  type="number"
+                  min={500}
+                  max={100000}
+                  step={500}
+                  value={s.scrollback}
+                  onChange={(e) => update({ scrollback: Number(e.target.value) })}
+                />
+              </label>
+              <label>
+                Line height
+                <input
+                  type="number"
+                  min={1}
+                  max={2}
+                  step={0.05}
+                  value={s.lineHeight}
+                  onChange={(e) => update({ lineHeight: Number(e.target.value) })}
+                />
+              </label>
+              <label>
+                Terminal font family
+                <input
+                  placeholder="Default monospace"
+                  defaultValue={s.fontFamily}
+                  onBlur={(e) => e.target.value !== s.fontFamily && update({ fontFamily: e.target.value })}
+                />
+              </label>
+              <label>
+                Accent color
+                <input
+                  type="color"
+                  value={s.accent}
+                  onChange={(e) => update({ accent: e.target.value })}
+                />
+              </label>
+              <label>
+                Density
+                <select
+                  value={s.density}
+                  onChange={(e) => update({ density: e.target.value as AppSettings['density'] })}
+                >
+                  <option value="comfortable">Comfortable</option>
+                  <option value="compact">Compact</option>
+                </select>
+              </label>
+              <label>
+                On startup
+                <select
+                  value={s.startup}
+                  onChange={(e) => update({ startup: e.target.value as AppSettings['startup'] })}
+                >
+                  <option value="empty">Start empty</option>
+                  <option value="last">Reopen last workspace</option>
+                  <option value="palette">Open command palette</option>
+                </select>
+              </label>
+              <label>
+                Update channel
+                <select
+                  value={s.updateChannel}
+                  onChange={(e) => update({ updateChannel: e.target.value as AppSettings['updateChannel'] })}
+                >
+                  <option value="stable">Stable</option>
+                  <option value="beta">Beta</option>
+                </select>
+              </label>
+              <label>
+                Default working directory
+                <input
+                  placeholder="Home directory"
+                  defaultValue={s.defaultCwd}
+                  onBlur={(e) => e.target.value !== s.defaultCwd && update({ defaultCwd: e.target.value })}
+                />
+              </label>
+              <label>
                 Default agent
                 <select value={s.defaultAgent} onChange={(e) => update({ defaultAgent: e.target.value })}>
                   <option value="">Ask each time</option>
@@ -236,6 +324,11 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
                   ['confirmOnClose', 'Confirm before closing sessions'],
                   ['autoUpdate', 'Automatic updates'],
                   ['telemetry', 'Anonymous telemetry'],
+                ['cursorBlink', 'Cursor blink'],
+                ['reduceMotion', 'Reduce motion'],
+                ['restoreSessions', 'Restore sessions on launch'],
+                ['notifications', 'Notifications'],
+                ['sound', 'Sound'],
                 ] as const
               ).map(([k, label]) => (
                 <label key={k} className="settings-switch">

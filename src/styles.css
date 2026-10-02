@@ -4095,3 +4095,21 @@ button:not(:disabled):active {
   border-color: var(--pop-b);
   box-shadow: 0 0 0 var(--rule-w) var(--pop-b);
 }
+
+/* ---- Appearance settings: density + reduced motion ---- */
+.app.density-compact {
+  font-size: 13px;
+}
+.app.density-compact button,
+.app.density-compact input,
+.app.density-compact select {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.app.reduce-motion *,
+.app.reduce-motion *::before,
+.app.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

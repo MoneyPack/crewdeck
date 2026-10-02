@@ -315,6 +315,20 @@ export interface AppSettings {
   telemetry: boolean;
   shell: string;
   customAgents: CustomAgent[];
+  cursorStyle: 'block' | 'bar' | 'underline';
+  cursorBlink: boolean;
+  scrollback: number;
+  fontFamily: string;
+  lineHeight: number;
+  accent: string;
+  density: 'compact' | 'comfortable';
+  restoreSessions: boolean;
+  startup: 'empty' | 'last' | 'palette';
+  notifications: boolean;
+  sound: boolean;
+  updateChannel: 'stable' | 'beta';
+  defaultCwd: string;
+  reduceMotion: boolean;
 }
 
 export interface ProviderKeyInfo {
