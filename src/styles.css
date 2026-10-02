@@ -3800,3 +3800,62 @@ button:not(:disabled):active {
     transform: none;
   }
 }
+
+/* ---- agents pass ---- */
+.agent-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+.agent-search {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 6px 10px;
+  background: var(--bg-2, transparent);
+  color: inherit;
+  border: var(--rule-w) solid var(--rule, currentColor);
+  border-radius: 8px;
+  transition:
+    border-color var(--t-fast) var(--snap),
+    box-shadow var(--t-fast) var(--snap);
+}
+.agent-search:hover {
+  border-color: var(--pop-a);
+}
+.agent-search:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  box-shadow: var(--pop-glow);
+}
+.badge.busy {
+  background: var(--pop-grad);
+  color: #fff;
+  animation: cd-pulse 1.2s var(--glide) infinite;
+}
+.agent-catalog li.empty,
+.custom-agents li.empty {
+  display: block;
+  padding: 12px;
+  opacity: 0.7;
+  font-style: italic;
+  text-align: center;
+}
+.custom-agents li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  animation: cd-fade-up var(--t-med) var(--glide) both;
+}
+.custom-agents li > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge.busy,
+  .custom-agents li {
+    animation: none;
+  }
+}

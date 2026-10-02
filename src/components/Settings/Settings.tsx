@@ -28,6 +28,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<AgentInstallResult[]>([]);
   const [form, setForm] = useState({ name: '', command: '', args: '', env: '' });
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -77,6 +78,24 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
   };
 
   const saveAgent = async () => {
+    const nm = form.name.trim().toLowerCase();
+    const taken = [
+      ...AGENT_PROFILES.flatMap((p) => [p.id.toLowerCase(), p.name.toLowerCase()]),
+      ...(s?.customAgents ?? []).flatMap((a) => [a.id.toLowerCase(), a.name.toLowerCase()]),
+    ];
+    if (nm && taken.includes(nm)) {
+      setErr('An agent named "' + form.name.trim() + '" already exists');
+      return;
+    }
+    const badEnv = form.env
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .find((l) => !/^[A-Za-z_][A-Za-z0-9_]*=/.test(l));
+    if (badEnv) {
+      setErr('Invalid environment line "' + badEnv + '" (use KEY=value)');
+      return;
+    }
     if (!form.name.trim() || !form.command.trim()) {
       setErr('Name and command are required');
       return;
@@ -125,6 +144,24 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
     } finally {
       setBusy(false);
     }
+  };
+
+  const q = query.trim().toLowerCase();
+
+  const visible = AGENT_PROFILES.filter(
+    (p) => p.install && (!q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)),
+  );
+
+  const selectAll = () => setPicked(visible.filter((p) => !installed(p.id)).map((p) => p.id));
+
+  const agentBadge = (id: string, ok: boolean) => {
+    const r = results.find((x) => x.id === id);
+
+    if (busy && picked.includes(id)) return <span className="badge busy">Installing</span>;
+
+    if (r) return <span className={r.ok ? 'badge ok' : 'badge bad'}>{r.ok ? 'Installed now' : 'Install failed'}</span>;
+
+    return <span className={ok ? 'badge ok' : 'badge'}>{ok ? 'Installed' : 'Not installed'}</span>;
   };
 
   const installed = (id: string) => detections.find((d) => d.id === id)?.installed ?? false;
@@ -252,8 +289,25 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
           {tab === 'agents' && s && (
             <div className="settings-section">
               <h3>Install agents</h3>
+              <div className="agent-toolbar">
+                <input
+                  className="agent-search"
+                  type="search"
+                  placeholder="Search agents"
+                  aria-label="Search agents"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <button disabled={busy || !visible.length} onClick={selectAll}>
+                  Select all
+                </button>
+                <button disabled={busy || !picked.length} onClick={() => setPicked([])}>
+                  Clear
+                </button>
+              </div>
               <ul className="agent-catalog">
-                {AGENT_PROFILES.filter((p) => p.install).map((p) => {
+                {visible.length === 0 && <li className="empty">No agents match "{query}"</li>}
+                {visible.map((p) => {
                   const ok = installed(p.id);
                   return (
                     <li key={p.id} className={picked.includes(p.id) ? 'picked' : ''}>
@@ -265,7 +319,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
                           onChange={() => toggle(p.id)}
                         />
                         <strong>{p.name}</strong>
-                        <span className={ok ? 'badge ok' : 'badge'}>{ok ? 'Installed' : 'Not installed'}</span>
+                        {agentBadge(p.id, ok)}
                       </label>
                       <code className="muted">{p.install}</code>
                     </li>
@@ -319,7 +373,8 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               <button className="btn-pop" onClick={saveAgent}>
                 Add agent
               </button>
-              <ul className="settings-list">
+              <ul className="settings-list custom-agents">
+                {s.customAgents.length === 0 && <li className="empty">No custom agents</li>}
                 {s.customAgents.map((a) => (
                   <li key={a.id}>
                     <strong>{a.name}</strong>
