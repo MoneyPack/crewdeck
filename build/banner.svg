@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed">
+        <animate attributeName="stop-color" values="#7c3aed;#06b6d4;#7c3aed" dur="6s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="1" stop-color="#06b6d4">
+        <animate attributeName="stop-color" values="#06b6d4;#7c3aed;#06b6d4" dur="6s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="0.5" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="220" rx="28" fill="#0b0f19"/>
+  <g transform="translate(40 22) scale(0.6875)">
+    <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+    <rect x="20" y="20" width="216" height="216" rx="40" fill="#0b0f19"/>
+    <path d="M52 84 L104 128 L52 172" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="140" stroke-dashoffset="140">
+      <animate attributeName="stroke-dashoffset" from="140" to="0" dur="0.8s" fill="freeze"/>
+    </path>
+    <rect x="124" y="70" width="0" height="22" rx="11" fill="#a78bfa">
+      <animate attributeName="width" values="0;84;60;84" keyTimes="0;0.15;0.5;1" begin="0.6s" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="124" y="117" width="0" height="22" rx="11" fill="#22d3ee">
+      <animate attributeName="width" values="0;68;84;68" keyTimes="0;0.15;0.5;1" begin="0.8s" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="124" y="164" width="0" height="22" rx="11" fill="#34d399">
+      <animate attributeName="width" values="0;84;52;84" keyTimes="0;0.15;0.5;1" begin="1s" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="0.4s" dur="0.8s" fill="freeze"/>
+    <text x="250" y="118" font-size="72" font-weight="800" fill="url(#txt)">crewdeck</text>
+    <text x="252" y="158" font-size="22" fill="#94a3b8">Coding-agent CLIs, side by side.</text>
+    <rect x="252" y="172" width="14" height="4" fill="#22d3ee">
+      <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+</svg>

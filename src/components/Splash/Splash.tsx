@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import logo from '../../assets/logo.svg';
 
 const CREW = [
   { id: 'claude', label: 'CLAUDE' },
@@ -51,6 +52,7 @@ export function Splash({ onDone }: { onDone: () => void }) {
           </div>
         ))}
       </div>
+      <img className="splash-logo" src={logo} alt="" />
       <h1 className="splash-word" aria-label="crewdeck">
         {WORD.split('').map((ch, i) => (
           <span key={i} style={{ animationDelay: `${700 + i * 55}ms` }}>

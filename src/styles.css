@@ -2675,6 +2675,13 @@ kbd {
   animation: splash-blink 900ms steps(2, jump-none) 2 both;
   animation-delay: inherit;
 }
+.splash-logo {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 18px;
+  filter: drop-shadow(0 0 24px rgba(124, 58, 237, 0.55));
+  animation: splash-rise 560ms var(--snap) both;
+}
 .splash-word {
   margin: var(--s4) 0 0;
   font-family: var(--wide);
