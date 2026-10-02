@@ -3664,3 +3664,139 @@ button:not(:disabled):active {
     transform: none;
   }
 }
+
+/* ---- settings/palette pop pass ---- */
+.settings-backdrop,
+.palette-backdrop {
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  animation: cd-fade-up var(--t-med) var(--glide) both;
+}
+.settings,
+.palette {
+  position: relative;
+  box-shadow:
+    var(--pop-glow),
+    0 24px 64px rgba(0, 0, 0, 0.45);
+  animation: cd-fade-up var(--t-med) var(--glide) both;
+}
+.settings::before,
+.palette::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: var(--rule-w);
+  border-radius: inherit;
+  background: var(--pop-grad);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.settings-tabs [role='tab'] {
+  position: relative;
+  transition: color var(--t-fast) var(--snap);
+}
+.settings-tabs [role='tab']::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  height: 2px;
+  background: var(--pop-grad);
+  transform: scaleX(0);
+  transition: transform var(--t-med) var(--glide);
+}
+.settings-tabs [aria-selected='true']::after {
+  transform: scaleX(1);
+}
+.settings-row,
+.agent-catalog li {
+  transition:
+    transform var(--t-fast) var(--snap),
+    box-shadow var(--t-fast) var(--snap),
+    background var(--t-fast) var(--snap);
+}
+.settings-row:hover,
+.agent-catalog li:hover {
+  transform: translateY(var(--lift));
+  box-shadow: 0 6px 18px rgba(124, 92, 255, 0.18);
+}
+.switch input:checked + *,
+.settings-switch input:checked + * {
+  background: var(--pop-grad);
+  box-shadow: 0 0 12px rgba(0, 224, 255, 0.45);
+}
+.btn-pop {
+  background-image: var(--pop-grad);
+  background-size: 200% 100%;
+  transition:
+    background-position var(--t-med) var(--glide),
+    box-shadow var(--t-fast) var(--snap),
+    transform var(--t-fast) var(--snap);
+}
+.btn-pop:hover {
+  background-position: 100% 0;
+  box-shadow: var(--pop-glow);
+  transform: translateY(var(--lift));
+}
+.toolbar {
+  position: relative;
+}
+.toolbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--rule-w);
+  background: var(--pop-grad);
+  opacity: 0.6;
+  pointer-events: none;
+}
+.new-term {
+  background-image: var(--pop-grad);
+  background-size: 200% 100%;
+  transition:
+    background-position var(--t-med) var(--glide),
+    box-shadow var(--t-fast) var(--snap);
+}
+.new-term:hover {
+  background-position: 100% 0;
+  box-shadow: var(--pop-glow);
+}
+.toolbar [aria-pressed='true'] {
+  color: var(--pop-b);
+  box-shadow:
+    0 0 0 var(--rule-w) var(--pop-a),
+    0 0 14px rgba(124, 92, 255, 0.45);
+}
+.tabs [role='tab'] {
+  position: relative;
+}
+.tabs [aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--pop-grad);
+  box-shadow: 0 0 10px rgba(0, 224, 255, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings,
+  .palette,
+  .settings-backdrop,
+  .palette-backdrop {
+    animation: none;
+  }
+  .settings-row:hover,
+  .agent-catalog li:hover,
+  .btn-pop:hover {
+    transform: none;
+  }
+}
