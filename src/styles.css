@@ -3859,3 +3859,157 @@ button:not(:disabled):active {
     animation: none;
   }
 }
+
+/* ---- interactions pass ---- */
+.toolbar button,
+.toolbar .agent-picker,
+.toolbar .project {
+  transition:
+    transform var(--t-fast) var(--snap),
+    box-shadow var(--t-med) var(--glide),
+    border-color var(--t-fast) var(--snap),
+    background-color var(--t-fast) var(--snap);
+}
+.toolbar button:hover:not(:disabled),
+.toolbar .agent-picker:hover,
+.toolbar .project:hover {
+  transform: translateY(calc(var(--lift) * -1));
+  box-shadow: var(--pop-glow);
+  border-color: var(--pop-a);
+}
+.toolbar button:active:not(:disabled) {
+  transform: translateY(0) scale(0.96);
+}
+.toolbar button:focus-visible,
+.toolbar .agent-picker:focus-visible {
+  outline: var(--rule-w) solid var(--signal);
+  outline-offset: 2px;
+}
+.toolbar button:disabled {
+  opacity: 0.4;
+}
+.layout-picker button.selected {
+  background-image: var(--pop-grad);
+  border-color: transparent;
+  box-shadow: var(--pop-glow);
+}
+.new-term:hover:not(:disabled) {
+  border-color: var(--pop-b);
+}
+
+.palette {
+  animation: cd-fade-up var(--t-med) var(--glide) both;
+  box-shadow:
+    var(--pop-glow),
+    0 24px 64px rgb(0 0 0 / 0.45);
+}
+.palette input {
+  transition:
+    border-color var(--t-fast) var(--snap),
+    box-shadow var(--t-med) var(--glide);
+}
+.palette input:focus {
+  border-color: var(--pop-a);
+  box-shadow: 0 0 0 var(--rule-w) var(--pop-a);
+  outline: none;
+}
+.palette li[role='option'] {
+  position: relative;
+  transition:
+    background-color var(--t-fast) var(--snap),
+    padding-left var(--t-fast) var(--snap);
+}
+.palette li[role='option']:hover:not([aria-disabled='true']),
+.palette li[role='option'].active {
+  padding-left: calc(var(--rule-w) * 6 + 8px);
+  background: color-mix(in srgb, var(--pop-a) 16%, transparent);
+}
+.palette li[role='option'].active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 3px;
+  background-image: var(--pop-grad);
+}
+.palette li[role='option'] kbd {
+  transition:
+    border-color var(--t-fast) var(--snap),
+    color var(--t-fast) var(--snap);
+}
+.palette li[role='option'].active kbd {
+  border-color: var(--pop-b);
+  color: var(--pop-b);
+}
+.palette li[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pane-header {
+  transition:
+    border-color var(--t-fast) var(--snap),
+    background-color var(--t-fast) var(--snap);
+}
+.pane-header:hover {
+  border-color: var(--pop-a);
+}
+.pane-header button {
+  transition: transform var(--t-fast) var(--snap);
+}
+.pane-header button:hover:not(:disabled) {
+  transform: scale(1.12);
+}
+.pane-header button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.pane-body {
+  transition: box-shadow var(--t-med) var(--glide);
+}
+.pane-body:focus-within {
+  box-shadow: inset 0 0 0 var(--rule-w) color-mix(in srgb, var(--pop-a) 55%, transparent);
+}
+
+.composer {
+  transition: box-shadow var(--t-med) var(--glide);
+}
+.composer:focus-within {
+  box-shadow: var(--pop-glow);
+}
+.composer-input {
+  transition: border-color var(--t-fast) var(--snap);
+}
+.composer-input:focus {
+  border-color: var(--pop-a);
+  outline: none;
+}
+.composer-suggest {
+  animation: cd-fade-up var(--t-fast) var(--glide) both;
+}
+.composer-suggest li[role='option'] {
+  transition:
+    background-color var(--t-fast) var(--snap),
+    transform var(--t-fast) var(--snap);
+}
+.composer-suggest li[role='option']:hover,
+.composer-suggest li[role='option'][aria-selected='true'] {
+  background: color-mix(in srgb, var(--pop-b) 14%, transparent);
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar button,
+  .toolbar .agent-picker,
+  .toolbar .project,
+  .palette,
+  .palette li[role='option'],
+  .pane-header button,
+  .composer-suggest,
+  .composer-suggest li[role='option'] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
