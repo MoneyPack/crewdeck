@@ -1,6 +1,6 @@
 import { registerSettingsIpc } from './ipc/settings';
 import { getSettings } from './services/settings';
-import { app, BrowserWindow, dialog, Menu, session, shell } from 'electron';
+import { app, BrowserWindow, dialog, globalShortcut, Menu, session, shell } from 'electron';
 import path from 'node:path';
 import { closeDatabase, openDatabase } from './services/db';
 import { registerAgentIpc } from './ipc/agents';
@@ -83,7 +83,7 @@ registerProjectIpc();
 registerRoutingIpc();
 registerGitIpc();
 registerBrowserIpc();
-registerSettingsIpc();
+registerSettingsIpc(() => registerSummonHotkey());
 
 function initDatabase(): boolean {
   const file = path.join(app.getPath('userData'), 'crewdeck.db');
@@ -109,18 +109,39 @@ function initDatabase(): boolean {
 
 app.whenReady().then(() => {
   // ponytail: channel read once at startup; changing it applies on next launch.
-  if (app.isPackaged) { autoUpdater.allowPrerelease = getSettings().updateChannel === 'beta'; autoUpdater.checkForUpdatesAndNotify().catch(() => {}); }
+  if (app.isPackaged) {
+    autoUpdater.allowPrerelease = getSettings().updateChannel === 'beta';
+    autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+  }
   if (!initDatabase()) {
     app.exit(1);
     return;
   }
   applyContentSecurityPolicy();
   createWindow();
+  registerSummonHotkey();
   startBrowserTooling().catch((err: unknown) => log.error('browser bridge failed to start', err));
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
+
+/** Global "summon the deck" hotkey: toggles show/hide from anywhere. ponytail: fixed combo, settings-driven if asked. */
+export function registerSummonHotkey(): void {
+  globalShortcut.unregisterAll();
+  const combo = getSettings().summonHotkey;
+  if (!combo) return;
+  const ok = globalShortcut.register(combo, () => {
+    const win = BrowserWindow.getAllWindows()[0] ?? createWindow();
+    if (win.isFocused() && win.isVisible()) win.hide();
+    else {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    }
+  });
+  if (!ok) log.warn('summon hotkey could not be registered', combo);
+}
 
 app.on('before-quit', () => {
   // Flush first: PTY exit callbacks would otherwise race the final debounced write.
@@ -131,9 +152,11 @@ app.on('before-quit', () => {
   browserEngine.dispose();
   void stopBrowserTooling();
 });
-app.on('will-quit', () => closeDatabase());
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+  closeDatabase();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
-

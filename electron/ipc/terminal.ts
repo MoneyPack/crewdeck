@@ -43,7 +43,8 @@ export function registerTerminalIpc(): TerminalIpc {
         }
       }
       const s = getSettings();
-      if (s.notifications && !BrowserWindow.getFocusedWindow() && Notification.isSupported()) new Notification({ title: 'Terminal exited', body: `exit code ${event.exitCode}` }).show();
+      if (s.notifications && !BrowserWindow.getFocusedWindow() && Notification.isSupported())
+        new Notification({ title: 'Terminal exited', body: `exit code ${event.exitCode}` }).show();
       if (s.sound) shell.beep();
       if (owner && !owner.isDestroyed()) owner.send(TerminalChannels.exit, event);
     },

@@ -83,6 +83,8 @@ const HELP: Record<string, string> = {
   defaultCwd: 'Folder new shells start in when no project is open.',
   defaultAgent: 'Pre-selects this agent when you press New. Works for any installed CLI.',
   shell: 'Program used for plain shell panes, e.g. pwsh.exe, cmd.exe or bash.',
+  summonHotkey:
+    'Global shortcut that shows or hides crewdeck from any app. Electron accelerator syntax; leave empty to disable.',
   animations: 'Pane transitions, hover lifts and the splash sequence.',
   confirmOnClose: 'Ask before killing a pane that still has a running process.',
   autoUpdate: 'Download releases in the background and install on next launch.',
@@ -405,6 +407,15 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
                   placeholder="System default"
                   defaultValue={s.shell}
                   onBlur={(e) => e.target.value !== s.shell && update({ shell: e.target.value })}
+                />
+              </label>
+              <label>
+                Summon hotkey
+                <small className="settings-help">{HELP.summonHotkey}</small>
+                <input
+                  placeholder="CommandOrControl+Alt+C"
+                  defaultValue={s.summonHotkey}
+                  onBlur={(e) => e.target.value !== s.summonHotkey && update({ summonHotkey: e.target.value.trim() })}
                 />
               </label>
               {(

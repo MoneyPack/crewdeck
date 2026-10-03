@@ -16,6 +16,7 @@ export type TerminalSettings = Pick<
 >;
 import type { MentionTarget } from '../../../shared/mention';
 import { findShortcut } from '../../../shared/shortcuts';
+import { ACTIVITY_LABEL, classify, type Activity } from '../../../shared/activity';
 import logo from '../../assets/logo.svg';
 
 export interface TerminalPaneProps {
@@ -47,6 +48,8 @@ export interface TerminalPaneProps {
   /** Agent profile id; drives the pane's accent color via `[data-agent]`. */
   agent?: string;
   terminalSettings?: TerminalSettings;
+  /** Reports working / waiting / idle transitions plus the recent output tail (for pipelines). */
+  onActivity?: (activity: Activity, tail: string) => void;
 }
 
 /** xterm palette from styles.css design tokens: [xterm key, CSS custom property, fallback literal]. */
@@ -136,15 +139,21 @@ export function TerminalPane({
   onSendSelection,
   agent,
   terminalSettings,
+  onActivity,
 }: TerminalPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const onPtyIdRef = useRef(onPtyId);
   onPtyIdRef.current = onPtyId;
+  const onActivityRef = useRef(onActivity);
+  onActivityRef.current = onActivity;
   const terminalSettingsRef = useRef(terminalSettings);
   terminalSettingsRef.current = terminalSettings;
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'starting' });
+  const [activity, setActivity] = useState<Activity>('off');
+  // Recent output tail + timestamp, used by the activity heuristic.
+  const tailRef = useRef({ buf: '', at: 0 });
   const [hasSelection, setHasSelection] = useState(false);
   const [sendNote, setSendNote] = useState<string | null>(null);
   const hidden = style?.display === 'none';
@@ -154,6 +163,24 @@ export function TerminalPane({
     const timer = setTimeout(() => setSendNote(null), 2500);
     return () => clearTimeout(timer);
   }, [sendNote]);
+
+  // Activity heuristic: re-classify on a slow tick; only report transitions.
+  useEffect(() => {
+    const alive = status.kind === 'running';
+    let last: Activity | null = null;
+    const tick = () => {
+      const t = tailRef.current;
+      const next = classify(performance.now(), t.at, t.buf, alive);
+      if (next !== last) {
+        last = next;
+        setActivity(next);
+        onActivityRef.current?.(next, t.buf.slice(-400));
+      }
+    };
+    tick();
+    const timer = window.setInterval(tick, 700);
+    return () => window.clearInterval(timer);
+  }, [status.kind]);
 
   const sendSelection = async (handle: string) => {
     const target = sendTargets?.find((t) => t.handle === handle);
@@ -278,6 +305,9 @@ export function TerminalPane({
       term.write(data);
     };
     const queueOut = (data: string) => {
+      const t = tailRef.current;
+      t.at = performance.now();
+      t.buf = (t.buf + data).slice(-2000);
       outBuf.push(data);
       // Hidden panes get no rAF ticks in background windows; cap buffered size and flush directly.
       if (outBuf.length > 512) flushOut();
@@ -391,6 +421,7 @@ export function TerminalPane({
     <div
       className={active ? 'pane active' : 'pane'}
       data-agent={agent}
+      data-activity={activity}
       style={style}
       onMouseDown={onActivate}
       onFocus={onActivate}
@@ -448,7 +479,15 @@ export function TerminalPane({
           </select>
         )}
         {sendNote && <span className="send-note">{sendNote}</span>}
-        <span className="status">{describe(status)}</span>
+        <span className="status">
+          {status.kind === 'running' && (
+            <span className={`activity activity--${activity}`} title={ACTIVITY_LABEL[activity]}>
+              <i aria-hidden="true" />
+              {ACTIVITY_LABEL[activity]}
+            </span>
+          )}
+          {describe(status)}
+        </span>
         {onClose && (
           <button
             type="button"

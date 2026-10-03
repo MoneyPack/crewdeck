@@ -6,6 +6,7 @@ import {
   type MentionTarget,
   type MentionTerminal,
 } from '../../../shared/mention';
+import { isPipeline } from '../../../shared/pipeline';
 
 const HISTORY_MAX = 100;
 
@@ -13,6 +14,8 @@ export interface ComposerProps {
   terminals: readonly MentionTerminal[];
   /** Deliver `message` to each target. Return an error string to keep the draft and show it. */
   onSend: (targets: MentionTarget[], message: string) => string | void;
+  /** Handles `@a -> @b: task` chains. Return an error string to keep the draft. */
+  onPipeline?: (text: string) => string | void;
   ref?: Ref<ComposerHandle>;
 }
 
@@ -34,7 +37,7 @@ function tokenAtCaret(text: string, caret: number): { start: number; prefix: str
   return { start: caret - m[2].length - 1, prefix: m[2] };
 }
 
-export function Composer({ terminals, onSend, ref }: ComposerProps) {
+export function Composer({ terminals, onSend, onPipeline, ref }: ComposerProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }), []);
   const [text, setText] = useState('');
@@ -74,13 +77,18 @@ export function Composer({ terminals, onSend, ref }: ComposerProps) {
   };
 
   const send = () => {
-    const result = parseMention(text, terminals);
-    if (!result.ok) {
-      setError(result.error);
-      inputRef.current?.setSelectionRange(result.start, result.end);
-      return;
+    let failure: string | void;
+    if (onPipeline && isPipeline(text)) {
+      failure = onPipeline(text);
+    } else {
+      const result = parseMention(text, terminals);
+      if (!result.ok) {
+        setError(result.error);
+        inputRef.current?.setSelectionRange(result.start, result.end);
+        return;
+      }
+      failure = onSend(result.targets, result.message);
     }
-    const failure = onSend(result.targets, result.message);
     if (failure) {
       setError(failure);
       return;
@@ -188,9 +196,11 @@ export function Composer({ terminals, onSend, ref }: ComposerProps) {
         spellCheck={false}
         value={text}
         placeholder={
-          handles.length
-            ? `@${handles[0].handle} message…  (Enter send · Shift+Enter newline · ↑↓ history)`
-            : 'Open a terminal to send messages'
+          handles.length > 1
+            ? `@${handles[0].handle} message…  or  @${handles[0].handle} -> @${handles[1].handle}: pipeline  (Enter send · ↑↓ history)`
+            : handles.length
+              ? `@${handles[0].handle} message…  (Enter send · Shift+Enter newline · ↑↓ history)`
+              : 'Open a terminal to send messages'
         }
         onChange={(e) => {
           setText(e.target.value);

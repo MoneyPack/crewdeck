@@ -43,6 +43,34 @@ Windows SmartScreen may warn until code signing is live: click "More info" → "
 4. Open a browser pane to let agents drive a built-in browser through the bridge, CLI, or MCP tools below.
 5. `Ctrl+,` opens Settings — every option has a one-line description; API keys live under **API keys (BYOK)**.
 
+### Pipelines
+
+Chain agents from the composer. Each stage receives the task plus the previous stage's output, and advances automatically when the agent goes quiet or asks for input:
+
+```
+@claude -> @codex -> @gemini: build the login page with tests
+```
+
+A strip above the composer shows the stage that's running; cancel any time.
+
+### Crew status
+
+Every pane shows **working**, **needs you** (prompt / permission ask detected) or **idle**. The toolbar sums it up across the crew, and panes waiting on you glow orange.
+
+### Project presets
+
+Commit a `.crewdeck.json` to your repo and the deck opens pre-staffed the first time someone opens that folder:
+
+```json
+{ "agents": ["claude", "codex", "shell"], "layout": 4 }
+```
+
+Agent ids are the profile ids (`claude`, `codex`, `gemini`, `opencode`, `shell`, or a custom agent). Not-installed agents are skipped.
+
+### Summon hotkey
+
+`Ctrl+Alt+C` shows or hides crewdeck from any app. Change it under Settings → Summon hotkey.
+
 ## Browser bridge
 
 When the app starts, it launches a local HTTP bridge:

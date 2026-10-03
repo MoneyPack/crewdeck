@@ -9,11 +9,13 @@ import {
   removeCustomAgent,
 } from '../services/settings';
 
-export function registerSettingsIpc(): void {
+export function registerSettingsIpc(onUpdated?: (s: AppSettings) => void): void {
   ipcMain.handle(SettingsChannels.get, () => getSettings());
   ipcMain.handle(SettingsChannels.update, (_e, patch: Partial<AppSettings>) => {
     updateSettings(patch ?? {});
-    return getSettings();
+    const s = getSettings();
+    onUpdated?.(s);
+    return s;
   });
   ipcMain.handle(SettingsChannels.listKeys, () => listKeys());
   ipcMain.handle(SettingsChannels.setKey, (_e, provider: string, value: string) =>

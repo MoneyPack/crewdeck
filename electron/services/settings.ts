@@ -31,6 +31,7 @@ const DEFAULTS: StoredSettings = {
   updateChannel: 'stable',
   defaultCwd: '',
   reduceMotion: false,
+  summonHotkey: 'CommandOrControl+Alt+C',
   keys: {},
 };
 
@@ -71,7 +72,8 @@ export function updateSettings(patch: Partial<AppSettings>): AppSettings {
   const next: StoredSettings = { ...cur, ...patch, keys: cur.keys };
   if (typeof next.fontSize !== 'number' || next.fontSize < 9 || next.fontSize > 28) next.fontSize = 13;
   const pick = <T extends string>(v: unknown, ok: readonly T[], d: T): T => (ok.includes(v as T) ? (v as T) : d);
-  const num = (v: unknown, lo: number, hi: number, d: number): number => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
+  const num = (v: unknown, lo: number, hi: number, d: number): number =>
+    typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d;
   const bool = (v: unknown, d: boolean): boolean => (typeof v === 'boolean' ? v : d);
   const str = (v: unknown, d: string): string => (typeof v === 'string' ? v.slice(0, 500) : d);
   next.cursorStyle = pick(next.cursorStyle, ['block', 'bar', 'underline'] as const, DEFAULTS.cursorStyle);
@@ -79,7 +81,8 @@ export function updateSettings(patch: Partial<AppSettings>): AppSettings {
   next.scrollback = Math.round(num(next.scrollback, 500, 100000, DEFAULTS.scrollback));
   next.fontFamily = str(next.fontFamily, DEFAULTS.fontFamily);
   next.lineHeight = num(next.lineHeight, 1, 2, DEFAULTS.lineHeight);
-  next.accent = typeof next.accent === 'string' && /^#[0-9a-fA-F]{6}$/.test(next.accent) ? next.accent : DEFAULTS.accent;
+  next.accent =
+    typeof next.accent === 'string' && /^#[0-9a-fA-F]{6}$/.test(next.accent) ? next.accent : DEFAULTS.accent;
   next.density = pick(next.density, ['compact', 'comfortable'] as const, DEFAULTS.density);
   next.restoreSessions = bool(next.restoreSessions, DEFAULTS.restoreSessions);
   next.startup = pick(next.startup, ['empty', 'last', 'palette'] as const, DEFAULTS.startup);
@@ -88,6 +91,11 @@ export function updateSettings(patch: Partial<AppSettings>): AppSettings {
   next.updateChannel = pick(next.updateChannel, ['stable', 'beta'] as const, DEFAULTS.updateChannel);
   next.defaultCwd = str(next.defaultCwd, DEFAULTS.defaultCwd);
   next.reduceMotion = bool(next.reduceMotion, DEFAULTS.reduceMotion);
+  // Electron accelerator or empty to disable; ponytail: shape check only, register() reports conflicts.
+  next.summonHotkey =
+    typeof next.summonHotkey === 'string' && /^([A-Za-z0-9+]{0,60})$/.test(next.summonHotkey)
+      ? next.summonHotkey
+      : DEFAULTS.summonHotkey;
   save(next);
   return getSettings();
 }

@@ -74,7 +74,16 @@ export const ProjectChannels = {
   restore: 'project:restore',
   saveLayout: 'project:saveLayout',
   saveTerminals: 'terminals:save',
+  preset: 'project:preset',
 } as const;
+
+/** `.crewdeck.json` in a project root: agents to open when the project has no saved terminals. */
+export interface ProjectPreset {
+  /** Agent profile ids (built-in or custom), e.g. ["claude", "codex", "shell"]. */
+  agents: string[];
+  /** Optional grid size 1-4; defaults to the agent count. */
+  layout?: number;
+}
 
 export interface CrewdeckAgentsApi {
   /** Detects which built-in agent CLIs are installed. Cached in main after the first call unless `refresh`. */
@@ -128,6 +137,8 @@ export interface CrewdeckProjectApi {
   restore(): Promise<RestoreResult | null>;
   saveLayout(projectId: string, layout: PersistedLayout): Promise<void>;
   saveTerminals(projectId: string, terminals: PersistedTerminal[]): Promise<void>;
+  /** Reads and validates `<projectPath>/.crewdeck.json`; null when absent or invalid. */
+  preset(projectPath: string): Promise<ProjectPreset | null>;
 }
 
 export const RoutingChannels = {
@@ -329,6 +340,8 @@ export interface AppSettings {
   updateChannel: 'stable' | 'beta';
   defaultCwd: string;
   reduceMotion: boolean;
+  /** Global accelerator that shows/hides the window from anywhere. Empty disables. */
+  summonHotkey: string;
 }
 
 export interface ProviderKeyInfo {

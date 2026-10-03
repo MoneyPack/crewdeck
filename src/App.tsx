@@ -16,12 +16,15 @@ import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
 import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId, type AgentProfile } from '../shared/agents';
 import { Splash } from './components/Splash/Splash';
 import { CrewBot, CrewLine } from './components/Splash/CrewBot';
+import type { Activity } from '../shared/activity';
+import { advance, parsePipeline, stagePrompt, type Pipeline } from '../shared/pipeline';
 import { Settings, type Tab as SettingsTab } from './components/Settings/Settings';
 import { Palette, type PaletteAction } from './components/Palette/Palette';
 import type {
   AppSettings,
   PersistedLayout,
   PersistedTerminal,
+  PersistedLayoutSize,
   ProjectInfo,
   RestoreResult,
   RouteLogEntry,
@@ -225,6 +228,59 @@ export function App() {
   );
 
   const mentionTerminals = useMemo(() => terminals.map(({ id, title }) => ({ id, title })), [terminals]);
+
+  // Agent pipeline (`@a -> @b: task`). One at a time; ponytail: a queue if anyone chains pipelines.
+  const pipelineRef = useRef<Pipeline | null>(null);
+  const [pipelineView, setPipelineView] = useState<{ handles: string[]; current: number; done: boolean } | null>(null);
+  const launchStage = useCallback(
+    (p: Pipeline, i: number) => {
+      const ptyId = ptyIds.current.get(p.stages[i]);
+      if (!ptyId) return;
+      submitToPty(ptyId, stagePrompt(p, i));
+      recordRoute({
+        kind: 'composer',
+        fromLabel: i === 0 ? 'you' : `@${p.handles[i - 1]}`,
+        targets: [p.handles[i]],
+        preview: `[pipeline ${i + 1}/${p.stages.length}] ${stripAnsi(p.task)}`,
+        bytes: utf8Length(p.task),
+      });
+      setPipelineView({ handles: p.handles, current: i, done: false });
+    },
+    [recordRoute],
+  );
+  const [activities, setActivities] = useState<Record<string, Activity>>({});
+  const onActivity = useCallback(
+    (terminalId: string, activity: Activity, tail: string) => {
+      setActivities((prev) => (prev[terminalId] === activity ? prev : { ...prev, [terminalId]: activity }));
+      const p = pipelineRef.current;
+      if (!p) return;
+      const next = advance(p, terminalId, activity, stripAnsi(tail));
+      if (next === null) return;
+      if (next === 'done') {
+        pipelineRef.current = null;
+        setPipelineView({ handles: p.handles, current: p.stages.length, done: true });
+        return;
+      }
+      launchStage(p, next);
+    },
+    [launchStage],
+  );
+  const cancelPipeline = useCallback(() => {
+    pipelineRef.current = null;
+    setPipelineView(null);
+  }, []);
+  const startPipeline = useCallback(
+    (text: string): string | void => {
+      const r = parsePipeline(text, mentionTerminals);
+      if (!r.ok) return r.error;
+      const missing = r.pipeline.handles.filter((_, i) => !ptyIds.current.has(r.pipeline.stages[i]));
+      if (missing.length) return `@${missing.join(', @')} not running`;
+      if (pipelineRef.current) return 'a pipeline is already running (cancel it first)';
+      pipelineRef.current = r.pipeline;
+      launchStage(r.pipeline, 0);
+    },
+    [mentionTerminals, launchStage],
+  );
 
   const routeMessage = useCallback(
     (targets: MentionTarget[], message: string): string | void => {
@@ -547,7 +603,44 @@ export function App() {
     const merge = (r: RestoreResult): RestoreResult => ({ ...r, terminals: [...r.terminals, ...orphans] });
     // Persist adopted orphans immediately so they survive a restart even without further edits.
     const adopt = async (r: RestoreResult) => {
-      const merged = merge(r);
+      let merged = merge(r);
+      // Fresh project with a `.crewdeck.json` preset: open its agents (installed ones only).
+      if (!merged.terminals.length) {
+        const preset = await window.crewdeck.project.preset(picked.path).catch(() => null);
+        if (preset) {
+          const dets = detections ?? [];
+          const known = new Set([...AGENT_PROFILES, ...customProfiles].map((p) => p.id));
+          const counts = new Map<string, number>();
+          const terms: PersistedTerminal[] = [];
+          for (const a of preset.agents) {
+            const id = a as AgentId;
+            const ok = id === 'shell' || (known.has(id) && dets.find((d) => d.id === id)?.launch);
+            if (!ok) continue;
+            const n = (counts.get(id) ?? 0) + 1;
+            counts.set(id, n);
+            terms.push({
+              id: crypto.randomUUID(),
+              title: `${getProfile(id, customProfiles).name} ${n}`,
+              profileId: id,
+              cwd: picked.path,
+            });
+          }
+          if (terms.length) {
+            const want = preset.layout ?? terms.length;
+            const layout: PersistedLayoutSize = want >= 3 ? 4 : want === 2 ? 2 : 1;
+            merged = {
+              ...merged,
+              terminals: terms,
+              layout: { layout, slots: terms.slice(0, layout).map((t) => t.id), activeSlot: 0 },
+            };
+            try {
+              await window.crewdeck.project.saveTerminals(picked.id, terms);
+            } catch (err) {
+              console.error('saveTerminals failed', err);
+            }
+          }
+        }
+      }
       if (orphans.length) {
         try {
           await window.crewdeck.project.saveTerminals(picked.id, merged.terminals);
@@ -746,6 +839,19 @@ export function App() {
       {splash && <Splash onDone={endSplash} />}
       <div className="toolbar">
         <span className="title">crewdeck</span>
+        {terminals.length > 0 && (
+          <span className="crew-status" title="Crew activity">
+            {(['working', 'waiting'] as const).map((k) => {
+              const n = terminals.filter((x) => activities[x.id] === k).length;
+              return n ? (
+                <span key={k} className={`activity activity--${k}`}>
+                  <i aria-hidden="true" />
+                  {n} {k === 'waiting' ? 'need you' : 'working'}
+                </span>
+              ) : null;
+            })}
+          </span>
+        )}
         <button
           type="button"
           className="project"
@@ -1046,6 +1152,7 @@ export function App() {
                   sendTargets={mentionTargets.filter((m) => m.id !== t.id)}
                   onSendSelection={(target, text) => forwardSelection(t.title, target, text)}
                   terminalSettings={appSettings ?? undefined}
+                  onActivity={(a, tail) => onActivity(t.id, a, tail)}
                 />
               );
             })}
@@ -1089,7 +1196,29 @@ export function App() {
         </Suspense>
       </div>
 
-      <Composer ref={composerRef} terminals={mentionTerminals} onSend={routeMessage} />
+      {pipelineView && (
+        <div className={pipelineView.done ? 'pipeline done' : 'pipeline'} role="status">
+          <span className="pipeline-label">{pipelineView.done ? 'pipeline done' : 'pipeline'}</span>
+          {pipelineView.handles.map((h, i) => (
+            <span
+              key={h}
+              className={
+                i < pipelineView.current
+                  ? 'pipeline-stage past'
+                  : i === pipelineView.current
+                    ? 'pipeline-stage now'
+                    : 'pipeline-stage'
+              }
+            >
+              @{h}
+            </span>
+          ))}
+          <button type="button" className="pipeline-x" onClick={cancelPipeline} aria-label="Dismiss pipeline">
+            {pipelineView.done ? 'dismiss' : 'cancel'}
+          </button>
+        </div>
+      )}
+      <Composer ref={composerRef} terminals={mentionTerminals} onSend={routeMessage} onPipeline={startPipeline} />
       {showHelp && <ShortcutHelp mac={IS_MAC} onClose={() => setShowHelp(false)} />}
       <Settings
         open={settingsOpen}

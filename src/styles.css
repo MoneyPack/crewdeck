@@ -266,6 +266,11 @@ textarea {
   flex: none;
 }
 
+.crew-status {
+  display: inline-flex;
+  gap: 6px;
+  font-size: var(--fs-2xs);
+}
 .toolbar .title {
   display: flex;
   align-items: center;
@@ -696,6 +701,57 @@ textarea {
 .pane.active .pane-actions,
 .pane-actions:focus-within {
   opacity: 1;
+}
+/* Activity: working / needs you / idle */
+.activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--ink-3);
+  color: var(--paper-dim);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+.activity i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.activity--working {
+  color: var(--ok);
+}
+.activity--working i {
+  animation: splash-pulse 1s var(--glide) infinite;
+}
+.activity--waiting {
+  color: var(--signal);
+  background: var(--signal-soft);
+}
+.activity--idle {
+  color: var(--paper-mute);
+}
+.pane[data-activity='waiting'] {
+  box-shadow: inset 0 0 0 1px var(--signal);
+  animation: pane-attn 1.6s ease-in-out infinite;
+}
+@keyframes pane-attn {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px var(--signal);
+  }
+  50% {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--signal) 30%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pane[data-activity='waiting'],
+  .activity--working i {
+    animation: none;
+  }
 }
 
 .pane-header .status {
@@ -1498,6 +1554,61 @@ kbd {
 /* ================================================================
    Composer — the command line of the deck
    ================================================================ */
+/* Pipeline strip above the composer */
+.pipeline {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--s3);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--paper-dim);
+  border-top: var(--rule-w) solid var(--rule);
+  background: var(--ink-2);
+}
+.pipeline-label {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-right: 6px;
+}
+.pipeline.done .pipeline-label {
+  color: var(--ok);
+}
+.pipeline-stage {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--ink-3);
+}
+.pipeline-stage + .pipeline-stage::before {
+  content: '→';
+  position: relative;
+  left: -10px;
+  color: var(--paper-mute);
+}
+.pipeline-stage.past {
+  color: var(--ok);
+}
+.pipeline-stage.now {
+  color: var(--ink);
+  background: var(--signal);
+  animation: splash-pulse 1.4s var(--glide) infinite;
+}
+.pipeline-x {
+  margin-left: auto;
+  background: none;
+  border: var(--rule-w) solid var(--rule-hi);
+  color: var(--paper-dim);
+  border-radius: 6px;
+  padding: 1px 8px;
+  font: inherit;
+  cursor: pointer;
+}
+.pipeline-x:hover {
+  color: var(--paper);
+  border-color: var(--signal);
+}
 .composer {
   position: relative;
   flex: none;

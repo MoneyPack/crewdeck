@@ -48,6 +48,7 @@ const api: CrewdeckApi = {
     restore: () => ipcRenderer.invoke(ProjectChannels.restore),
     saveLayout: (projectId, layout) => ipcRenderer.invoke(ProjectChannels.saveLayout, projectId, layout),
     saveTerminals: (projectId, terminals) => ipcRenderer.invoke(ProjectChannels.saveTerminals, projectId, terminals),
+    preset: (projectPath) => ipcRenderer.invoke(ProjectChannels.preset, projectPath),
   },
   routing: {
     writeTemp: (text) => ipcRenderer.invoke(RoutingChannels.writeTemp, text),

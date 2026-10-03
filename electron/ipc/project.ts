@@ -7,6 +7,7 @@ import {
   type PersistedLayout,
   type PersistedTerminal,
   type ProjectInfo,
+  type ProjectPreset,
   type RestoreResult,
   type WorktreeInfo,
 } from '../../shared/ipc';
@@ -19,6 +20,23 @@ const MAX_TERMINALS = 64;
 const MAX_TEXT = 4096;
 
 export function registerProjectIpc(): void {
+  ipcMain.handle(ProjectChannels.preset, (_e, projectPath: unknown): ProjectPreset | null => {
+    if (typeof projectPath !== 'string' || !isDirectory(projectPath)) return null;
+    try {
+      const raw: unknown = JSON.parse(fs.readFileSync(path.join(projectPath, '.crewdeck.json'), 'utf8'));
+      if (!raw || typeof raw !== 'object') return null;
+      const r = raw as { agents?: unknown; layout?: unknown };
+      const agents = Array.isArray(r.agents)
+        ? r.agents.filter((a): a is string => typeof a === 'string' && /^[\w-]{1,64}$/.test(a)).slice(0, 4)
+        : [];
+      if (!agents.length) return null;
+      const layout = typeof r.layout === 'number' && r.layout >= 1 && r.layout <= 4 ? Math.round(r.layout) : undefined;
+      return layout ? { agents, layout } : { agents };
+    } catch {
+      return null; // absent or malformed: no preset
+    }
+  });
+
   ipcMain.handle(ProjectChannels.select, async (e): Promise<ProjectInfo | null> => {
     const win = BrowserWindow.fromWebContents(e.sender);
     let selected: string | undefined;
@@ -53,17 +71,19 @@ export function registerProjectIpc(): void {
     // Bump last_opened_at so the restored project stays "last".
     db.openProject(row.path, row.name);
 
-    const terminals: PersistedTerminal[] = !settings.restoreSessions ? [] : db.listTerminals(row.id).map((t) => {
-      const worktree = parseWorktree(t.config.worktree);
-      const liveWorktree = worktree && isDirectory(worktree.path) ? worktree : undefined;
-      return {
-        id: t.id,
-        title: t.title,
-        profileId: t.profileId,
-        cwd: isDirectory(t.cwd) ? t.cwd : row.path,
-        ...(liveWorktree ? { worktree: liveWorktree } : {}),
-      };
-    });
+    const terminals: PersistedTerminal[] = !settings.restoreSessions
+      ? []
+      : db.listTerminals(row.id).map((t) => {
+          const worktree = parseWorktree(t.config.worktree);
+          const liveWorktree = worktree && isDirectory(worktree.path) ? worktree : undefined;
+          return {
+            id: t.id,
+            title: t.title,
+            profileId: t.profileId,
+            cwd: isDirectory(t.cwd) ? t.cwd : row.path,
+            ...(liveWorktree ? { worktree: liveWorktree } : {}),
+          };
+        });
     const layout = parseLayout(row.layout, new Set(terminals.map((t) => t.id)));
 
     BrowserWindow.fromWebContents(e.sender)?.setTitle(`crewdeck — ${row.name}`);
