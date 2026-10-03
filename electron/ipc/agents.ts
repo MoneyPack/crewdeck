@@ -3,6 +3,8 @@ import { ipcMain } from 'electron';
 import { AGENT_PROFILES, type AgentDetection, type AgentInstallResult, type AgentProfile } from '../../shared/agents';
 import { AgentChannels } from '../../shared/ipc';
 import { getSettings } from '../services/settings';
+import { getDatabase } from '../services/db';
+import { listAgentSessions } from '../services/agentSessions';
 
 const SPAWNABLE = /\.(exe|cmd|bat|com)$/i;
 const SHIM = /\.(cmd|bat)$/i;
@@ -69,6 +71,12 @@ export function registerAgentIpc(): void {
   ipcMain.handle(AgentChannels.detect, (_e, refresh?: boolean) => {
     if (!cache || refresh) cache = detectAll();
     return cache;
+  });
+
+  ipcMain.handle(AgentChannels.sessions, (_e, projectId: unknown) => {
+    if (typeof projectId !== 'string') return [];
+    const p = getDatabase().getProject(projectId);
+    return p ? listAgentSessions(p.path) : [];
   });
 
   ipcMain.handle(AgentChannels.install, async (_e, ids: unknown): Promise<AgentInstallResult[]> => {

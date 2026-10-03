@@ -16,7 +16,11 @@ import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
 import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId, type AgentProfile } from '../shared/agents';
 import { Splash } from './components/Splash/Splash';
 import { CrewBot, CrewLine } from './components/Splash/CrewBot';
+import { Inbox } from './components/Inbox/Inbox';
+import { RaceDialog } from './components/Race/RaceDialog';
+import { RacePanel } from './components/Race/RacePanel';
 import type { Activity } from '../shared/activity';
+import type { AgentSession } from '../shared/ipc';
 import { advance, parsePipeline, stagePrompt, type Pipeline } from '../shared/pipeline';
 import { Settings, type Tab as SettingsTab } from './components/Settings/Settings';
 import { Palette, type PaletteAction } from './components/Palette/Palette';
@@ -161,6 +165,7 @@ export function App() {
     }
   };
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [agentSessions, setAgentSessions] = useState<AgentSession[]>([]);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   // Saves are suppressed until the last session has been restored (or restore found nothing).
   const [ready, setReady] = useState(false);
@@ -249,8 +254,10 @@ export function App() {
     [recordRoute],
   );
   const [activities, setActivities] = useState<Record<string, Activity>>({});
+  const tails = useRef<Record<string, string>>({});
   const onActivity = useCallback(
     (terminalId: string, activity: Activity, tail: string) => {
+      tails.current[terminalId] = stripAnsi(tail);
       setActivities((prev) => (prev[terminalId] === activity ? prev : { ...prev, [terminalId]: activity }));
       const p = pipelineRef.current;
       if (!p) return;
@@ -458,49 +465,63 @@ export function App() {
     setActiveSlot(slot);
   };
 
-  const openTerminal = async (profileId: AgentId) => {
+  /** Opens a pane. `isolate` overrides the toolbar Worktree toggle; `placeInSlot=false` keeps it off-screen (races). */
+  const openTerminal = async (
+    profileId: AgentId,
+    opts: {
+      isolate?: boolean;
+      placeInSlot?: boolean;
+      titleSuffix?: string;
+      existing?: TermSpec[];
+      /** Appended to the launch args (e.g. a resume id). */
+      extraArgs?: string[];
+    } = {},
+  ): Promise<TermSpec | null> => {
     const profile = getProfile(profileId, customProfiles);
     const dets = detections ?? [];
     const detection = dets.find((d) => d.id === profileId);
-    if (profileId !== 'shell' && !detection?.launch) return;
-    const n = terminals.filter((t) => t.profileId === profileId).length + 1;
+    if (profileId !== 'shell' && !detection?.launch) return null;
+    const known = opts.existing ?? terminals;
+    const n = known.filter((t) => t.profileId === profileId).length + 1;
     const id = crypto.randomUUID();
     let worktree: WorktreeInfo | undefined;
-    if (isolateNext && project) {
+    if ((opts.isolate ?? isolateNext) && project) {
       try {
         const r = await window.crewdeck.git.worktreeAdd(project.id, id, profileId);
         if (!r.ok) {
           setWorktreeError(`Worktree not created: ${r.error}`);
-          return;
+          return null;
         }
         worktree = r.worktree;
       } catch (err) {
         setWorktreeError(`Worktree not created: ${err instanceof Error ? err.message : String(err)}`);
-        return;
+        return null;
       }
     }
     setWorktreeError(null);
     const base = buildSpec(
       id,
-      `${profile.name} ${n}`,
+      `${profile.name} ${n}${opts.titleSuffix ?? ''}`,
       profileId,
       worktree?.path ?? project?.path,
       dets,
       false,
       customProfiles,
     );
+    if (opts.extraArgs?.length && base.args) base.args = [...base.args, ...opts.extraArgs];
     const spec: TermSpec = worktree ? { ...base, worktree } : base;
     // Persist the row before the pane mounts so its session can reference it (FK).
     if (project) {
       // A stale debounced save (without this terminal) must not land after ours and delete the row.
       pendingSaves.current.delete('terminals');
       try {
-        await window.crewdeck.project.saveTerminals(project.id, toPersisted([...terminals, spec], project.path));
+        await window.crewdeck.project.saveTerminals(project.id, toPersisted([...known, spec], project.path));
       } catch (err) {
         console.error('saveTerminals failed', err);
       }
     }
     setTerminals((prev) => [...prev, spec]);
+    if (opts.placeInSlot === false) return spec;
     // Prefer an empty visible slot; otherwise replace what the active slot shows.
     const empty = slots.slice(0, layout).indexOf(null);
     const target = empty >= 0 ? empty : activeSlot;
@@ -510,6 +531,72 @@ export function App() {
       return next;
     });
     setActiveSlot(target);
+    return spec;
+  };
+
+  // Diff Race: same task to N agents in isolated worktrees; compare diffs, keep one.
+  const [race, setRace] = useState<{ task: string; ids: string[] } | null>(null);
+  const [raceOpen, setRaceOpen] = useState(false);
+  const [raceDialog, setRaceDialog] = useState(false);
+  const startRace = async (agents: AgentId[], task: string) => {
+    if (!project || agents.length < 2) return 'pick at least two agents';
+    const specs: TermSpec[] = [];
+    for (const a of agents) {
+      const s = await openTerminal(a, {
+        isolate: true,
+        placeInSlot: false,
+        titleSuffix: ' ⚑',
+        existing: [...terminals, ...specs],
+      });
+      if (!s) return `could not start ${a} (worktree or launch failed)`;
+      specs.push(s);
+    }
+    // Show up to 4 racers side by side.
+    const size: LayoutSize = specs.length >= 3 ? 4 : 2;
+    setLayout(size);
+    setSlots(normalizeSlots(specs.slice(0, size).map((s) => s.id)));
+    setActiveSlot(0);
+    setRace({ task, ids: specs.map((s) => s.id) });
+    setRaceOpen(true);
+    // Agents need a beat to boot before the prompt lands; the PTY ids arrive via onPtyId.
+    window.setTimeout(() => {
+      for (const s of specs) {
+        const p = ptyIds.current.get(s.id);
+        if (p) submitToPty(p, task);
+      }
+      recordRoute({
+        kind: 'composer',
+        fromLabel: 'you',
+        targets: specs.map((s) => s.title),
+        preview: `[race] ${task}`,
+        bytes: utf8Length(task),
+      });
+    }, 2500);
+  };
+  const keepRacer = async (id: string): Promise<string | void> => {
+    const t = terminals.find((x) => x.id === id);
+    if (!project || !t?.worktree || !race) return 'racer not found';
+    const r = await window.crewdeck.git.worktreeKeep(project.id, t.worktree.path, `crewdeck race: ${race.task}`);
+    if (!r.ok) return r.error;
+    // Winner merged: drop the losers' worktrees (force; their work is discarded by design).
+    for (const loser of race.ids.filter((x) => x !== id)) {
+      const lt = terminals.find((x) => x.id === loser);
+      closeTerminal(loser);
+      if (lt?.worktree) void window.crewdeck.git.worktreeRemove(project.id, lt.worktree.path, true).catch(() => {});
+    }
+    setRace(null);
+    setRaceOpen(false);
+  };
+  const dropRacer = (id: string) => {
+    const t = terminals.find((x) => x.id === id);
+    closeTerminal(id);
+    if (project && t?.worktree)
+      void window.crewdeck.git.worktreeRemove(project.id, t.worktree.path, true).catch(() => {});
+    setRace((r) => {
+      if (!r) return r;
+      const ids = r.ids.filter((x) => x !== id);
+      return ids.length ? { ...r, ids } : null;
+    });
   };
 
   const closeTerminal = (id: string) => {
@@ -719,8 +806,23 @@ export function App() {
 
   layoutRef.current = changeLayout;
 
+  // Past Claude/Codex sessions for this project, refreshed whenever the palette opens.
+  useEffect(() => {
+    if (!paletteOpen || !projectId) return;
+    window.crewdeck.agents
+      .sessions(projectId)
+      .then(setAgentSessions)
+      .catch(() => setAgentSessions([]));
+  }, [paletteOpen, projectId]);
+
   const shortcutRef = useRef(runShortcut);
   const paletteActions: PaletteAction[] = [
+    ...agentSessions.slice(0, 12).map((s) => ({
+      id: `resume-${s.agent}-${s.id}`,
+      label: `Resume ${s.agent === 'claude' ? 'Claude Code' : 'Codex'}: ${s.title}`,
+      hint: new Date(s.at).toLocaleString(),
+      run: () => void openTerminal(s.agent, { extraArgs: s.resumeArgs, titleSuffix: ' ↺' }),
+    })),
     ...LAYOUTS.map((n) => ({
       id: `layout-${n}`,
       hint: `Ctrl+Alt+${n}`,
@@ -758,6 +860,13 @@ export function App() {
     { id: 'project', label: 'Select project folder', run: () => void selectProject() },
     { id: 'refresh', label: 'Refresh agent detection', run: () => void refreshAgents(true) },
     { id: 'log', label: 'Toggle routing log', run: () => setShowLog((v) => !v) },
+    {
+      id: 'race',
+      label: 'Diff race: same task, N agents, pick the winner',
+      hint: 'needs a git project',
+      run: () => project && setRaceDialog(true),
+    },
+    ...(race ? [{ id: 'race-view', label: 'Toggle race view', run: () => setRaceOpen((v) => !v) }] : []),
     ...[...AGENT_PROFILES, ...customProfiles].map((p) => ({
       id: `open-${p.id}`,
       label: `Open terminal: ${p.name}`,
@@ -839,19 +948,17 @@ export function App() {
       {splash && <Splash onDone={endSplash} />}
       <div className="toolbar">
         <span className="title">crewdeck</span>
-        {terminals.length > 0 && (
-          <span className="crew-status" title="Crew activity">
-            {(['working', 'waiting'] as const).map((k) => {
-              const n = terminals.filter((x) => activities[x.id] === k).length;
-              return n ? (
-                <span key={k} className={`activity activity--${k}`}>
-                  <i aria-hidden="true" />
-                  {n} {k === 'waiting' ? 'need you' : 'working'}
-                </span>
-              ) : null;
-            })}
-          </span>
-        )}
+        <Inbox
+          working={terminals.filter((x) => activities[x.id] === 'working').length}
+          items={terminals
+            .filter((x) => activities[x.id] === 'waiting')
+            .map((x) => ({ id: x.id, title: x.title, agent: x.profileId, tail: tails.current[x.id] ?? '' }))}
+          onReply={(id, keys) => {
+            const p = ptyIds.current.get(id);
+            if (p) void window.crewdeck.terminal.write(p, keys);
+          }}
+          onFocus={showTerminal}
+        />
         <button
           type="button"
           className="project"
@@ -915,6 +1022,19 @@ export function App() {
           />
           Worktree
         </label>
+        <button
+          type="button"
+          className={race ? 'race-btn active' : 'race-btn'}
+          disabled={!project}
+          title={
+            project
+              ? 'Diff race: same task to several agents in isolated worktrees'
+              : 'Open a git project to race agents'
+          }
+          onClick={() => (race ? setRaceOpen((v) => !v) : setRaceDialog(true))}
+        >
+          ⚑ Race{race ? ` (${race.ids.length})` : ''}
+        </button>
         <button
           type="button"
           className="icon-btn"
@@ -1184,6 +1304,33 @@ export function App() {
         <Suspense fallback={null}>
           {showLog && <RoutingLog entries={routeLog} hasProject={!!project} onClose={() => setShowLog(false)} />}
           {showGit && <GitPanel projectId={projectId} onClose={() => setShowGit(false)} attributions={attributions} />}
+          {race && raceOpen && project && (
+            <RacePanel
+              projectId={project.id}
+              task={race.task}
+              racers={race.ids
+                .map((id) => terminals.find((x) => x.id === id))
+                .filter((x): x is TermSpec & { worktree: WorktreeInfo } => !!x?.worktree)
+                .map((x) => ({
+                  id: x.id,
+                  title: x.title,
+                  agent: x.profileId,
+                  worktree: x.worktree,
+                  activity: activities[x.id] ?? 'off',
+                }))}
+              onKeep={(r) => keepRacer(r.id)}
+              onDrop={(r) => dropRacer(r.id)}
+              onClose={() => setRaceOpen(false)}
+            />
+          )}
+          {raceDialog && (
+            <RaceDialog
+              profiles={[...AGENT_PROFILES, ...customProfiles]}
+              installed={(id) => !!detections?.find((d) => d.id === id)?.launch}
+              onStart={startRace}
+              onClose={() => setRaceDialog(false)}
+            />
+          )}
           {showBrowser && (
             <BrowserPane
               projectId={projectId}

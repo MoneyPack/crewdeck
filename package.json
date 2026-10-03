@@ -1,6 +1,6 @@
 {
   "name": "crewdeck",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "Multi-agent AI development workspace",
   "author": "crewdeck",

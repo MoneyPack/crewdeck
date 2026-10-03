@@ -23,6 +23,8 @@ CrewDeck is a Windows desktop app that runs several coding-agent CLIs — <b>Cla
 |                             |                                                                                                                                                                                               |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Agent-agnostic**          | First-class profiles for Claude Code, Codex, Gemini CLI and OpenCode, one-click install, plus _bring your own agent_ (any command + args + env).                                              |
+| **Diff Race**               | Same task to 2–4 agents, each in its own git worktree. Compare their diffs side by side, **keep one** — it merges; the rest are discarded. Agents compete, you judge.                         |
+| **Attention Inbox**         | Every agent asking "allow? (y/n)" lands in one inbox with the question text and one-click answers. Never hunt for the blocked pane again.                                                     |
 | **One prompt, many agents** | The composer routes a message to one pane or all of them with `@claude @codex …`. Compare answers, keep the best.                                                                             |
 | **Built-in browser bridge** | Agents open pages, fill forms, click and screenshot through a local HTTP bridge, the `crewdeck-browser` CLI, or the `crewdeck-mcp` MCP server.                                                |
 | **BYOK for 10 providers**   | Anthropic, OpenAI, Gemini, Google, OpenRouter, Groq, Mistral, xAI, DeepSeek, DashScope, or any custom env name — encrypted with the Windows credential vault and injected into every session. |
@@ -42,6 +44,22 @@ Windows SmartScreen may warn until code signing is live: click "More info" → "
 3. Use the composer to send prompts to one or more panes.
 4. Open a browser pane to let agents drive a built-in browser through the bridge, CLI, or MCP tools below.
 5. `Ctrl+,` opens Settings — every option has a one-line description; API keys live under **API keys (BYOK)**.
+
+### Diff Race
+
+Click **⚑ Race**, pick 2–4 agents, describe the task once. Every racer gets the identical prompt in an isolated worktree on a `crewdeck/*` branch. The race view shows each racer's live diff vs your checkout (files, +/−). **Keep** commits that racer's work and merges it; the other worktrees are removed. **Drop** discards one racer early.
+
+### Attention Inbox
+
+The toolbar badge `N need you` opens an inbox listing every pane that is waiting on a human — with the last lines it printed. Answer with **y / n / Enter / Esc** or type a reply, without leaving what you're doing.
+
+### Resume past sessions
+
+The command palette lists recent **Claude Code** and **Codex** sessions recorded for this project folder (read from `~/.claude/projects` and `~/.codex/sessions`). Pick one to reopen it with `--resume`.
+
+### Reader mode & cost HUD
+
+Each pane has a **Reader** toggle that renders the terminal as readable text — TUI borders and spinners stripped, code fences and bullets kept. The pane header also shows **tokens · $** scraped from whatever the agent prints about usage (approximate; agents differ).
 
 ### Pipelines
 

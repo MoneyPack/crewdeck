@@ -14,6 +14,7 @@
 }
 .ri-arrow-left-line:before { content: '\ea60'; }
 .ri-arrow-right-line:before { content: '\ea6c'; }
+.ri-article-line:before { content: '\ea7e'; }
 .ri-camera-line:before { content: '\eb31'; }
 .ri-close-line:before { content: '\eb99'; }
 .ri-eraser-line:before { content: '\ec9f'; }

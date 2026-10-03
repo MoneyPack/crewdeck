@@ -17,6 +17,9 @@ export type TerminalSettings = Pick<
 import type { MentionTarget } from '../../../shared/mention';
 import { findShortcut } from '../../../shared/shortcuts';
 import { ACTIVITY_LABEL, classify, type Activity } from '../../../shared/activity';
+import { fmtTokens, NO_USAGE, scanUsage, type Usage } from '../../../shared/usage';
+import { stripAnsi } from '../../../shared/ansi';
+import { Reader } from './Reader';
 import logo from '../../assets/logo.svg';
 
 export interface TerminalPaneProps {
@@ -152,6 +155,11 @@ export function TerminalPane({
   const fitRef = useRef<FitAddon | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'starting' });
   const [activity, setActivity] = useState<Activity>('off');
+  const [usage, setUsage] = useState<Usage>(NO_USAGE);
+  const [reader, setReader] = useState(false);
+  const [readerText, setReaderText] = useState('');
+  const readerRef = useRef(false);
+  readerRef.current = reader;
   // Recent output tail + timestamp, used by the activity heuristic.
   const tailRef = useRef({ buf: '', at: 0 });
   const [hasSelection, setHasSelection] = useState(false);
@@ -302,12 +310,16 @@ export function TerminalPane({
       if (!outBuf.length) return;
       const data = outBuf.length === 1 ? outBuf[0] : outBuf.join('');
       outBuf = [];
-      term.write(data);
+      term.write(data, () => {
+        if (readerRef.current) setReaderText(bufferText(term));
+      });
     };
     const queueOut = (data: string) => {
       const t = tailRef.current;
       t.at = performance.now();
       t.buf = (t.buf + data).slice(-2000);
+      // Usage lines are short; scan the stripped chunk plus a little context.
+      setUsage((u) => scanUsage(u, stripAnsi(t.buf.slice(-600))));
       outBuf.push(data);
       // Hidden panes get no rAF ticks in background windows; cap buffered size and flush directly.
       if (outBuf.length > 512) flushOut();
@@ -443,6 +455,21 @@ export function TerminalPane({
           </button>
           <button
             type="button"
+            className={reader ? 'icon-btn selected' : 'icon-btn'}
+            aria-pressed={reader}
+            title="Reader mode: show output as readable text"
+            aria-label="Toggle reader mode"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              const next = !reader;
+              setReader(next);
+              if (next && termRef.current) setReaderText(bufferText(termRef.current));
+            }}
+          >
+            <i className="ri-article-line" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
             className="icon-btn"
             title="Copy visible output"
             aria-label="Copy visible output"
@@ -480,6 +507,13 @@ export function TerminalPane({
         )}
         {sendNote && <span className="send-note">{sendNote}</span>}
         <span className="status">
+          {(usage.usd !== null || usage.tokens !== null) && (
+            <span className="usage" title="Usage scraped from this agent's own output (approximate)">
+              {usage.tokens !== null && <>{fmtTokens(usage.tokens)} tok</>}
+              {usage.tokens !== null && usage.usd !== null && ' · '}
+              {usage.usd !== null && <>${usage.usd.toFixed(2)}</>}
+            </span>
+          )}
           {status.kind === 'running' && (
             <span className={`activity activity--${activity}`} title={ACTIVITY_LABEL[activity]}>
               <i aria-hidden="true" />
@@ -502,8 +536,17 @@ export function TerminalPane({
       </div>
       {status.kind === 'error' && <div className="pane-error">Failed to start: {status.message}</div>}
       <div className="pane-body" ref={hostRef} />
+      {reader && <Reader text={readerText} onClose={() => setReader(false)} />}
     </div>
   );
+}
+
+/** Whole xterm buffer as plain text (trailing blank lines trimmed). */
+function bufferText(term: Terminal): string {
+  const buf = term.buffer.active;
+  const lines: string[] = [];
+  for (let i = 0; i < buf.length; i++) lines.push(buf.getLine(i)?.translateToString(true) ?? '');
+  return lines.join('\n').replace(/\s+$/, '');
 }
 
 function safeFit(fit: FitAddon): void {

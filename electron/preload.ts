@@ -42,6 +42,7 @@ const api: CrewdeckApi = {
   agents: {
     detect: (refresh) => ipcRenderer.invoke(AgentChannels.detect, refresh === true),
     install: (ids) => ipcRenderer.invoke(AgentChannels.install, ids),
+    sessions: (projectId) => ipcRenderer.invoke(AgentChannels.sessions, projectId),
   },
   project: {
     select: () => ipcRenderer.invoke(ProjectChannels.select),
@@ -74,6 +75,9 @@ const api: CrewdeckApi = {
     unstage: (projectId, path, oldPath) => ipcRenderer.invoke(GitChannels.unstage, projectId, path, oldPath),
     discard: (projectId, path, untracked) => ipcRenderer.invoke(GitChannels.discard, projectId, path, untracked),
     worktreeAdd: (projectId, tabId, agentId) => ipcRenderer.invoke(GitChannels.worktreeAdd, projectId, tabId, agentId),
+    worktreeDiff: (projectId, worktreePath) => ipcRenderer.invoke(GitChannels.worktreeDiff, projectId, worktreePath),
+    worktreeKeep: (projectId, worktreePath, message) =>
+      ipcRenderer.invoke(GitChannels.worktreeKeep, projectId, worktreePath, message),
     worktreeRemove: (projectId, worktreePath, force) =>
       ipcRenderer.invoke(GitChannels.worktreeRemove, projectId, worktreePath, force),
   },

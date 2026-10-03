@@ -67,7 +67,22 @@ export interface CrewdeckTerminalApi {
 export const AgentChannels = {
   detect: 'agents:detect',
   install: 'agents:install',
+  sessions: 'agents:sessions',
 } as const;
+
+/** A past agent CLI session found on disk for a project folder. */
+export interface AgentSession {
+  agent: 'claude' | 'codex';
+  id: string;
+  /** First user prompt, trimmed. */
+  title: string;
+  cwd: string;
+  /** mtime, ms since epoch. */
+  at: number;
+  file: string;
+  /** CLI args that resume this session. */
+  resumeArgs: string[];
+}
 
 export const ProjectChannels = {
   select: 'project:select',
@@ -89,6 +104,8 @@ export interface CrewdeckAgentsApi {
   /** Detects which built-in agent CLIs are installed. Cached in main after the first call unless `refresh`. */
   detect(refresh?: boolean): Promise<AgentDetection[]>;
   install(ids: string[]): Promise<AgentInstallResult[]>;
+  /** Past Claude Code / Codex sessions recorded for the project folder, newest first. */
+  sessions(projectId: string): Promise<AgentSession[]>;
 }
 
 export interface ProjectInfo {
@@ -196,9 +213,20 @@ export const GitChannels = {
   discard: 'git:discard',
   worktreeAdd: 'git:worktreeAdd',
   worktreeRemove: 'git:worktreeRemove',
+  worktreeDiff: 'git:worktreeDiff',
+  worktreeKeep: 'git:worktreeKeep',
 } as const;
 
 export type WorktreeAddResult = { ok: true; worktree: WorktreeInfo } | { ok: false; error: string };
+
+export interface WorktreeDiffResult {
+  patch: string;
+  files: number;
+  insertions: number;
+  deletions: number;
+  truncated: boolean;
+}
+export type WorktreeKeepResult = { ok: true; merged: string } | { ok: false; error: string };
 
 export interface WorktreeRemoveResult {
   ok: boolean;
@@ -271,6 +299,10 @@ export interface CrewdeckGitApi {
   worktreeAdd(projectId: string, tabId: string, agentId: string): Promise<WorktreeAddResult>;
   /** Removes a crewdeck worktree and its branch. Refuses dirty/unmerged work unless `force`. */
   worktreeRemove(projectId: string, worktreePath: string, force: boolean): Promise<WorktreeRemoveResult>;
+  /** Full patch of everything a worktree changed vs the main checkout's HEAD (Diff Race). */
+  worktreeDiff(projectId: string, worktreePath: string): Promise<WorktreeDiffResult | { error: string }>;
+  /** Commits the worktree's WIP and merges its branch into the main checkout. */
+  worktreeKeep(projectId: string, worktreePath: string, message: string): Promise<WorktreeKeepResult>;
 }
 
 export const BrowserChannels = {

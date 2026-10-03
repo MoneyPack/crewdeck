@@ -7,6 +7,8 @@ import {
   type GitDiffResult,
   type GitStatus,
   type WorktreeAddResult,
+  type WorktreeDiffResult,
+  type WorktreeKeepResult,
   type WorktreeRemoveResult,
 } from '../../shared/ipc';
 import { getDatabase } from '../services/db';
@@ -19,6 +21,8 @@ import {
   repoRoot,
   watchRepo,
   worktreeAdd,
+  worktreeDiff,
+  worktreeKeep,
   worktreeRemove,
 } from '../services/git';
 
@@ -161,6 +165,34 @@ export function registerGitIpc(): void {
       if (!isId(tabId) || !isId(agentId)) return { ok: false, error: 'invalid request' };
       try {
         return { ok: true, worktree: await worktreeAdd(dir, tabId, agentId) };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    GitChannels.worktreeDiff,
+    async (_e, projectId: unknown, worktreePath: unknown): Promise<WorktreeDiffResult | { error: string }> => {
+      const dir = projectPath(projectId);
+      if (!dir) return { error: 'unknown project' };
+      if (!isRelPath(worktreePath)) return { error: 'invalid request' };
+      try {
+        return await worktreeDiff(dir, worktreePath);
+      } catch (err) {
+        return { error: err instanceof Error ? err.message : String(err) };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    GitChannels.worktreeKeep,
+    async (_e, projectId: unknown, worktreePath: unknown, message: unknown): Promise<WorktreeKeepResult> => {
+      const dir = projectPath(projectId);
+      if (!dir) return { ok: false, error: 'unknown project' };
+      if (!isRelPath(worktreePath) || typeof message !== 'string') return { ok: false, error: 'invalid request' };
+      try {
+        return { ok: true, ...(await worktreeKeep(dir, worktreePath, message)) };
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : String(err) };
       }

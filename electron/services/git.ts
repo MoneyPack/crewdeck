@@ -350,6 +350,93 @@ export async function worktreeAdd(
 
 export type WorktreeRemoveOutcome = { removed: true } | { removed: false; reason: string; needsForce: boolean };
 
+/** Resolves + validates a crewdeck worktree path for `dir`'s repo. */
+async function crewWorktree(dir: string, worktreePath: unknown): Promise<{ root: string; target: string }> {
+  const root = await repoRoot(dir);
+  if (!root) throw new GitError('not a git repository', null, '');
+  if (typeof worktreePath !== 'string' || !isInside(worktreesBase(root), worktreePath))
+    throw new GitError('not a crewdeck worktree', null, '');
+  return { root, target: path.resolve(worktreePath) };
+}
+
+/**
+ * Everything the worktree changed relative to the main checkout's HEAD: committed, staged,
+ * unstaged and untracked. Untracked files are added with intent-to-add on a throwaway basis so
+ * they appear in the patch (`git add -N` is cheap and reversible; we reset it right after).
+ */
+export async function worktreeDiff(
+  dir: string,
+  worktreePath: string,
+): Promise<{ patch: string; files: number; insertions: number; deletions: number; truncated: boolean }> {
+  const { root, target } = await crewWorktree(dir, worktreePath);
+  if (!fs.existsSync(target)) throw new GitError('worktree folder is missing', null, '');
+  const baseRef = (await runGit(root, ['rev-parse', 'HEAD'])).stdout.trim();
+  await runGit(target, ['add', '-N', '--', '.'], [0], { write: true });
+  try {
+    const stat = await runGit(target, ['diff', '--no-color', '--shortstat', baseRef, '--']);
+    const m = /(\d+) files? changed(?:, (\d+) insertions?)?(?:, (\d+) deletions?)?/.exec(stat.stdout);
+    const { stdout } = await runGit(target, [
+      'diff',
+      '--no-color',
+      '--no-ext-diff',
+      '--no-textconv',
+      '-M',
+      '--patch',
+      baseRef,
+      '--',
+    ]);
+    const truncated = stdout.length > GIT_MAX_PATCH_CHARS;
+    return {
+      patch: truncated ? stdout.slice(0, GIT_MAX_PATCH_CHARS) : stdout,
+      files: m ? Number(m[1]) : 0,
+      insertions: m?.[2] ? Number(m[2]) : 0,
+      deletions: m?.[3] ? Number(m[3]) : 0,
+      truncated,
+    };
+  } finally {
+    // Undo intent-to-add so the agent's own `git status` is unchanged.
+    await runGit(target, ['reset', '-q', '--', '.'], [0, 1], { write: true });
+  }
+}
+
+/**
+ * "Keep this one": commits the worktree's WIP on its branch (if any), then merges that branch
+ * into the main checkout. The main checkout must be clean. Returns the merge commit summary.
+ */
+export async function worktreeKeep(dir: string, worktreePath: string, message: string): Promise<{ merged: string }> {
+  const { root, target } = await crewWorktree(dir, worktreePath);
+  if (!fs.existsSync(target)) throw new GitError('worktree folder is missing', null, '');
+  const dirty = await runGit(root, ['status', '--porcelain=v1', '--untracked-files=no']);
+  if (dirty.stdout.trim()) throw new GitError('main checkout has uncommitted changes; commit or stash first', null, '');
+  const branch = (await runGit(target, ['rev-parse', '--abbrev-ref', 'HEAD'])).stdout.trim();
+  if (!branch.startsWith(WORKTREE_BRANCH_PREFIX)) throw new GitError('worktree is not on a crewdeck branch', null, '');
+  const wip = await runGit(target, ['status', '--porcelain=v1', '--untracked-files=all']);
+  if (wip.stdout.trim()) {
+    await runGit(target, ['add', '-A'], [0], { write: true });
+    await runGit(
+      target,
+      [
+        '-c',
+        'user.name=crewdeck',
+        '-c',
+        'user.email=crewdeck@local',
+        'commit',
+        '-q',
+        '-m',
+        message.slice(0, 200) || 'crewdeck: race result',
+      ],
+      [0],
+      { write: true },
+    );
+  }
+  const res = await runGit(root, ['merge', '--no-edit', '--no-ff', branch], [0, 1], { write: true });
+  if (res.code !== 0) {
+    await runGit(root, ['merge', '--abort'], [0, 128], { write: true });
+    throw new GitError(`merge of ${branch} conflicts with the main checkout`, res.code, res.stdout);
+  }
+  return { merged: branch };
+}
+
 /**
  * Removes a crewdeck worktree and deletes its `crewdeck/*` branch. Without `force`, refuses when the
  * worktree has uncommitted changes or its branch is not merged into the main checkout's HEAD.
