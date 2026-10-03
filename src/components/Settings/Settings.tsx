@@ -12,7 +12,87 @@ interface Props {
   onChange: () => void;
 }
 
-const PROVIDERS = ['anthropic_api_key', 'openai_api_key', 'gemini_api_key', 'openrouter_api_key', 'dashscope_api_key'];
+interface Provider {
+  env: string;
+  label: string;
+  help: string;
+  usedBy: string;
+}
+
+/** Every provider we know about. Keys are stored under the env name and injected into agent sessions. */
+export const PROVIDERS: Provider[] = [
+  {
+    env: 'anthropic_api_key',
+    label: 'Anthropic',
+    help: 'console.anthropic.com → API keys',
+    usedBy: 'Claude Code, OpenCode',
+  },
+  { env: 'openai_api_key', label: 'OpenAI', help: 'platform.openai.com → API keys', usedBy: 'Codex CLI, OpenCode' },
+  {
+    env: 'gemini_api_key',
+    label: 'Google Gemini',
+    help: 'aistudio.google.com → Get API key',
+    usedBy: 'Gemini CLI, OpenCode',
+  },
+  {
+    env: 'google_api_key',
+    label: 'Google (alt name)',
+    help: 'Alternate env name some tools expect',
+    usedBy: 'Gemini CLI, custom agents',
+  },
+  {
+    env: 'openrouter_api_key',
+    label: 'OpenRouter',
+    help: 'openrouter.ai → Keys · one key, many models',
+    usedBy: 'OpenCode, custom agents',
+  },
+  { env: 'groq_api_key', label: 'Groq', help: 'console.groq.com → API keys', usedBy: 'OpenCode, custom agents' },
+  {
+    env: 'mistral_api_key',
+    label: 'Mistral',
+    help: 'console.mistral.ai → API keys',
+    usedBy: 'OpenCode, custom agents',
+  },
+  { env: 'xai_api_key', label: 'xAI (Grok)', help: 'console.x.ai → API keys', usedBy: 'OpenCode, custom agents' },
+  {
+    env: 'deepseek_api_key',
+    label: 'DeepSeek',
+    help: 'platform.deepseek.com → API keys',
+    usedBy: 'OpenCode, custom agents',
+  },
+  {
+    env: 'dashscope_api_key',
+    label: 'Alibaba DashScope (Qwen)',
+    help: 'dashscope.console.aliyun.com',
+    usedBy: 'Qwen Code, custom agents',
+  },
+];
+
+/** Short, human explanations shown under each general setting. */
+const HELP: Record<string, string> = {
+  theme: 'Dark is the native crewdeck look. System follows Windows.',
+  fontSize: 'Pixel size of terminal text. 13–14 is comfortable on 1080p.',
+  cursorStyle: 'Shape of the terminal cursor in every pane.',
+  scrollback: 'Lines kept per pane. Higher uses more memory; agents can be chatty.',
+  lineHeight: 'Multiplier on the font size. 1.2 is tight, 1.5 is airy.',
+  fontFamily: 'Any installed monospace font, e.g. "Cascadia Code" or "Fira Code".',
+  accent: 'Highlight color for the active pane, buttons and the splash.',
+  density: 'Compact trims padding so four panes fit on a laptop screen.',
+  startup: 'What the deck does when crewdeck opens.',
+  updateChannel: 'Beta gets new builds first; Stable waits for tagged releases.',
+  defaultCwd: 'Folder new shells start in when no project is open.',
+  defaultAgent: 'Pre-selects this agent when you press New. Works for any installed CLI.',
+  shell: 'Program used for plain shell panes, e.g. pwsh.exe, cmd.exe or bash.',
+  animations: 'Pane transitions, hover lifts and the splash sequence.',
+  confirmOnClose: 'Ask before killing a pane that still has a running process.',
+  autoUpdate: 'Download releases in the background and install on next launch.',
+  telemetry: 'Anonymous crash and usage counts. Never terminal content or keys.',
+  cursorBlink: 'Blink the terminal cursor.',
+  reduceMotion: 'Disable non-essential motion, including the mascot wave.',
+  restoreSessions: 'Reopen the panes you had when you last quit.',
+  notifications: 'Desktop toast when an agent finishes or a process exits.',
+  sound: 'Short beep alongside notifications.',
+};
 
 export function Settings({ open, detections, onClose, onChange, initialTab }: Props) {
   const [tab, setTab] = useState<Tab>('general');
@@ -21,7 +101,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
   }, [open, initialTab]);
   const [s, setS] = useState<AppSettings | null>(null);
   const [keys, setKeys] = useState<ProviderKeyInfo[]>([]);
-  const [provider, setProvider] = useState(PROVIDERS[0]);
+  const [provider, setProvider] = useState(PROVIDERS[0].env);
   const [keyVal, setKeyVal] = useState('');
   const [err, setErr] = useState('');
   const [picked, setPicked] = useState<string[]>([]);
@@ -195,6 +275,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
             <div className="settings-grid">
               <label>
                 Theme
+                <small className="settings-help">{HELP.theme}</small>
                 <select value={s.theme} onChange={(e) => update({ theme: e.target.value as AppSettings['theme'] })}>
                   <option value="dark">Dark</option>
                   <option value="light">Light</option>
@@ -203,6 +284,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Terminal font size
+                <small className="settings-help">{HELP.fontSize}</small>
                 <input
                   type="number"
                   min={9}
@@ -213,6 +295,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Cursor style
+                <small className="settings-help">{HELP.cursorStyle}</small>
                 <select
                   value={s.cursorStyle}
                   onChange={(e) => update({ cursorStyle: e.target.value as AppSettings['cursorStyle'] })}
@@ -224,6 +307,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Scrollback lines
+                <small className="settings-help">{HELP.scrollback}</small>
                 <input
                   type="number"
                   min={500}
@@ -235,6 +319,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Line height
+                <small className="settings-help">{HELP.lineHeight}</small>
                 <input
                   type="number"
                   min={1}
@@ -246,6 +331,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Terminal font family
+                <small className="settings-help">{HELP.fontFamily}</small>
                 <input
                   placeholder="Default monospace"
                   defaultValue={s.fontFamily}
@@ -254,14 +340,12 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Accent color
-                <input
-                  type="color"
-                  value={s.accent}
-                  onChange={(e) => update({ accent: e.target.value })}
-                />
+                <small className="settings-help">{HELP.accent}</small>
+                <input type="color" value={s.accent} onChange={(e) => update({ accent: e.target.value })} />
               </label>
               <label>
                 Density
+                <small className="settings-help">{HELP.density}</small>
                 <select
                   value={s.density}
                   onChange={(e) => update({ density: e.target.value as AppSettings['density'] })}
@@ -272,6 +356,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 On startup
+                <small className="settings-help">{HELP.startup}</small>
                 <select
                   value={s.startup}
                   onChange={(e) => update({ startup: e.target.value as AppSettings['startup'] })}
@@ -283,6 +368,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Update channel
+                <small className="settings-help">{HELP.updateChannel}</small>
                 <select
                   value={s.updateChannel}
                   onChange={(e) => update({ updateChannel: e.target.value as AppSettings['updateChannel'] })}
@@ -293,6 +379,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Default working directory
+                <small className="settings-help">{HELP.defaultCwd}</small>
                 <input
                   placeholder="Home directory"
                   defaultValue={s.defaultCwd}
@@ -301,6 +388,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Default agent
+                <small className="settings-help">{HELP.defaultAgent}</small>
                 <select value={s.defaultAgent} onChange={(e) => update({ defaultAgent: e.target.value })}>
                   <option value="">Ask each time</option>
                   {[...AGENT_PROFILES, ...s.customAgents].map((p) => (
@@ -312,6 +400,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               </label>
               <label>
                 Shell override
+                <small className="settings-help">{HELP.shell}</small>
                 <input
                   placeholder="System default"
                   defaultValue={s.shell}
@@ -324,17 +413,20 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
                   ['confirmOnClose', 'Confirm before closing sessions'],
                   ['autoUpdate', 'Automatic updates'],
                   ['telemetry', 'Anonymous telemetry'],
-                ['cursorBlink', 'Cursor blink'],
-                ['reduceMotion', 'Reduce motion'],
-                ['restoreSessions', 'Restore sessions on launch'],
-                ['notifications', 'Notifications'],
-                ['sound', 'Sound'],
+                  ['cursorBlink', 'Cursor blink'],
+                  ['reduceMotion', 'Reduce motion'],
+                  ['restoreSessions', 'Restore sessions on launch'],
+                  ['notifications', 'Notifications'],
+                  ['sound', 'Sound'],
                 ] as const
               ).map(([k, label]) => (
                 <label key={k} className="settings-switch">
                   <input type="checkbox" checked={s[k]} onChange={(e) => update({ [k]: e.target.checked })} />
                   <span className="switch" aria-hidden="true" />
-                  {label}
+                  <span>
+                    {label}
+                    <small className="settings-help">{HELP[k]}</small>
+                  </span>
                 </label>
               ))}
             </div>
@@ -342,20 +434,27 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
           {tab === 'keys' && (
             <div className="settings-section">
               <p className="settings-hint">
-                Keys are encrypted with your OS keychain and injected as environment variables into agent sessions.
+                Bring your own keys. They are encrypted with the Windows credential vault and injected as environment
+                variables (e.g. <code>ANTHROPIC_API_KEY</code>) into every agent session, so each CLI picks up the right
+                one automatically. Nothing is sent to crewdeck servers.
               </p>
               <div className="settings-row">
-                <input
-                  list="cd-providers"
-                  value={provider}
-                  onChange={(e) => setProvider(e.target.value)}
-                  placeholder="ENV_NAME"
-                />
-                <datalist id="cd-providers">
+                <select value={provider} onChange={(e) => setProvider(e.target.value)} aria-label="Provider">
                   {PROVIDERS.map((p) => (
-                    <option key={p} value={p} />
+                    <option key={p.env} value={p.env}>
+                      {p.label}
+                    </option>
                   ))}
-                </datalist>
+                  <option value="">Custom env name…</option>
+                </select>
+                {provider === '' || !PROVIDERS.some((p) => p.env === provider) ? (
+                  <input
+                    value={provider}
+                    onChange={(e) => setProvider(e.target.value)}
+                    placeholder="MY_PROVIDER_API_KEY"
+                    aria-label="Custom env name"
+                  />
+                ) : null}
                 <input
                   type="password"
                   value={keyVal}
@@ -367,16 +466,45 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
                   Save key
                 </button>
               </div>
-              <ul className="settings-list">
-                {keys.length === 0 && <li className="empty">No keys stored</li>}
-                {keys.map((k) => (
-                  <li key={k.provider}>
-                    <code>{k.provider.toUpperCase()}</code>
-                    <span className="muted">{k.hint}</span>
-                    <button onClick={() => removeKey(k.provider)}>Remove</button>
-                  </li>
-                ))}
+              <ul className="provider-grid">
+                {PROVIDERS.map((p) => {
+                  const stored = keys.find((k) => k.provider.toLowerCase() === p.env);
+                  return (
+                    <li key={p.env} className={stored ? 'stored' : ''}>
+                      <div className="provider-head">
+                        <strong>{p.label}</strong>
+                        <span className={stored ? 'badge ok' : 'badge'}>{stored ? 'Stored' : 'Not set'}</span>
+                      </div>
+                      <code className="muted">{p.env.toUpperCase()}</code>
+                      <span className="muted">{p.help}</span>
+                      <span className="muted">Used by: {p.usedBy}</span>
+                      <div className="provider-actions">
+                        {stored ? (
+                          <>
+                            <span className="muted">{stored.hint}</span>
+                            <button onClick={() => removeKey(stored.provider)}>Remove</button>
+                          </>
+                        ) : (
+                          <button onClick={() => setProvider(p.env)}>Add key</button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
+              {keys.filter((k) => !PROVIDERS.some((p) => p.env === k.provider.toLowerCase())).length > 0 && (
+                <ul className="settings-list">
+                  {keys
+                    .filter((k) => !PROVIDERS.some((p) => p.env === k.provider.toLowerCase()))
+                    .map((k) => (
+                      <li key={k.provider}>
+                        <code>{k.provider.toUpperCase()}</code>
+                        <span className="muted">{k.hint}</span>
+                        <button onClick={() => removeKey(k.provider)}>Remove</button>
+                      </li>
+                    ))}
+                </ul>
+              )}
             </div>
           )}
           {tab === 'agents' && s && (

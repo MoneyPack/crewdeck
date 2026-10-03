@@ -15,6 +15,7 @@ import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
 import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId, type AgentProfile } from '../shared/agents';
 import { Splash } from './components/Splash/Splash';
+import { CrewBot, CrewLine } from './components/Splash/CrewBot';
 import { Settings, type Tab as SettingsTab } from './components/Settings/Settings';
 import { Palette, type PaletteAction } from './components/Palette/Palette';
 import type {
@@ -322,7 +323,12 @@ export function App() {
       .catch((err: unknown) => console.error('restore failed', err))
       .finally(() => {
         setReady(true);
-        window.crewdeck.settings.get().then((s) => { if (s.startup === 'palette') setPaletteOpen(true); }).catch(() => {});
+        window.crewdeck.settings
+          .get()
+          .then((s) => {
+            if (s.startup === 'palette') setPaletteOpen(true);
+          })
+          .catch(() => {});
       });
   }, [detections, applyRestore]);
 
@@ -939,6 +945,10 @@ export function App() {
         {terminals.length === 0 ? (
           <div className="grid empty">
             <section className="onboard" aria-labelledby="onboard-title">
+              <div className="onboard-mascot">
+                <CrewBot size={72} />
+                <CrewLine />
+              </div>
               <span className="kicker">
                 FAST · FOCUSED · MULTI-AGENT{' '}
                 <span className="kicker-state">{project ? 'Deck armed' : 'No project'}</span>
@@ -957,7 +967,7 @@ export function App() {
               <p>
                 {project
                   ? `Working in ${project.name}. Launch a shell or an agent, tile up to four panes, and route one message to many with @mentions in the composer.`
-                  : 'crewdeck runs shells and coding agents side by side against one folder. Choose a project to start the deck.'}
+                  : 'crewdeck runs Claude Code, Codex, Gemini CLI, OpenCode, your own agents and plain shells side by side against one folder. Choose a project to start the deck.'}
               </p>
               <ol>
                 <li className="card">

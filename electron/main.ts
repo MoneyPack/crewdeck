@@ -48,7 +48,7 @@ function createWindow(): BrowserWindow {
     autoHideMenuBar: true,
     width: 1280,
     height: 800,
-    backgroundColor: '#0f1115',
+    backgroundColor: '#0c0c0a',
     title: 'crewdeck',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -136,3 +136,4 @@ app.on('will-quit', () => closeDatabase());
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+

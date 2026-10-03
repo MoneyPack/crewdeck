@@ -22,7 +22,7 @@ const DEFAULTS: StoredSettings = {
   scrollback: 5000,
   fontFamily: '',
   lineHeight: 1.2,
-  accent: '#7c5cff',
+  accent: '#ff4d00',
   density: 'comfortable',
   restoreSessions: true,
   startup: 'last',

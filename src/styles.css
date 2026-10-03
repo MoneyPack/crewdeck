@@ -676,6 +676,27 @@ textarea {
 .pane.active .pane-title {
   color: var(--paper);
 }
+.pane-logo {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  opacity: 0.55;
+  transition: opacity var(--t-fast) var(--snap);
+}
+.pane.active .pane-logo {
+  opacity: 1;
+}
+.pane-actions {
+  display: inline-flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--t-fast) var(--snap);
+}
+.pane:hover .pane-actions,
+.pane.active .pane-actions,
+.pane-actions:focus-within {
+  opacity: 1;
+}
 
 .pane-header .status {
   margin-left: auto;
@@ -870,6 +891,19 @@ textarea {
   letter-spacing: 0.01em;
   text-align: left;
   animation: rise var(--t-med) var(--glide) both;
+}
+.onboard-mascot {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+.onboard-mascot .crewline {
+  margin: 0;
+  font-family: var(--wide);
+  font-size: 15px;
+  color: var(--paper);
+  max-width: 40ch;
 }
 
 .onboard .kicker {
@@ -2717,6 +2751,92 @@ kbd {
   box-shadow: 0 0 10px var(--signal);
   animation: splash-pulse 1s var(--glide) infinite;
 }
+.splash-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+}
+.splash-bot {
+  animation: splash-fade 500ms var(--glide) 400ms both;
+}
+.splash-line {
+  margin: 0;
+  max-width: 48ch;
+  text-align: center;
+  font-family: var(--wide);
+  font-size: var(--fs-md, 15px);
+  color: var(--paper);
+  animation: splash-fade 500ms var(--glide) 1500ms both;
+}
+.splash-skip {
+  margin: 0;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.18em;
+  color: var(--paper-mute);
+  animation: splash-fade 600ms var(--glide) 2200ms both;
+}
+
+/* CrewBot mascot (shared by splash + empty state) */
+.crewbot {
+  display: block;
+  animation: crewbot-bob 2.4s ease-in-out infinite;
+}
+.crewbot-arm {
+  transform-origin: 70px 52px;
+  transform-box: view-box;
+  animation: crewbot-wave 1.4s ease-in-out infinite;
+}
+.crewbot-eyes {
+  transform-origin: 50px 51px;
+  transform-box: view-box;
+  animation: crewbot-blink 3.2s steps(1) infinite;
+}
+.crewbot-antenna {
+  animation: splash-pulse 1.6s var(--glide) infinite;
+}
+.crewline {
+  animation: splash-fade 400ms var(--glide) both;
+}
+@keyframes crewbot-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes crewbot-wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-28deg);
+  }
+  60% {
+    transform: rotate(14deg);
+  }
+}
+@keyframes crewbot-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .crewbot,
+  .crewbot-arm,
+  .crewbot-eyes,
+  .crewbot-antenna,
+  .crewline {
+    animation: none;
+  }
+}
 @keyframes splash-scan {
   from {
     transform: translateY(-40%);
@@ -2802,9 +2922,10 @@ a:focus-visible,
 
 /* ===== Pop pass: glow, motion, hover ===== */
 :root {
-  --pop-a: #7c5cff;
-  --pop-b: #00e0ff;
-  --pop-c: #ff4fd8;
+  /* Non-pastel "signal" palette: hot orange, acid lime, hard cyan on ink. */
+  --pop-a: var(--signal);
+  --pop-b: var(--ok);
+  --pop-c: var(--info);
   --pop-grad: linear-gradient(135deg, var(--pop-a), var(--pop-b) 55%, var(--pop-c));
   --pop-glow:
     0 0 0 var(--rule-w) color-mix(in srgb, var(--pop-a) 55%, transparent),
@@ -3042,6 +3163,63 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
+}
+.settings-help {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--paper-mute);
+}
+.settings-switch .settings-help {
+  margin-top: 0;
+}
+.settings-hint code {
+  color: var(--paper);
+  background: var(--ink-3);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.provider-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.provider-grid li {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: var(--rule-w) solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  transition: border-color var(--t-fast) var(--snap);
+}
+.provider-grid li.stored {
+  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+}
+.provider-grid li:hover {
+  border-color: var(--pop-a);
+}
+.provider-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.provider-head strong {
+  font-size: 12px;
+}
+.provider-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
 }
 .settings-section {
   display: flex;

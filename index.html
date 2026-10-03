@@ -3,9 +3,227 @@
   <head>
     <meta charset="UTF-8" />
     <title>crewdeck</title>
+    <style>
+      /* ponytail: early boot splash is pure HTML+CSS (prod CSP blocks inline script). React render replaces #root. */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0c0c0a;
+        color: #e8e4da;
+        font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+      }
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #0c0c0a;
+        overflow: hidden;
+      }
+      .boot-stack {
+        display: grid;
+        justify-items: center;
+        gap: 22px;
+        text-align: center;
+      }
+      .boot-bot {
+        width: 96px;
+        height: 96px;
+        animation: boot-bob 2.4s ease-in-out infinite;
+      }
+      .boot-arm {
+        transform-origin: 70px 52px;
+        animation: boot-wave 1.4s ease-in-out infinite;
+      }
+      .boot-eye {
+        animation: boot-blink 3.2s steps(1) infinite;
+      }
+      .boot-lanes {
+        display: grid;
+        gap: 8px;
+        width: min(420px, 80vw);
+      }
+      .boot-lane {
+        display: grid;
+        grid-template-columns: 9ch 1fr auto;
+        gap: 12px;
+        align-items: center;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: #9c978b;
+        opacity: 0;
+        animation: boot-in 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      }
+      .boot-lane:nth-child(1) {
+        animation-delay: 0.12s;
+      }
+      .boot-lane:nth-child(2) {
+        animation-delay: 0.23s;
+      }
+      .boot-lane:nth-child(3) {
+        animation-delay: 0.34s;
+      }
+      .boot-lane:nth-child(4) {
+        animation-delay: 0.45s;
+      }
+      .boot-bar {
+        height: 2px;
+        background: #2c2b27;
+        position: relative;
+        overflow: hidden;
+      }
+      .boot-bar::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--c);
+        transform: scaleX(0);
+        transform-origin: left;
+        animation: boot-fill 0.9s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+        animation-delay: inherit;
+      }
+      .boot-lane--claude {
+        --c: #ff8a4c;
+      }
+      .boot-lane--codex {
+        --c: #3fe0ff;
+      }
+      .boot-lane--gemini {
+        --c: #b69cff;
+      }
+      .boot-lane--opencode {
+        --c: #c6f432;
+      }
+      .boot-word {
+        font-family: 'Archivo', Inter, system-ui, sans-serif;
+        font-weight: 800;
+        font-size: clamp(40px, 9vw, 112px);
+        letter-spacing: 0.06em;
+        line-height: 1;
+        display: flex;
+      }
+      .boot-word span {
+        opacity: 0;
+        animation: boot-in 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      }
+      .boot-word span:nth-child(5) {
+        color: #ff4d00;
+      }
+      .boot-sub {
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        color: #9c978b;
+        opacity: 0;
+        animation: boot-in 0.6s ease forwards;
+        animation-delay: 1.3s;
+      }
+      .boot-sub b {
+        color: #e8e4da;
+        font-weight: 600;
+      }
+      @keyframes boot-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes boot-fill {
+        to {
+          transform: scaleX(1);
+        }
+      }
+      @keyframes boot-bob {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
+      @keyframes boot-wave {
+        0%,
+        100% {
+          transform: rotate(0);
+        }
+        30% {
+          transform: rotate(-28deg);
+        }
+        60% {
+          transform: rotate(14deg);
+        }
+      }
+      @keyframes boot-blink {
+        0%,
+        92%,
+        100% {
+          transform: scaleY(1);
+        }
+        95% {
+          transform: scaleY(0.1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot *,
+        .boot *::after {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="presentation" aria-label="CrewDeck is starting">
+        <div class="boot-stack">
+          <svg class="boot-bot" viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="22" y="30" width="56" height="44" rx="10" fill="#1d1d1a" stroke="#45433c" stroke-width="2" />
+            <rect x="30" y="40" width="40" height="22" rx="5" fill="#0c0c0a" />
+            <g class="boot-eye" style="transform-origin: 50px 51px">
+              <circle cx="41" cy="51" r="3.5" fill="#ff4d00" />
+              <circle cx="59" cy="51" r="3.5" fill="#ff4d00" />
+            </g>
+            <path d="M43 58 Q50 62 57 58" stroke="#c6f432" stroke-width="2" fill="none" stroke-linecap="round" />
+            <line x1="50" y1="30" x2="50" y2="20" stroke="#45433c" stroke-width="2" />
+            <circle cx="50" cy="17" r="4" fill="#ff4d00" />
+            <rect x="12" y="46" width="10" height="16" rx="4" fill="#262622" />
+            <g class="boot-arm">
+              <rect x="70" y="36" width="10" height="22" rx="4" fill="#262622" />
+              <circle cx="75" cy="34" r="5" fill="#3fe0ff" />
+            </g>
+            <rect x="34" y="74" width="12" height="10" rx="3" fill="#262622" />
+            <rect x="54" y="74" width="12" height="10" rx="3" fill="#262622" />
+          </svg>
+          <div class="boot-lanes">
+            <div class="boot-lane boot-lane--claude">
+              <span>CLAUDE</span><span class="boot-bar"></span><span>ONLINE</span>
+            </div>
+            <div class="boot-lane boot-lane--codex">
+              <span>CODEX</span><span class="boot-bar"></span><span>ONLINE</span>
+            </div>
+            <div class="boot-lane boot-lane--gemini">
+              <span>GEMINI</span><span class="boot-bar"></span><span>ONLINE</span>
+            </div>
+            <div class="boot-lane boot-lane--opencode">
+              <span>OPENCODE</span><span class="boot-bar"></span><span>ONLINE</span>
+            </div>
+          </div>
+          <div class="boot-word">
+            <span style="animation-delay: 0.7s">C</span><span style="animation-delay: 0.755s">R</span
+            ><span style="animation-delay: 0.81s">E</span><span style="animation-delay: 0.865s">W</span
+            ><span style="animation-delay: 0.92s">D</span><span style="animation-delay: 0.975s">E</span
+            ><span style="animation-delay: 1.03s">C</span><span style="animation-delay: 1.085s">K</span>
+          </div>
+          <div class="boot-sub">HEY, CAPTAIN · <b>YOUR CREW IS WAKING UP</b></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

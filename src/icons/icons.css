@@ -16,6 +16,8 @@
 .ri-arrow-right-line:before { content: '\ea6c'; }
 .ri-camera-line:before { content: '\eb31'; }
 .ri-close-line:before { content: '\eb99'; }
+.ri-eraser-line:before { content: '\ec9f'; }
+.ri-file-copy-line:before { content: '\ecd5'; }
 .ri-focus-3-line:before { content: '\ed4c'; }
 .ri-git-branch-line:before { content: '\edbd'; }
 .ri-global-line:before { content: '\edcf'; }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import logo from '../../assets/logo.svg';
+import { CrewBot, CrewLine } from './CrewBot';
 
 const CREW = [
   { id: 'claude', label: 'CLAUDE' },
@@ -9,7 +10,7 @@ const CREW = [
 ] as const;
 
 const WORD = 'CREWDECK';
-const HOLD_MS = 2400;
+const HOLD_MS = 1800; // shorter: the HTML boot splash already covered the first beat
 const FADE_MS = 420;
 
 export function Splash({ onDone }: { onDone: () => void }) {
@@ -52,7 +53,10 @@ export function Splash({ onDone }: { onDone: () => void }) {
           </div>
         ))}
       </div>
-      <img className="splash-logo" src={logo} alt="" />
+      <div className="splash-hero">
+        <CrewBot className="splash-bot" />
+        <img className="splash-logo" src={logo} alt="" />
+      </div>
       <h1 className="splash-word" aria-label="crewdeck">
         {WORD.split('').map((ch, i) => (
           <span key={i} style={{ animationDelay: `${700 + i * 55}ms` }}>
@@ -63,6 +67,8 @@ export function Splash({ onDone }: { onDone: () => void }) {
       <p className="splash-sub">
         <span className="splash-dot" /> CREW ASSEMBLED · DECK ARMED
       </p>
+      <CrewLine className="splash-line" />
+      <p className="splash-skip">click or press any key to skip</p>
     </div>
   );
 }

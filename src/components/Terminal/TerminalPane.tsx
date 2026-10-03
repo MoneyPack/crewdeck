@@ -3,7 +3,12 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { WebglAddon } from '@xterm/addon-webgl';
-import { RESTORED_DIVIDER, type AppSettings, type TerminalDataEvent, type TerminalExitEvent } from '../../../shared/ipc';
+import {
+  RESTORED_DIVIDER,
+  type AppSettings,
+  type TerminalDataEvent,
+  type TerminalExitEvent,
+} from '../../../shared/ipc';
 
 export type TerminalSettings = Pick<
   AppSettings,
@@ -11,6 +16,7 @@ export type TerminalSettings = Pick<
 >;
 import type { MentionTarget } from '../../../shared/mention';
 import { findShortcut } from '../../../shared/shortcuts';
+import logo from '../../assets/logo.svg';
 
 export interface TerminalPaneProps {
   title: string;
@@ -390,8 +396,38 @@ export function TerminalPane({
       onFocus={onActivate}
     >
       <div className="pane-header">
+        <img className="pane-logo" src={logo} alt="" title="crewdeck" />
         <span className="pane-title">{title}</span>
         {headerExtra}
+        <span className="pane-actions">
+          <button
+            type="button"
+            className="icon-btn"
+            title="Clear screen"
+            aria-label="Clear screen"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => termRef.current?.clear()}
+          >
+            <i className="ri-eraser-line" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="icon-btn"
+            title="Copy visible output"
+            aria-label="Copy visible output"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              const term = termRef.current;
+              if (!term) return;
+              const buf = term.buffer.active;
+              const lines: string[] = [];
+              for (let i = 0; i < buf.length; i++) lines.push(buf.getLine(i)?.translateToString(true) ?? '');
+              void navigator.clipboard.writeText(lines.join('\n').trimEnd());
+            }}
+          >
+            <i className="ri-file-copy-line" aria-hidden="true" />
+          </button>
+        </span>
         {onSendSelection && sendTargets && sendTargets.length > 0 && (
           <select
             className="send-selection"
