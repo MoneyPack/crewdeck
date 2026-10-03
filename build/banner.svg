@@ -1,42 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#7c3aed">
-        <animate attributeName="stop-color" values="#7c3aed;#06b6d4;#7c3aed" dur="6s" repeatCount="indefinite"/>
-      </stop>
-      <stop offset="1" stop-color="#06b6d4">
-        <animate attributeName="stop-color" values="#06b6d4;#7c3aed;#06b6d4" dur="6s" repeatCount="indefinite"/>
-      </stop>
-    </linearGradient>
-    <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#a78bfa"/>
-      <stop offset="0.5" stop-color="#22d3ee"/>
-      <stop offset="1" stop-color="#34d399"/>
-    </linearGradient>
-  </defs>
-  <rect width="800" height="220" rx="28" fill="#0b0f19"/>
-  <g transform="translate(40 22) scale(0.6875)">
-    <rect width="256" height="256" rx="56" fill="url(#bg)"/>
-    <rect x="20" y="20" width="216" height="216" rx="40" fill="#0b0f19"/>
-    <path d="M52 84 L104 128 L52 172" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="140" stroke-dashoffset="140">
-      <animate attributeName="stroke-dashoffset" from="140" to="0" dur="0.8s" fill="freeze"/>
-    </path>
-    <rect x="124" y="70" width="0" height="22" rx="11" fill="#a78bfa">
-      <animate attributeName="width" values="0;84;60;84" keyTimes="0;0.15;0.5;1" begin="0.6s" dur="3s" repeatCount="indefinite"/>
-    </rect>
-    <rect x="124" y="117" width="0" height="22" rx="11" fill="#22d3ee">
-      <animate attributeName="width" values="0;68;84;68" keyTimes="0;0.15;0.5;1" begin="0.8s" dur="3s" repeatCount="indefinite"/>
-    </rect>
-    <rect x="124" y="164" width="0" height="22" rx="11" fill="#34d399">
-      <animate attributeName="width" values="0;84;52;84" keyTimes="0;0.15;0.5;1" begin="1s" dur="3s" repeatCount="indefinite"/>
-    </rect>
+  <style>
+    .arm{transform-origin:690px 112px;animation:wave 1.4s ease-in-out infinite}
+    .eyes{transform-origin:670px 111px;animation:blink 3.2s steps(1) infinite}
+    .scan{animation:scan 3s linear infinite}
+    .lane{stroke-dasharray:140;stroke-dashoffset:140;animation:fill 1.2s cubic-bezier(.7,0,.2,1) forwards}
+    @keyframes wave{0%,100%{transform:rotate(0)}30%{transform:rotate(-28deg)}60%{transform:rotate(14deg)}}
+    @keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+    @keyframes scan{from{transform:translateY(-40px)}to{transform:translateY(260px)}}
+    @keyframes fill{to{stroke-dashoffset:0}}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;stroke-dashoffset:0!important}}
+  </style>
+  <rect width="800" height="220" rx="14" fill="#0c0c0a"/>
+  <rect class="scan" width="800" height="2" fill="#ff4d00" opacity=".35"/>
+  <text x="40" y="96" font-family="Archivo, Inter, 'Segoe UI', sans-serif" font-weight="800" font-size="72" letter-spacing="4" fill="#e8e4da">CREW<tspan fill="#ff4d00">D</tspan>ECK</text>
+  <text x="42" y="126" font-family="Consolas, 'JetBrains Mono', monospace" font-size="13" letter-spacing="4" fill="#9c978b">CODING-AGENT CLIS, SIDE BY SIDE. ONE WINDOWS APP.</text>
+  <g font-family="Consolas, 'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#9c978b">
+    <text x="42" y="162">CLAUDE</text>  <line class="lane" x1="120" y1="158" x2="260" y2="158" stroke="#ff8a4c" stroke-width="2" style="animation-delay:.1s"/>
+    <text x="42" y="182">CODEX</text>   <line class="lane" x1="120" y1="178" x2="260" y2="178" stroke="#3fe0ff" stroke-width="2" style="animation-delay:.3s"/>
+    <text x="300" y="162">GEMINI</text> <line class="lane" x1="378" y1="158" x2="518" y2="158" stroke="#b69cff" stroke-width="2" style="animation-delay:.5s"/>
+    <text x="300" y="182">OPENCODE</text><line class="lane" x1="378" y1="178" x2="518" y2="178" stroke="#c6f432" stroke-width="2" style="animation-delay:.7s"/>
   </g>
-  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" opacity="0">
-    <animate attributeName="opacity" from="0" to="1" begin="0.4s" dur="0.8s" fill="freeze"/>
-    <text x="250" y="118" font-size="72" font-weight="800" fill="url(#txt)">crewdeck</text>
-    <text x="252" y="158" font-size="22" fill="#94a3b8">Coding-agent CLIs, side by side.</text>
-    <rect x="252" y="172" width="14" height="4" fill="#22d3ee">
-      <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
-    </rect>
+  <g transform="translate(600,50) scale(1.4)">
+    <rect x="22" y="30" width="56" height="44" rx="10" fill="#1d1d1a" stroke="#45433c" stroke-width="2"/>
+    <rect x="30" y="40" width="40" height="22" rx="5" fill="#0c0c0a"/>
+    <g class="eyes" style="transform-origin:50px 51px"><circle cx="41" cy="51" r="3.5" fill="#ff4d00"/><circle cx="59" cy="51" r="3.5" fill="#ff4d00"/></g>
+    <path d="M43 58 Q50 62 57 58" stroke="#c6f432" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <line x1="50" y1="30" x2="50" y2="20" stroke="#45433c" stroke-width="2"/><circle cx="50" cy="17" r="4" fill="#ff4d00"/>
+    <rect x="12" y="46" width="10" height="16" rx="4" fill="#262622"/>
+    <g class="arm" style="transform-origin:70px 52px"><rect x="70" y="36" width="10" height="22" rx="4" fill="#262622"/><circle cx="75" cy="34" r="5" fill="#3fe0ff"/></g>
+    <rect x="34" y="74" width="12" height="10" rx="3" fill="#262622"/><rect x="54" y="74" width="12" height="10" rx="3" fill="#262622"/>
   </g>
 </svg>

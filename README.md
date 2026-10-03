@@ -1,15 +1,33 @@
 <p align="center">
   <img src="build/banner.svg" alt="CrewDeck — Coding-agent CLIs, side by side." width="800">
 </p>
-<p align="center"><img src="build/tagline.svg" alt="claude · codex · gemini · shell — side by side" width="800"></p>
+<p align="center"><img src="build/tagline.svg" alt="claude · codex · gemini · opencode · your agent · shell — side by side" width="800"></p>
 
 <p align="center">
   <a href="https://github.com/MoneyPack/crewdeck/actions/workflows/ci.yml"><img src="https://github.com/MoneyPack/crewdeck/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/MoneyPack/crewdeck/releases"><img src="https://img.shields.io/github/v/release/MoneyPack/crewdeck" alt="Release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
+  <a href="https://github.com/MoneyPack/crewdeck/releases"><img src="https://img.shields.io/github/v/release/MoneyPack/crewdeck?color=ff4d00" alt="Release"></a>
+  <a href="https://github.com/MoneyPack/crewdeck/releases"><img src="https://img.shields.io/github/downloads/MoneyPack/crewdeck/total?color=c6f432" alt="Downloads"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3fe0ff" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/platform-Windows-0c0c0a" alt="Windows">
 </p>
 
-A Windows desktop app for running several coding-agent CLIs (Claude Code, Codex, Gemini CLI, OpenCode, your own agents, or a plain shell) side by side in one project.
+<table align="center"><tr>
+<td width="110" align="center"><img src="build/crewbot.svg" width="96" alt="CrewBot, the CrewDeck mascot waving"></td>
+<td>
+<b>Hey, captain. Your crew is waking up.</b><br>
+CrewDeck is a Windows desktop app that runs several coding-agent CLIs — <b>Claude Code, Codex, Gemini CLI, OpenCode</b>, any CLI you bring, or a plain shell — side by side against one project folder. Tile up to four panes, send one prompt to many with <code>@mentions</code>, and let agents drive a built-in browser.
+</td></tr></table>
+
+## Why CrewDeck
+
+|                             |                                                                                                                                                                                               |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Agent-agnostic**          | First-class profiles for Claude Code, Codex, Gemini CLI and OpenCode, one-click install, plus _bring your own agent_ (any command + args + env).                                              |
+| **One prompt, many agents** | The composer routes a message to one pane or all of them with `@claude @codex …`. Compare answers, keep the best.                                                                             |
+| **Built-in browser bridge** | Agents open pages, fill forms, click and screenshot through a local HTTP bridge, the `crewdeck-browser` CLI, or the `crewdeck-mcp` MCP server.                                                |
+| **BYOK for 10 providers**   | Anthropic, OpenAI, Gemini, Google, OpenRouter, Groq, Mistral, xAI, DeepSeek, DashScope, or any custom env name — encrypted with the Windows credential vault and injected into every session. |
+| **Fast, dark, no fluff**    | Instant boot splash, 60 fps WebGL terminals, command palette (`Ctrl+Shift+P`), git panel, routing log, session restore.                                                                       |
+| **Auto-updates**            | Ships with a built-in updater. Install once, stay current.                                                                                                                                    |
 
 ## Install
 
@@ -20,9 +38,10 @@ Windows SmartScreen may warn until code signing is live: click "More info" → "
 ## Usage
 
 1. Open a project folder.
-2. Add agent panes (Claude Code, Codex, Gemini CLI, OpenCode, a custom agent, or shell). Each pane runs in its own terminal.
+2. Add agent panes (Claude Code, Codex, Gemini CLI, OpenCode, a custom agent, or shell). Each pane runs in its own terminal with a CrewDeck header, clear and copy actions.
 3. Use the composer to send prompts to one or more panes.
 4. Open a browser pane to let agents drive a built-in browser through the bridge, CLI, or MCP tools below.
+5. `Ctrl+,` opens Settings — every option has a one-line description; API keys live under **API keys (BYOK)**.
 
 ## Browser bridge
 
@@ -101,6 +120,16 @@ npm run dist       # build the Windows installer into release/
 | `npm run test:e2e:dist` | E2E against the packaged build |
 | `npm run smoke`         | Smoke test                     |
 
+## Roadmap
+
+- [ ] Session recording & replay (share an agent run as a `.crewdeck` file)
+- [ ] Split prompt / diff view: send the same task to N agents and diff their patches
+- [ ] Agent presets per project (`.crewdeck.json`)
+- [ ] Linux & macOS builds
+- [ ] Themes beyond Signal (contributions welcome)
+
+Have an idea? [Open an issue](https://github.com/MoneyPack/crewdeck/issues/new) — CrewBot reads them all.
+
 ## Code signing
 
 Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
@@ -112,3 +141,5 @@ crewdeck runs entirely on your machine and collects no telemetry or user data. T
 ## License
 
 [MIT](LICENSE)
+
+<p align="center"><sub>Built by <a href="https://github.com/MoneyPack">MoneyPack</a> · CrewBot is an original CrewDeck character</sub></p>

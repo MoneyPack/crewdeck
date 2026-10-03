@@ -1,16 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 48" width="800" height="48">
   <defs>
-    <linearGradient id="g" x1="0" x2="1">
-      <stop offset="0" stop-color="#a78bfa"/>
-      <stop offset=".5" stop-color="#22d3ee"/>
-      <stop offset="1" stop-color="#34d399"/>
-    </linearGradient>
-    <clipPath id="type">
-      <rect x="0" y="0" height="48" width="0">
-        <animate attributeName="width" values="0;800;800;0" keyTimes="0;.45;.9;1" dur="7s" repeatCount="indefinite"/>
-      </rect>
-    </clipPath>
+    <clipPath id="type"><rect x="0" y="0" height="48" width="0"><animate attributeName="width" values="0;800;800;0" keyTimes="0;.45;.9;1" dur="7s" repeatCount="indefinite"/></rect></clipPath>
   </defs>
-  <rect width="800" height="48" rx="10" fill="#0b0f19"/>
-  <text x="400" y="30" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="18" fill="url(#g)" clip-path="url(#type)">&gt; claude · codex · gemini · shell — side by side</text>
+  <rect width="800" height="48" rx="10" fill="#0c0c0a"/>
+  <text x="400" y="30" text-anchor="middle" font-family="Consolas, 'JetBrains Mono', monospace" font-size="17" fill="#c6f432" clip-path="url(#type)">&gt; claude · codex · gemini · opencode · your agent · shell — side by side</text>
 </svg>

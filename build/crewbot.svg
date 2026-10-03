@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <style>
+    .bob{animation:bob 2.4s ease-in-out infinite}
+    .arm{transform-origin:70px 52px;animation:wave 1.4s ease-in-out infinite}
+    .eyes{transform-origin:50px 51px;animation:blink 3.2s steps(1) infinite}
+    .ant{animation:pulse 1.6s ease-in-out infinite}
+    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+    @keyframes wave{0%,100%{transform:rotate(0)}30%{transform:rotate(-28deg)}60%{transform:rotate(14deg)}}
+    @keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @media (prefers-reduced-motion:reduce){.bob,.arm,.eyes,.ant{animation:none}}
+  </style>
+  <g class="bob">
+    <rect x="22" y="30" width="56" height="44" rx="10" fill="#1d1d1a" stroke="#45433c" stroke-width="2"/>
+    <rect x="30" y="40" width="40" height="22" rx="5" fill="#0c0c0a"/>
+    <g class="eyes"><circle cx="41" cy="51" r="3.5" fill="#ff4d00"/><circle cx="59" cy="51" r="3.5" fill="#ff4d00"/></g>
+    <path d="M43 58 Q50 62 57 58" stroke="#c6f432" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <line x1="50" y1="30" x2="50" y2="20" stroke="#45433c" stroke-width="2"/>
+    <circle class="ant" cx="50" cy="17" r="4" fill="#ff4d00"/>
+    <rect x="12" y="46" width="10" height="16" rx="4" fill="#262622"/>
+    <g class="arm"><rect x="70" y="36" width="10" height="22" rx="4" fill="#262622"/><circle cx="75" cy="34" r="5" fill="#3fe0ff"/></g>
+    <rect x="34" y="74" width="12" height="10" rx="3" fill="#262622"/><rect x="54" y="74" width="12" height="10" rx="3" fill="#262622"/>
+  </g>
+</svg>
