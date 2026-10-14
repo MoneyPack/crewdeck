@@ -59,4 +59,3 @@ export function toBlocks(text: string): ReaderBlock[] {
   if (code) out.push({ kind: 'code', text: code.join('\n') });
   return out;
 }
-
