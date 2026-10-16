@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="build/banner.svg" alt="CrewDeck — Coding-agent CLIs, side by side." width="800">
+  <img src="build/banner.svg" alt="CrewDeck ΓÇö Coding-agent CLIs, side by side." width="800">
 </p>
-<p align="center"><img src="build/tagline.svg" alt="claude · codex · gemini · opencode · your agent · shell — side by side" width="800"></p>
+<p align="center"><img src="build/tagline.svg" alt="claude ┬╖ codex ┬╖ gemini ┬╖ opencode ┬╖ your agent ┬╖ shell ΓÇö side by side" width="800"></p>
 
 <p align="center">
   <a href="https://github.com/MoneyPack/crewdeck/actions/workflows/ci.yml"><img src="https://github.com/MoneyPack/crewdeck/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -15,19 +15,23 @@
 <td width="110" align="center"><img src="build/crewbot.svg" width="96" alt="CrewBot, the CrewDeck mascot waving"></td>
 <td>
 <b>Hey, captain. Your crew is waking up.</b><br>
-CrewDeck is a Windows desktop app that runs several coding-agent CLIs — <b>Claude Code, Codex, Gemini CLI, OpenCode</b>, any CLI you bring, or a plain shell — side by side against one project folder. Tile up to four panes, send one prompt to many with <code>@mentions</code>, and let agents drive a built-in browser.
+CrewDeck is a Windows desktop app that runs several coding-agent CLIs ΓÇö <b>Claude Code, Codex, Gemini CLI, OpenCode</b>, any CLI you bring, or a plain shell ΓÇö side by side against one project folder. Tile up to four panes, send one prompt to many with <code>@mentions</code>, and let agents drive a built-in browser.
 </td></tr></table>
+
+<p align="center"><img src="design/logo.svg" width="64" alt="CrewDeck logo"></p>
+
+<p align="center"><b>Roadmap:</b> see <a href="docs/PLAN.md">docs/PLAN.md</a> — vision, architecture, 11 builds, M0–M4.</p>
 
 ## Why CrewDeck
 
 |                             |                                                                                                                                                                                               |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Agent-agnostic**          | First-class profiles for Claude Code, Codex, Gemini CLI and OpenCode, one-click install, plus _bring your own agent_ (any command + args + env).                                              |
-| **Diff Race**               | Same task to 2–4 agents, each in its own git worktree. Compare their diffs side by side, **keep one** — it merges; the rest are discarded. Agents compete, you judge.                         |
+| **Diff Race**               | Same task to 2ΓÇô4 agents, each in its own git worktree. Compare their diffs side by side, **keep one** ΓÇö it merges; the rest are discarded. Agents compete, you judge.                         |
 | **Attention Inbox**         | Every agent asking "allow? (y/n)" lands in one inbox with the question text and one-click answers. Never hunt for the blocked pane again.                                                     |
-| **One prompt, many agents** | The composer routes a message to one pane or all of them with `@claude @codex …`. Compare answers, keep the best.                                                                             |
+| **One prompt, many agents** | The composer routes a message to one pane or all of them with `@claude @codex ΓÇª`. Compare answers, keep the best.                                                                             |
 | **Built-in browser bridge** | Agents open pages, fill forms, click and screenshot through a local HTTP bridge, the `crewdeck-browser` CLI, or the `crewdeck-mcp` MCP server.                                                |
-| **BYOK for 10 providers**   | Anthropic, OpenAI, Gemini, Google, OpenRouter, Groq, Mistral, xAI, DeepSeek, DashScope, or any custom env name — encrypted with the Windows credential vault and injected into every session. |
+| **BYOK for 10 providers**   | Anthropic, OpenAI, Gemini, Google, OpenRouter, Groq, Mistral, xAI, DeepSeek, DashScope, or any custom env name ΓÇö encrypted with the Windows credential vault and injected into every session. |
 | **Fast, dark, no fluff**    | Instant boot splash, 60 fps WebGL terminals, command palette (`Ctrl+Shift+P`), git panel, routing log, session restore.                                                                       |
 | **Auto-updates**            | Ships with a built-in updater. Install once, stay current.                                                                                                                                    |
 
@@ -35,7 +39,7 @@ CrewDeck is a Windows desktop app that runs several coding-agent CLIs — <b>Cla
 
 Download `crewdeck Setup <version>.exe` from [Releases](https://github.com/MoneyPack/crewdeck/releases).
 
-Windows SmartScreen may warn until code signing is live: click "More info" → "Run anyway".
+Windows SmartScreen may warn until code signing is live: click "More info" ΓåÆ "Run anyway".
 
 ## Usage
 
@@ -43,15 +47,15 @@ Windows SmartScreen may warn until code signing is live: click "More info" → "
 2. Add agent panes (Claude Code, Codex, Gemini CLI, OpenCode, a custom agent, or shell). Each pane runs in its own terminal with a CrewDeck header, clear and copy actions.
 3. Use the composer to send prompts to one or more panes.
 4. Open a browser pane to let agents drive a built-in browser through the bridge, CLI, or MCP tools below.
-5. `Ctrl+,` opens Settings — every option has a one-line description; API keys live under **API keys (BYOK)**.
+5. `Ctrl+,` opens Settings ΓÇö every option has a one-line description; API keys live under **API keys (BYOK)**.
 
 ### Diff Race
 
-Click **⚑ Race**, pick 2–4 agents, describe the task once. Every racer gets the identical prompt in an isolated worktree on a `crewdeck/*` branch. The race view shows each racer's live diff vs your checkout (files, +/−). **Keep** commits that racer's work and merges it; the other worktrees are removed. **Drop** discards one racer early.
+Click **ΓÜæ Race**, pick 2ΓÇô4 agents, describe the task once. Every racer gets the identical prompt in an isolated worktree on a `crewdeck/*` branch. The race view shows each racer's live diff vs your checkout (files, +/ΓêÆ). **Keep** commits that racer's work and merges it; the other worktrees are removed. **Drop** discards one racer early.
 
 ### Attention Inbox
 
-The toolbar badge `N need you` opens an inbox listing every pane that is waiting on a human — with the last lines it printed. Answer with **y / n / Enter / Esc** or type a reply, without leaving what you're doing.
+The toolbar badge `N need you` opens an inbox listing every pane that is waiting on a human ΓÇö with the last lines it printed. Answer with **y / n / Enter / Esc** or type a reply, without leaving what you're doing.
 
 ### Resume past sessions
 
@@ -59,7 +63,7 @@ The command palette lists recent **Claude Code** and **Codex** sessions recorded
 
 ### Reader mode & cost HUD
 
-Each pane has a **Reader** toggle that renders the terminal as readable text — TUI borders and spinners stripped, code fences and bullets kept. The pane header also shows **tokens · $** scraped from whatever the agent prints about usage (approximate; agents differ).
+Each pane has a **Reader** toggle that renders the terminal as readable text ΓÇö TUI borders and spinners stripped, code fences and bullets kept. The pane header also shows **tokens ┬╖ $** scraped from whatever the agent prints about usage (approximate; agents differ).
 
 ### Pipelines
 
@@ -87,7 +91,7 @@ Agent ids are the profile ids (`claude`, `codex`, `gemini`, `opencode`, `shell`,
 
 ### Summon hotkey
 
-`Ctrl+Alt+C` shows or hides crewdeck from any app. Change it under Settings → Summon hotkey.
+`Ctrl+Alt+C` shows or hides crewdeck from any app. Change it under Settings ΓåÆ Summon hotkey.
 
 ## Browser bridge
 
@@ -174,7 +178,7 @@ npm run dist       # build the Windows installer into release/
 - [ ] Linux & macOS builds
 - [ ] Themes beyond Signal (contributions welcome)
 
-Have an idea? [Open an issue](https://github.com/MoneyPack/crewdeck/issues/new) — CrewBot reads them all.
+Have an idea? [Open an issue](https://github.com/MoneyPack/crewdeck/issues/new) ΓÇö CrewBot reads them all.
 
 ## Code signing
 
@@ -188,4 +192,4 @@ crewdeck runs entirely on your machine and collects no telemetry or user data. T
 
 [MIT](LICENSE)
 
-<p align="center"><sub>Built by <a href="https://github.com/MoneyPack">MoneyPack</a> · CrewBot is an original CrewDeck character</sub></p>
+<p align="center"><sub>Built by <a href="https://github.com/MoneyPack">MoneyPack</a> ┬╖ CrewBot is an original CrewDeck character</sub></p>
