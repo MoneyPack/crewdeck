@@ -33,8 +33,20 @@ related modules. An ABI mismatch makes it exit non-zero.
 
 ```powershell
 npm run dist           # NSIS installer in release/
+npm run dist:msix     # MSIX package in release/ (uncommitted config, see Signing)
 npm run test:e2e:dist  # packaged smoke against release/win-unpacked
 ```
+
+## Signing and MSIX
+
+- `build.appx.publisher` is `CN=MoneyPack`, a placeholder. It must match the certificate subject exactly, or MSIX install fails.
+- Signing uses Azure Trusted Signing via `build.win.azureSignOptions`. That block is not yet configured.
+- CI secrets required: `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`.
+
+## Release
+
+- Tag-triggered `release` job in `.github/workflows/ci.yml` runs only on `refs/tags/v*`, after `build` and `smoke` pass.
+- Publish with `git tag vX.Y.Z && git push --tags`. The job runs `electron-builder --win --x64 --publish always` and needs `GH_TOKEN` with `contents: write`.
 
 ## Local-dev fallback: N-API prebuilds
 

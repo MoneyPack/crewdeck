@@ -109,9 +109,15 @@ function initDatabase(): boolean {
 
 app.whenReady().then(() => {
   // ponytail: channel read once at startup; changing it applies on next launch.
-  if (app.isPackaged) {
+  // Skip in e2e/smoke runs (they set ZAPFLEET_USER_DATA) so packaged tests never hit GitHub.
+  if (app.isPackaged && !process.env.ZAPFLEET_USER_DATA) {
     autoUpdater.allowPrerelease = getSettings().updateChannel === 'beta';
-    autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+    autoUpdater.on('checking-for-update', () => log.info('[updater] checking for update'));
+    autoUpdater.on('update-available', (info) => log.info('[updater] update available', info.version));
+    autoUpdater.on('update-not-available', (info) => log.info('[updater] up to date', info.version));
+    autoUpdater.on('update-downloaded', (info) => log.info('[updater] update downloaded', info.version));
+    autoUpdater.on('error', (err) => log.warn('[updater] error', err));
+    autoUpdater.checkForUpdatesAndNotify().catch((err: unknown) => log.warn('[updater] check failed', err));
   }
   if (!initDatabase()) {
     app.exit(1);
