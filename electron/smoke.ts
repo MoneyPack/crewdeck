@@ -587,19 +587,24 @@ async function run(): Promise<void> {
   const { id, pid } = manager.create({ shell, args: ['-NoLogo', '-NoProfile'], cols: 80, rows: 24 });
   console.log(`spawned pid ${pid}`);
 
+  // Match against ANSI-stripped output; CI runners are slower, so allow a longer window.
   const waitFor = (pattern: RegExp, label: string) =>
     new Promise<void>((resolve, reject) => {
       const started = Date.now();
+      const limit = process.env.CI ? 60_000 : TIMEOUT_MS;
       const tick = () => {
-        if (pattern.test(output)) return resolve();
-        if (Date.now() - started > TIMEOUT_MS) return reject(new Error(`timed out waiting for ${label}`));
+        if (pattern.test(stripAnsi(output))) return resolve();
+        if (Date.now() - started > limit) {
+          const tail = stripAnsi(output).slice(-2000);
+          return reject(new Error(`timed out waiting for ${label}\n--- output tail ---\n${tail}`));
+        }
         setTimeout(tick, 50);
       };
       tick();
     });
 
   // Round-trip: the marker is built by concatenation so the echoed input line alone cannot match.
-  manager.write(id, "Write-Output ('CREW' + 'DECK_OK')\r");
+  manager.write(id, "Write-Output ('ZAPFLEET' + '_OK')\r");
   await waitFor(/ZAPFLEET_OK/, 'echo marker');
   console.log('round-trip ok');
 
