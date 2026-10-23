@@ -70,7 +70,7 @@ export const PROVIDERS: Provider[] = [
 
 /** Short, human explanations shown under each general setting. */
 const HELP: Record<string, string> = {
-  theme: 'Dark is the native crewdeck look. System follows Windows.',
+  theme: 'Dark is the native zapfleet look. System follows Windows.',
   fontSize: 'Pixel size of terminal text. 13–14 is comfortable on 1080p.',
   cursorStyle: 'Shape of the terminal cursor in every pane.',
   scrollback: 'Lines kept per pane. Higher uses more memory; agents can be chatty.',
@@ -78,13 +78,13 @@ const HELP: Record<string, string> = {
   fontFamily: 'Any installed monospace font, e.g. "Cascadia Code" or "Fira Code".',
   accent: 'Highlight color for the active pane, buttons and the splash.',
   density: 'Compact trims padding so four panes fit on a laptop screen.',
-  startup: 'What the deck does when crewdeck opens.',
+  startup: 'What the deck does when zapfleet opens.',
   updateChannel: 'Beta gets new builds first; Stable waits for tagged releases.',
   defaultCwd: 'Folder new shells start in when no project is open.',
   defaultAgent: 'Pre-selects this agent when you press New. Works for any installed CLI.',
   shell: 'Program used for plain shell panes, e.g. pwsh.exe, cmd.exe or bash.',
   summonHotkey:
-    'Global shortcut that shows or hides crewdeck from any app. Electron accelerator syntax; leave empty to disable.',
+    'Global shortcut that shows or hides zapfleet from any app. Electron accelerator syntax; leave empty to disable.',
   animations: 'Pane transitions, hover lifts and the splash sequence.',
   confirmOnClose: 'Ask before killing a pane that still has a running process.',
   autoUpdate: 'Download releases in the background and install on next launch.',
@@ -115,11 +115,11 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
   useEffect(() => {
     if (!open) return;
     setErr('');
-    window.crewdeck.settings
+    window.zapfleet.settings
       .get()
       .then(setS)
       .catch((e: unknown) => setErr(String(e)));
-    window.crewdeck.settings
+    window.zapfleet.settings
       .listKeys()
       .then(setKeys)
       .catch(() => setKeys([]));
@@ -134,7 +134,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
 
   const update = async (patch: Partial<AppSettings>) => {
     try {
-      setS(await window.crewdeck.settings.update(patch));
+      setS(await window.zapfleet.settings.update(patch));
       onChange();
     } catch (e) {
       setErr(String(e));
@@ -143,7 +143,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
 
   const saveKey = async () => {
     try {
-      setKeys(await window.crewdeck.settings.setKey(provider.trim(), keyVal));
+      setKeys(await window.zapfleet.settings.setKey(provider.trim(), keyVal));
       setKeyVal('');
       setErr('');
     } catch (e) {
@@ -153,7 +153,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
 
   const removeKey = async (p: string) => {
     try {
-      setKeys(await window.crewdeck.settings.setKey(p, ''));
+      setKeys(await window.zapfleet.settings.setKey(p, ''));
     } catch (e) {
       setErr(String(e));
     }
@@ -189,7 +189,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
     }
     try {
       setS(
-        await window.crewdeck.settings.saveAgent({
+        await window.zapfleet.settings.saveAgent({
           name: form.name.trim(),
           command: form.command.trim(),
           args: form.args.split(' ').filter(Boolean),
@@ -206,7 +206,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
 
   const removeAgent = async (id: string) => {
     try {
-      setS(await window.crewdeck.settings.removeAgent(id));
+      setS(await window.zapfleet.settings.removeAgent(id));
       onChange();
     } catch (e) {
       setErr(String(e));
@@ -218,7 +218,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
     setBusy(true);
     setResults([]);
     try {
-      setResults(await window.crewdeck.agents.install(picked));
+      setResults(await window.zapfleet.agents.install(picked));
       setPicked([]);
       onChange();
     } catch (e) {
@@ -447,7 +447,7 @@ export function Settings({ open, detections, onClose, onChange, initialTab }: Pr
               <p className="settings-hint">
                 Bring your own keys. They are encrypted with the Windows credential vault and injected as environment
                 variables (e.g. <code>ANTHROPIC_API_KEY</code>) into every agent session, so each CLI picks up the right
-                one automatically. Nothing is sent to crewdeck servers.
+                one automatically. Nothing is sent to zapfleet servers.
               </p>
               <div className="settings-row">
                 <select value={provider} onChange={(e) => setProvider(e.target.value)} aria-label="Provider">

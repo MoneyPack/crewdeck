@@ -1,11 +1,11 @@
 /**
- * `crewdeck-browser` — drive crewdeck's built-in browser pane from any terminal agent.
+ * `zapfleet-browser` — drive zapfleet's built-in browser pane from any terminal agent.
  * Launched by the PTY shims via ELECTRON_RUN_AS_NODE=1.
  */
 import { parseCliArgs } from '../../shared/browser';
 import { BridgeError, formatResult, runCommand } from './bridgeClient';
 
-const USAGE = `usage: crewdeck-browser <command> [args]
+const USAGE = `usage: zapfleet-browser <command> [args]
 
   open <url>                    navigate (aliases: goto, navigate)
   back | forward | reload
@@ -26,7 +26,7 @@ async function main(): Promise<number> {
   }
   const cmd = parseCliArgs(argv);
   if (!cmd) {
-    process.stderr.write(`crewdeck-browser: invalid command: ${argv.join(' ')}\n\n${USAGE}\n`);
+    process.stderr.write(`zapfleet-browser: invalid command: ${argv.join(' ')}\n\n${USAGE}\n`);
     return 2;
   }
   try {
@@ -34,7 +34,7 @@ async function main(): Promise<number> {
     (result.ok ? process.stdout : process.stderr).write(`${formatResult(result)}\n`);
     return result.ok ? 0 : 1;
   } catch (err) {
-    process.stderr.write(`crewdeck-browser: ${err instanceof BridgeError ? err.message : String(err)}\n`);
+    process.stderr.write(`zapfleet-browser: ${err instanceof BridgeError ? err.message : String(err)}\n`);
     return 3;
   }
 }

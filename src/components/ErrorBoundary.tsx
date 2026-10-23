@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!error) return this.props.children;
     return (
       <div role="alert" className="crash">
-        <h2>crewdeck hit an unexpected error</h2>
+        <h2>zapfleet hit an unexpected error</h2>
         <pre>{error.message}</pre>
         <button type="button" onClick={() => window.location.reload()}>
           Reload window

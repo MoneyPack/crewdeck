@@ -1,4 +1,4 @@
--- crewdeck schema, version 1 (baseline).
+-- zapfleet schema, version 1 (baseline).
 --
 -- Applied by electron/services/db.ts as migration #1. Later changes go into
 -- database/migrations/NNN_*.sql and are appended to the migration list; this

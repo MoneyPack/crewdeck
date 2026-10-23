@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-labelledby="title">
+  <title id="title">zapbot</title>
+  <style>
+    .bob { animation: bob 2.4s ease-in-out infinite; }
+    .arm { transform-origin: 70px 52px; animation: wave 1.4s ease-in-out infinite; }
+    .eyes { transform-origin: 50px 51px; animation: blink 3.2s steps(1) infinite; }
+    .ant { transform-origin: 50px 17px; animation: pulse 1.6s ease-in-out infinite; }
+    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @keyframes wave { 0%, 100% { transform: rotate(-28deg); } 50% { transform: rotate(14deg); } }
+    @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+    @keyframes pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; }
+    }
+  </style>
+  <g class="bob">
+    <line x1="50" y1="30" x2="50" y2="22" stroke="#e8e4da" stroke-width="2"/>
+    <polygon class="ant" points="51,11 45,18 49,18 48,23 55,16 51,16" fill="#c6f432"/>
+    <rect x="22" y="30" width="56" height="44" rx="10" fill="#16160f" stroke="#2a2a22" stroke-width="2"/>
+    <rect x="30" y="40" width="40" height="22" rx="5" fill="#0c0c0a"/>
+    <g class="eyes">
+      <circle cx="41" cy="51" r="3.5" fill="#ff4d00"/>
+      <circle cx="59" cy="51" r="3.5" fill="#ff4d00"/>
+    </g>
+    <path d="M43 58 Q50 62 57 58" stroke="#c6f432" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <rect x="12" y="46" width="10" height="16" rx="4" fill="#2a2a22"/>
+    <g class="arm">
+      <rect x="70" y="36" width="10" height="22" rx="4" fill="#2a2a22"/>
+      <circle cx="75" cy="34" r="5" fill="#c6f432"/>
+    </g>
+    <rect x="34" y="74" width="12" height="10" rx="3" fill="#2a2a22"/>
+    <rect x="54" y="74" width="12" height="10" rx="3" fill="#2a2a22"/>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 /**
- * Loopback HTTP bridge that lets agents running inside crewdeck terminals drive the
- * embedded browser (via the `crewdeck-browser` CLI or the `crewdeck-mcp` stdio server).
+ * Loopback HTTP bridge that lets agents running inside zapfleet terminals drive the
+ * embedded browser (via the `zapfleet-browser` CLI or the `zapfleet-mcp` stdio server).
  *
  * Security model:
  *  - binds 127.0.0.1 on a random port; never exposed off-box
@@ -45,7 +45,7 @@ function tokenMatches(expected: Buffer, req: http.IncomingMessage): boolean {
   const auth = req.headers.authorization;
   let presented: string | undefined;
   if (typeof auth === 'string' && auth.startsWith('Bearer ')) presented = auth.slice(7).trim();
-  else if (typeof req.headers['x-crewdeck-token'] === 'string') presented = req.headers['x-crewdeck-token'];
+  else if (typeof req.headers['x-zapfleet-token'] === 'string') presented = req.headers['x-zapfleet-token'];
   if (!presented) return false;
   const got = Buffer.from(presented, 'utf8');
   return got.length === expected.length && timingSafeEqual(got, expected);

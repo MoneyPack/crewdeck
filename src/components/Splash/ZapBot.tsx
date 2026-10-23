@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** Original CrewDeck mascot: a small waving crew-bot. Pure SVG + CSS, no deps. */
+/** Original Zapfleet mascot: a small waving crew-bot. Pure SVG + CSS, no deps. */
 export const CREW_LINES = [
   'Hey, captain. Your crew is waking up.',
   'Four agents. One deck. Zero tab-switching.',
@@ -12,20 +12,20 @@ export const CREW_LINES = [
   'The deck is armed. What are we building today?',
 ];
 
-export function CrewBot({ size = 96, className = '' }: { size?: number; className?: string }) {
+export function ZapBot({ size = 96, className = '' }: { size?: number; className?: string }) {
   return (
-    <svg className={`crewbot ${className}`} width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
+    <svg className={`zapbot ${className}`} width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
       <rect x="22" y="30" width="56" height="44" rx="10" fill="var(--ink-3)" stroke="var(--rule-hi)" strokeWidth="2" />
       <rect x="30" y="40" width="40" height="22" rx="5" fill="var(--ink)" />
-      <g className="crewbot-eyes">
+      <g className="zapbot-eyes">
         <circle cx="41" cy="51" r="3.5" fill="var(--signal)" />
         <circle cx="59" cy="51" r="3.5" fill="var(--signal)" />
       </g>
       <path d="M43 58 Q50 62 57 58" stroke="var(--ok)" strokeWidth="2" fill="none" strokeLinecap="round" />
       <line x1="50" y1="30" x2="50" y2="20" stroke="var(--rule-hi)" strokeWidth="2" />
-      <circle className="crewbot-antenna" cx="50" cy="17" r="4" fill="var(--signal)" />
+      <circle className="zapbot-antenna" cx="50" cy="17" r="4" fill="var(--signal)" />
       <rect x="12" y="46" width="10" height="16" rx="4" fill="var(--ink-4)" />
-      <g className="crewbot-arm">
+      <g className="zapbot-arm">
         <rect x="70" y="36" width="10" height="22" rx="4" fill="var(--ink-4)" />
         <circle cx="75" cy="34" r="5" fill="var(--info)" />
       </g>

@@ -4,20 +4,20 @@ import path from 'node:path';
 import { _electron as electron, expect, type ElectronApplication, type Page } from '@playwright/test';
 
 export async function launch(): Promise<{ app: ElectronApplication; page: Page }> {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-e2e-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-e2e-'));
   const userData = path.join(root, 'userData');
   const project = path.join(root, 'project');
   fs.mkdirSync(userData, { recursive: true });
   fs.mkdirSync(project, { recursive: true });
-  const exe = process.env.CREWDECK_E2E_EXE;
+  const exe = process.env.ZAPFLEET_E2E_EXE;
   const app = await electron.launch({
     ...(exe ? { executablePath: path.resolve(exe), args: [] } : { args: [path.resolve('dist-electron/main.cjs')] }),
-    env: { ...process.env, CREWDECK_USER_DATA: userData, CREWDECK_TEST_PROJECT: project } as Record<string, string>,
+    env: { ...process.env, ZAPFLEET_USER_DATA: userData, ZAPFLEET_TEST_PROJECT: project } as Record<string, string>,
   });
   const page = await app.firstWindow();
   await page.keyboard.press('Escape').catch(() => {});
   await page.locator('[data-testid="splash"]').waitFor({ state: 'detached' });
-  await expect(page.locator('.toolbar .title')).toHaveText('crewdeck');
+  await expect(page.locator('.toolbar .title')).toHaveText('zapfleet');
   return { app, page };
 }
 

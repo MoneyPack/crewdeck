@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const exe = resolve(root, 'release', 'win-unpacked', process.platform === 'win32' ? 'crewdeck.exe' : 'crewdeck');
+const exe = resolve(root, 'release', 'win-unpacked', process.platform === 'win32' ? 'zapfleet.exe' : 'zapfleet');
 const skipBuild = process.argv.includes('--no-build');
 
 function run(cmd, args, env = process.env) {
@@ -25,4 +25,4 @@ if (!existsSync(exe)) {
 }
 
 console.log(`e2e against ${exe}`);
-run('npx', ['playwright', 'test'], { ...process.env, CREWDECK_E2E_EXE: exe });
+run('npx', ['playwright', 'test'], { ...process.env, ZAPFLEET_E2E_EXE: exe });

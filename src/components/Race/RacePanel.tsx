@@ -29,7 +29,7 @@ export function RacePanel({ projectId, task, racers, onKeep, onDrop, onClose }: 
   const [note, setNote] = useState<string | null>(null);
 
   const load = (r: Racer) =>
-    window.crewdeck.git.worktreeDiff(projectId, r.worktree.path).then((d) => setDiffs((p) => ({ ...p, [r.id]: d })));
+    window.zapfleet.git.worktreeDiff(projectId, r.worktree.path).then((d) => setDiffs((p) => ({ ...p, [r.id]: d })));
 
   useEffect(() => {
     racers.forEach((r) => void load(r));

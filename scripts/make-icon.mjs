@@ -1,183 +1,226 @@
-// Generates build/icon.png (512x512 RGBA) with no dependencies.
-// Design: dark rounded tile with three stacked "terminal" cards (the crew deck).
+// Renders the zapfleet brand rasters (icon, ICO, social preview, avatar).
+// No dependencies. Geometry mirrors design/logo.svg on a 128-unit grid.
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
 
-const SIZE = 512;
-const out = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'build', 'icon.png');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const BUILD = join(ROOT, 'build');
+const SS = 4; // supersampling grid per axis for anti-aliasing
 
-const px = new Uint8ClampedArray(SIZE * SIZE * 4);
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const DECK_TOP = hex('#16160f');
+const DECK_BOTTOM = hex('#0c0c0a');
+const INK = hex('#0c0c0a');
+const LIME = hex('#c6f432');
+const ORANGE = hex('#ff4d00');
+const CREAM = hex('#e8e4da');
+
+// Stroke-width 6 round-capped lanes: distance <= 3 is covered.
+const LANES = [
+  [22, 44, 50, 44],
+  [18, 64, 54, 64],
+  [22, 84, 46, 84],
+];
+// Bolt polygon; fill LIME with a 4-wide INK stroke (distance <= 2 to edge).
+const BOLT = [
+  [74, 18], [46, 70], [66, 70], [56, 110], [86, 54], [66, 54], [78, 18],
+];
 
 function inRoundRect(x, y, x0, y0, x1, y1, r) {
   if (x < x0 || x > x1 || y < y0 || y > y1) return false;
-  const cx = x < x0 + r ? x0 + r : x > x1 - r ? x1 - r : x;
-  const cy = y < y0 + r ? y0 + r : y > y1 - r ? y1 - r : y;
-  return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+  const cx = Math.min(Math.max(x, x0 + r), x1 - r);
+  const cy = Math.min(Math.max(y, y0 + r), y1 - r);
+  const dx = x - cx;
+  const dy = y - cy;
+  return dx * dx + dy * dy <= r * r;
 }
 
-// Supersampled coverage (4x4) for smooth edges.
-function coverage(x, y, shape) {
-  let hit = 0;
-  for (let sy = 0; sy < 4; sy++)
-    for (let sx = 0; sx < 4; sx++) if (shape(x + (sx + 0.5) / 4, y + (sy + 0.5) / 4)) hit++;
-  return hit / 16;
+function distToSegment(x, y, ax, ay, bx, by) {
+  const vx = bx - ax;
+  const vy = by - ay;
+  const t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy)));
+  return Math.hypot(ax + t * vx - x, ay + t * vy - y);
 }
 
-function blend(x, y, [r, g, b], a) {
-  if (a <= 0) return;
-  const i = (y * SIZE + x) * 4;
-  const da = px[i + 3] / 255;
-  const oa = a + da * (1 - a);
-  px[i] = (r * a + px[i] * da * (1 - a)) / oa;
-  px[i + 1] = (g * a + px[i + 1] * da * (1 - a)) / oa;
-  px[i + 2] = (b * a + px[i + 2] * da * (1 - a)) / oa;
-  px[i + 3] = oa * 255;
+function distToPolygonEdges(x, y, pts) {
+  let d = Infinity;
+  for (let i = 0; i < pts.length; i++) {
+    const [ax, ay] = pts[i];
+    const [bx, by] = pts[(i + 1) % pts.length];
+    d = Math.min(d, distToSegment(x, y, ax, ay, bx, by));
+  }
+  return d;
 }
 
-function fill(shape, color, bbox = [0, 0, SIZE, SIZE]) {
-  const [bx0, by0, bx1, by1] = bbox.map((v) => Math.max(0, Math.min(SIZE, Math.round(v))));
-  for (let y = by0; y < by1; y++) for (let x = bx0; x < bx1; x++) blend(x, y, color, coverage(x, y, shape));
+// Even-odd ray casting.
+function inPolygon(x, y, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i];
+    const [xj, yj] = pts[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
 }
 
-function rr(x0, y0, x1, y1, r, color) {
-  fill((x, y) => inRoundRect(x, y, x0, y0, x1, y1, r), color, [x0 - 1, y0 - 1, x1 + 1, y1 + 1]);
+const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+
+// Logo color at logo-space (u, v) in 0..128 units; alpha 0 outside the tile.
+function logoSample(u, v) {
+  if (!inRoundRect(u, v, 0, 0, 128, 128, 28)) return [0, 0, 0, 0];
+
+  let c = mix(DECK_TOP, DECK_BOTTOM, v / 128);
+  // Faint inner border (stroke band of 2 units inside the tile edge).
+  if (!inRoundRect(u, v, 2, 2, 126, 126, 26)) c = mix(c, [255, 255, 255], 0.06);
+
+  for (const [x1, y1, x2, y2] of LANES) {
+    if (distToSegment(u, v, x1, y1, x2, y2) <= 3) return [...ORANGE, 1];
+  }
+  if (distToPolygonEdges(u, v, BOLT) <= 2) return [...INK, 1];
+  if (inPolygon(u, v, BOLT)) return [...LIME, 1];
+  return [...c, 1];
 }
 
-// Background tile with vertical gradient.
-const bg = (x, y) => inRoundRect(x, y, 16, 16, SIZE - 16, SIZE - 16, 96);
-for (let y = 0; y < SIZE; y++) {
-  const t = y / SIZE;
-  const c = [Math.round(24 + 10 * t), Math.round(28 + 8 * t), Math.round(44 + 16 * t)];
-  for (let x = 0; x < SIZE; x++) blend(x, y, c, coverage(x, y, bg));
+// Supersamples sample(x, y) over a w x h pixel grid into straight-alpha RGBA.
+function rasterize(w, h, sample) {
+  const out = new Uint8ClampedArray(w * h * 4);
+  const n = SS * SS;
+  for (let py = 0; py < h; py++) {
+    for (let px = 0; px < w; px++) {
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      let a = 0;
+      for (let sy = 0; sy < SS; sy++) {
+        for (let sx = 0; sx < SS; sx++) {
+          const [cr, cg, cb, ca] = sample(px + (sx + 0.5) / SS, py + (sy + 0.5) / SS);
+          r += cr * ca;
+          g += cg * ca;
+          b += cb * ca;
+          a += ca;
+        }
+      }
+      const i = (py * w + px) * 4;
+      if (a > 0) {
+        out[i] = r / a;
+        out[i + 1] = g / a;
+        out[i + 2] = b / a;
+      }
+      out[i + 3] = (a / n) * 255;
+    }
+  }
+  return out;
 }
 
-// Three stacked terminal cards (back to front), one accent per agent.
-const cards = [
-  { dx: 56, dy: -56, accent: [217, 119, 87] }, // Claude-ish orange
-  { dx: 28, dy: -28, accent: [66, 165, 245] }, // Gemini-ish blue
-  { dx: 0, dy: 0, accent: [102, 187, 106] }, // Codex-ish green
+const renderLogo = (size) =>
+  rasterize(size, size, (x, y) => logoSample((x * 128) / size, (y * 128) / size));
+
+// 1280x640 social card: logo on the left, three lane bars on the right.
+const SOCIAL_LOGO_K = 3.2;
+const SOCIAL_LOGO_X = 140;
+const SOCIAL_LOGO_Y = 115;
+const BARS = [
+  [230, 520, ORANGE],
+  [320, 440, LIME],
+  [410, 360, CREAM],
 ];
-const W = 280;
-const H = 220;
-const baseX = 88;
-const baseY = 196;
-for (const { dx, dy, accent } of cards) {
-  const x0 = baseX + dx;
-  const y0 = baseY + dy;
-  rr(x0 - 6, y0 - 6, x0 + W + 6, y0 + H + 6, 30, [16, 18, 28]); // outline/shadow
-  rr(x0, y0, x0 + W, y0 + H, 24, [36, 40, 58]); // body
-  rr(x0, y0, x0 + W, y0 + 44, 24, accent); // title bar
-  rr(x0, y0 + 24, x0 + W, y0 + 44, 0, accent);
+
+function socialSample(x, y) {
+  const logo = logoSample(
+    (x - SOCIAL_LOGO_X) / SOCIAL_LOGO_K,
+    (y - SOCIAL_LOGO_Y) / SOCIAL_LOGO_K,
+  );
+  if (logo[3]) return logo;
+  for (const [yc, len, col] of BARS) {
+    if (inRoundRect(x, y, 640, yc - 14, 640 + len, yc + 14, 14)) return [...col, 1];
+  }
+  return [...mix(DECK_TOP, DECK_BOTTOM, y / 640), 1];
 }
 
-// Prompt glyph on the front card: ">" chevron and a cursor bar.
-const fx = baseX;
-const fy = baseY + 44;
-const chevron = (x, y) => {
-  const cx = fx + 52;
-  const cy = fy + 88;
-  const dxp = x - cx;
-  const dyp = Math.abs(y - cy);
-  return dxp >= 0 && dxp <= 44 && Math.abs(dxp - (44 - dyp)) <= 11 && dyp <= 44;
-};
-fill(chevron, [230, 236, 245], [fx + 40, fy + 36, fx + 110, fy + 140]);
-rr(fx + 124, fy + 110, fx + 204, fy + 130, 6, [230, 236, 245]);
-
-// --- PNG encoding ---
-const crcTable = new Uint32Array(256).map((_, n) => {
+// PNG encoder: RGBA, 8-bit, filter 0 on every scanline.
+const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;
   for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
   return c >>> 0;
 });
+
 function crc32(buf) {
   let c = 0xffffffff;
-  for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
+  for (const b of buf) c = CRC_TABLE[(c ^ b) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;
 }
+
 function chunk(type, data) {
   const len = Buffer.alloc(4);
   len.writeUInt32BE(data.length);
-  const td = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+  const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
   const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(td));
-  return Buffer.concat([len, td, crc]);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([len, body, crc]);
 }
 
-function encodePng(data, size) {
+function encodePng(rgba, w, h) {
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
   ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // RGBA
-  const stride = size * 4;
-  const raw = Buffer.alloc(size * (stride + 1));
-  for (let y = 0; y < size; y++) Buffer.from(data.buffer, y * stride, stride).copy(raw, y * (stride + 1) + 1);
+  ihdr[9] = 6; // color type RGBA
+  const stride = w * 4;
+  const raw = Buffer.alloc((stride + 1) * h);
+  for (let y = 0; y < h; y++) {
+    raw[y * (stride + 1)] = 0; // filter: none
+    raw.set(rgba.subarray(y * stride, (y + 1) * stride), y * (stride + 1) + 1);
+  }
   return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     chunk('IHDR', ihdr),
     chunk('IDAT', deflateSync(raw, { level: 9 })),
     chunk('IEND', Buffer.alloc(0)),
   ]);
 }
 
-// 2x box downsample (premultiplied) for the 256px ICO entry.
-function downsample(src, size) {
-  const h = size / 2;
-  const dst = new Uint8ClampedArray(h * h * 4);
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < h; x++) {
-      let r = 0,
-        g = 0,
-        b = 0,
-        a = 0;
-      for (const [ox, oy] of [
-        [0, 0],
-        [1, 0],
-        [0, 1],
-        [1, 1],
-      ]) {
-        const i = ((2 * y + oy) * size + 2 * x + ox) * 4;
-        const al = src[i + 3];
-        r += src[i] * al;
-        g += src[i + 1] * al;
-        b += src[i + 2] * al;
-        a += al;
-      }
-      const o = (y * h + x) * 4;
-      if (a) {
-        dst[o] = r / a;
-        dst[o + 1] = g / a;
-        dst[o + 2] = b / a;
-      }
-      dst[o + 3] = a / 4;
-    }
-  return dst;
-}
-
-// ICO with a single PNG-compressed 256x256 entry (supported since Windows Vista).
-// Emitted directly so electron-builder skips its own png->ico conversion.
-function encodeIco(png256) {
-  const header = Buffer.alloc(6 + 16);
-  header.writeUInt16LE(0, 0);
+// ICO container with PNG-compressed entries (sizes >= 256 stored as 0).
+function encodeIco(entries) {
+  const header = Buffer.alloc(6);
   header.writeUInt16LE(1, 2); // type: icon
-  header.writeUInt16LE(1, 4); // count
-  header[6] = 0; // width 256
-  header[7] = 0; // height 256
-  header.writeUInt16LE(1, 10); // planes
-  header.writeUInt16LE(32, 12); // bpp
-  header.writeUInt32LE(png256.length, 14);
-  header.writeUInt32LE(22, 18); // offset
-  return Buffer.concat([header, png256]);
+  header.writeUInt16LE(entries.length, 4);
+  const dir = Buffer.alloc(16 * entries.length);
+  let offset = header.length + dir.length;
+  entries.forEach(({ size, png }, i) => {
+    const o = i * 16;
+    dir[o] = size >= 256 ? 0 : size;
+    dir[o + 1] = size >= 256 ? 0 : size;
+    dir.writeUInt16LE(1, o + 4); // planes
+    dir.writeUInt16LE(32, o + 6); // bits per pixel
+    dir.writeUInt32LE(png.length, o + 8);
+    dir.writeUInt32LE(offset, o + 12);
+    offset += png.length;
+  });
+  return Buffer.concat([header, dir, ...entries.map((e) => e.png)]);
 }
 
-const png = encodePng(px, SIZE);
-const ico = encodeIco(encodePng(downsample(px, SIZE), SIZE / 2));
-const icoOut = out.replace(/\.png$/, '.ico');
+function write(name, buf) {
+  const path = join(BUILD, name);
+  writeFileSync(path, buf);
+  console.log(`wrote ${path} (${buf.length} bytes)`);
+}
 
-mkdirSync(dirname(out), { recursive: true });
-writeFileSync(out, png);
-writeFileSync(icoOut, ico);
-console.log(`wrote ${out} (${SIZE}x${SIZE}, ${png.length} bytes)`);
-console.log(`wrote ${icoOut} (256x256, ${ico.length} bytes)`);
+mkdirSync(BUILD, { recursive: true });
+
+const logo512 = renderLogo(512);
+write('icon.png', encodePng(logo512, 512, 512));
+write('zapbot-avatar.png', encodePng(logo512, 512, 512));
+write(
+  'icon.ico',
+  encodeIco(
+    [256, 128, 64, 48, 32, 16].map((size) => ({
+      size,
+      png: encodePng(renderLogo(size), size, size),
+    })),
+  ),
+);
+write('social-preview.png', encodePng(rasterize(1280, 640, socialSample), 1280, 640));

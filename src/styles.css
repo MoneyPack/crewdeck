@@ -1,5 +1,5 @@
 /* =====================================================================
-   crewdeck — hybrid "brutalist cockpit" design system
+   zapfleet — hybrid "brutalist cockpit" design system
    B (brutalist ink/paper/signal, 2px rules, blueprint grid)
  + A (cockpit precision, agent colour telemetry, soft-snap motion)
    ===================================================================== */
@@ -3312,28 +3312,28 @@ kbd {
   animation: splash-fade 600ms var(--glide) 2200ms both;
 }
 
-/* CrewBot mascot (shared by splash + empty state) */
-.crewbot {
+/* ZapBot mascot (shared by splash + empty state) */
+.zapbot {
   display: block;
-  animation: crewbot-bob 2.4s ease-in-out infinite;
+  animation: zapbot-bob 2.4s ease-in-out infinite;
 }
-.crewbot-arm {
+.zapbot-arm {
   transform-origin: 70px 52px;
   transform-box: view-box;
-  animation: crewbot-wave 1.4s ease-in-out infinite;
+  animation: zapbot-wave 1.4s ease-in-out infinite;
 }
-.crewbot-eyes {
+.zapbot-eyes {
   transform-origin: 50px 51px;
   transform-box: view-box;
-  animation: crewbot-blink 3.2s steps(1) infinite;
+  animation: zapbot-blink 3.2s steps(1) infinite;
 }
-.crewbot-antenna {
+.zapbot-antenna {
   animation: splash-pulse 1.6s var(--glide) infinite;
 }
 .crewline {
   animation: splash-fade 400ms var(--glide) both;
 }
-@keyframes crewbot-bob {
+@keyframes zapbot-bob {
   0%,
   100% {
     transform: translateY(0);
@@ -3342,7 +3342,7 @@ kbd {
     transform: translateY(-4px);
   }
 }
-@keyframes crewbot-wave {
+@keyframes zapbot-wave {
   0%,
   100% {
     transform: rotate(0);
@@ -3354,7 +3354,7 @@ kbd {
     transform: rotate(14deg);
   }
 }
-@keyframes crewbot-blink {
+@keyframes zapbot-blink {
   0%,
   92%,
   100% {
@@ -3365,10 +3365,10 @@ kbd {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .crewbot,
-  .crewbot-arm,
-  .crewbot-eyes,
-  .crewbot-antenna,
+  .zapbot,
+  .zapbot-arm,
+  .zapbot-eyes,
+  .zapbot-antenna,
   .crewline {
     animation: none;
   }

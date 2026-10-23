@@ -23,7 +23,7 @@ export function registerProjectIpc(): void {
   ipcMain.handle(ProjectChannels.preset, (_e, projectPath: unknown): ProjectPreset | null => {
     if (typeof projectPath !== 'string' || !isDirectory(projectPath)) return null;
     try {
-      const raw: unknown = JSON.parse(fs.readFileSync(path.join(projectPath, '.crewdeck.json'), 'utf8'));
+      const raw: unknown = JSON.parse(fs.readFileSync(path.join(projectPath, '.zapfleet.json'), 'utf8'));
       if (!raw || typeof raw !== 'object') return null;
       const r = raw as { agents?: unknown; layout?: unknown };
       const agents = Array.isArray(r.agents)
@@ -41,7 +41,7 @@ export function registerProjectIpc(): void {
     const win = BrowserWindow.fromWebContents(e.sender);
     let selected: string | undefined;
     // Test hook: native dialogs can't be driven over CDP. Only honoured for an existing folder.
-    const testPath = process.env.CREWDECK_TEST_PROJECT;
+    const testPath = process.env.ZAPFLEET_TEST_PROJECT;
     if (testPath && isDirectory(testPath)) {
       selected = path.resolve(testPath);
     } else {
@@ -56,7 +56,7 @@ export function registerProjectIpc(): void {
     if (!selected) return null;
     const name = path.basename(selected) || selected;
     const row = getDatabase().openProject(selected, name);
-    win?.setTitle(`crewdeck — ${row.name}`);
+    win?.setTitle(`zapfleet — ${row.name}`);
     return { id: row.id, path: row.path, name: row.name };
   });
 
@@ -86,7 +86,7 @@ export function registerProjectIpc(): void {
         });
     const layout = parseLayout(row.layout, new Set(terminals.map((t) => t.id)));
 
-    BrowserWindow.fromWebContents(e.sender)?.setTitle(`crewdeck — ${row.name}`);
+    BrowserWindow.fromWebContents(e.sender)?.setTitle(`zapfleet — ${row.name}`);
     return { project: { id: row.id, path: row.path, name: row.name }, layout, terminals };
   });
 

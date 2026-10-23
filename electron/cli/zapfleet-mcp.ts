@@ -1,5 +1,5 @@
 /**
- * `crewdeck-mcp` — stdio MCP server exposing crewdeck's browser pane as tools.
+ * `zapfleet-mcp` — stdio MCP server exposing zapfleet's browser pane as tools.
  * stdout is the protocol channel: never write logs to it.
  */
 import fs from 'node:fs/promises';
@@ -26,11 +26,11 @@ async function exec(command: BrowserCommand, withImage = false): Promise<{ conte
 }
 
 const ref = z.string().describe('element ref from a snapshot, e.g. @e3');
-const server = new McpServer({ name: 'crewdeck-browser', version: '1.0.0' });
+const server = new McpServer({ name: 'zapfleet-browser', version: '1.0.0' });
 
 server.registerTool(
   'browser_open',
-  { description: 'Navigate the crewdeck browser pane to a URL.', inputSchema: { url: z.string() } },
+  { description: 'Navigate the zapfleet browser pane to a URL.', inputSchema: { url: z.string() } },
   ({ url }) => exec({ action: 'open', url }),
 );
 for (const action of ['back', 'forward', 'reload', 'status'] as const) {
@@ -107,6 +107,6 @@ server.registerTool(
 );
 
 void server.connect(new StdioServerTransport()).catch((err: unknown) => {
-  process.stderr.write(`crewdeck-mcp: ${String(err)}\n`);
+  process.stderr.write(`zapfleet-mcp: ${String(err)}\n`);
   process.exitCode = 1;
 });

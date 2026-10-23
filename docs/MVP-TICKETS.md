@@ -1,4 +1,4 @@
-# crewdeck — 6-Week MVP Tickets
+# zapfleet — 6-Week MVP Tickets
 
 Scope: one project, N terminals running 2–3 agent CLIs, session persistence (Windows/ConPTY),
 `@mention` routing between terminals, git diff view. Everything else is post-MVP.
@@ -60,7 +60,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 - **CD-17 Routing log** (1d)
   AC: side panel lists every routed message (from, to, time, preview); persisted in SQLite.
 
-> **Week 4 status: done.** Parser unit-tested; composer, selection forward (ANSI stripped, >4 KB → 0600 temp file under `%TEMP%/crewdeck`) and routing log (schema v2 migration `002_routing_log.sql`, FK cascade, CHECK guards) verified by `npm run smoke` (round-trip, newest-first ordering, limit, per-project scoping, input normalisation, cascade delete).
+> **Week 4 status: done.** Parser unit-tested; composer, selection forward (ANSI stripped, >4 KB → 0600 temp file under `%TEMP%/zapfleet`) and routing log (schema v2 migration `002_routing_log.sql`, FK cascade, CHECK guards) verified by `npm run smoke` (round-trip, newest-first ordering, limit, per-project scoping, input normalisation, cascade delete).
 > Known limitations: temp files are not garbage-collected; routing log shows the latest 200 entries per project.
 
 ## Week 5 — Git diff view
@@ -90,12 +90,12 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 - **CD-26 Buffer / docs** (0.5d)
   AC: README with setup, known limitations, post-MVP backlog.
 
-> **Week 6 status: done.** Size-rotating main-process log (`userData/logs/main.log`, 1 MB × 3) plus actionable PTY spawn-failure messages in the pane; PTY output batched per animation frame; unit tests (`npm test`, 27/27: mention parser, DB layer, git parser, routing log); Playwright-for-Electron smoke (launch → spawn shell → echo round-trip) passes against both the dev build and the packaged `release/win-unpacked/crewdeck.exe` (`CREWDECK_E2E_EXE`); `npm run dist` produces the NSIS x64 installer, with node-pty/better-sqlite3 loaded from `app.asar.unpacked`; README covers setup, scripts, env hooks, limitations and the post-MVP backlog.
+> **Week 6 status: done.** Size-rotating main-process log (`userData/logs/main.log`, 1 MB × 3) plus actionable PTY spawn-failure messages in the pane; PTY output batched per animation frame; unit tests (`npm test`, 27/27: mention parser, DB layer, git parser, routing log); Playwright-for-Electron smoke (launch → spawn shell → echo round-trip) passes against both the dev build and the packaged `release/win-unpacked/zapfleet.exe` (`ZAPFLEET_E2E_EXE`); `npm run dist` produces the NSIS x64 installer, with node-pty/better-sqlite3 loaded from `app.asar.unpacked`; README covers setup, scripts, env hooks, limitations and the post-MVP backlog.
 > Known limitations: the installer is unsigned (a generated placeholder icon is in `build/`); no auto-update/publish target; native modules are not rebuilt by electron-builder (N-API prebuilds are used because `electron-rebuild` of node-pty needs Spectre libs, MSB8040); e2e requires a build first (`test:e2e` / `test:e2e:dist` handle this); the "clean machine" install was verified via the unpacked exe on the dev box, not on a fresh VM.
 
 ---
 
-## Overseer — CREWDECK's built-in AI helper
+## Overseer — ZAPFLEET's built-in AI helper
 
 > All Overseer work sits behind the `overseer.enabled` flag (off by default). Provider: Claude (`@anthropic-ai/sdk`). Every writing run gets its own worktree/branch and merges only after diff review. Push and release always require explicit approval.
 
@@ -166,7 +166,7 @@ Each ticket: ID, title, acceptance criteria (AC), estimate (d = dev-days).
 
 - **CD-46 Per-run bridge tokens** (0.5d)
   AC: each run gets its own short-lived bridge token scoped to its allowed tools; revoked when the run ends.
-- **CD-47 Extend `crewdeck-mcp`** (1d)
+- **CD-47 Extend `zapfleet-mcp`** (1d)
   AC: MCP server exposes Overseer tools (not only the browser), still subject to policy and approvals.
 - **CD-48 CliRuntime** (2d)
   AC: runs can use claude/codex/gemini CLIs over MCP (per CD-28 findings); marked "partially governed"; no `git-remote` or `release` rights.

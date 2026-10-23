@@ -31,7 +31,7 @@ export function useGitAttribution(
   useEffect(() => {
     setAttributions({});
     if (!projectId) return;
-    const api = window.crewdeck.git;
+    const api = window.zapfleet.git;
     let disposed = false;
     let baseline: Map<string, string> | null = null;
     let inFlight = false;

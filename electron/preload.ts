@@ -7,7 +7,7 @@ import {
   ProjectChannels,
   RoutingChannels,
   TerminalChannels,
-  type CrewdeckApi,
+  type ZapfleetApi,
   type GitChangedEvent,
   type TerminalCreateResponse,
   type TerminalDataEvent,
@@ -16,7 +16,7 @@ import {
 } from '../shared/ipc';
 import type { BrowserState } from '../shared/browser';
 
-const api: CrewdeckApi = {
+const api: ZapfleetApi = {
   platform: process.platform,
   terminal: {
     create: async (options) => {
@@ -103,4 +103,4 @@ const api: CrewdeckApi = {
   },
 };
 
-contextBridge.exposeInMainWorld('crewdeck', api);
+contextBridge.exposeInMainWorld('zapfleet', api);

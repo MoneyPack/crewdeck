@@ -311,11 +311,11 @@ export async function gitDiscard(root: string, rel: string, untracked: boolean):
 }
 
 const WORKTREE_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
-export const WORKTREE_BRANCH_PREFIX = 'crewdeck/';
+export const WORKTREE_BRANCH_PREFIX = 'zapfleet/';
 
-/** Directory holding all crewdeck worktrees for the repo at `root`: `<root>/../.crewdeck-worktrees/<name>`. */
+/** Directory holding all zapfleet worktrees for the repo at `root`: `<root>/../.zapfleet-worktrees/<name>`. */
 export function worktreesBase(root: string): string {
-  return path.join(path.dirname(root), '.crewdeck-worktrees', path.basename(root));
+  return path.join(path.dirname(root), '.zapfleet-worktrees', path.basename(root));
 }
 
 /** True when `p` is strictly inside `base` (case-insensitive on Windows). */
@@ -326,7 +326,7 @@ function isInside(base: string, p: string): boolean {
 }
 
 /**
- * Creates a worktree for one tab on a fresh `crewdeck/<agent>-<shortid>` branch based on HEAD.
+ * Creates a worktree for one tab on a fresh `zapfleet/<agent>-<shortid>` branch based on HEAD.
  * `dir` is any path inside the repository.
  */
 export async function worktreeAdd(
@@ -350,12 +350,12 @@ export async function worktreeAdd(
 
 export type WorktreeRemoveOutcome = { removed: true } | { removed: false; reason: string; needsForce: boolean };
 
-/** Resolves + validates a crewdeck worktree path for `dir`'s repo. */
+/** Resolves + validates a zapfleet worktree path for `dir`'s repo. */
 async function crewWorktree(dir: string, worktreePath: unknown): Promise<{ root: string; target: string }> {
   const root = await repoRoot(dir);
   if (!root) throw new GitError('not a git repository', null, '');
   if (typeof worktreePath !== 'string' || !isInside(worktreesBase(root), worktreePath))
-    throw new GitError('not a crewdeck worktree', null, '');
+    throw new GitError('not a zapfleet worktree', null, '');
   return { root, target: path.resolve(worktreePath) };
 }
 
@@ -409,7 +409,7 @@ export async function worktreeKeep(dir: string, worktreePath: string, message: s
   const dirty = await runGit(root, ['status', '--porcelain=v1', '--untracked-files=no']);
   if (dirty.stdout.trim()) throw new GitError('main checkout has uncommitted changes; commit or stash first', null, '');
   const branch = (await runGit(target, ['rev-parse', '--abbrev-ref', 'HEAD'])).stdout.trim();
-  if (!branch.startsWith(WORKTREE_BRANCH_PREFIX)) throw new GitError('worktree is not on a crewdeck branch', null, '');
+  if (!branch.startsWith(WORKTREE_BRANCH_PREFIX)) throw new GitError('worktree is not on a zapfleet branch', null, '');
   const wip = await runGit(target, ['status', '--porcelain=v1', '--untracked-files=all']);
   if (wip.stdout.trim()) {
     await runGit(target, ['add', '-A'], [0], { write: true });
@@ -417,13 +417,13 @@ export async function worktreeKeep(dir: string, worktreePath: string, message: s
       target,
       [
         '-c',
-        'user.name=crewdeck',
+        'user.name=zapfleet',
         '-c',
-        'user.email=crewdeck@local',
+        'user.email=zapfleet@local',
         'commit',
         '-q',
         '-m',
-        message.slice(0, 200) || 'crewdeck: race result',
+        message.slice(0, 200) || 'zapfleet: race result',
       ],
       [0],
       { write: true },
@@ -438,7 +438,7 @@ export async function worktreeKeep(dir: string, worktreePath: string, message: s
 }
 
 /**
- * Removes a crewdeck worktree and deletes its `crewdeck/*` branch. Without `force`, refuses when the
+ * Removes a zapfleet worktree and deletes its `zapfleet/*` branch. Without `force`, refuses when the
  * worktree has uncommitted changes or its branch is not merged into the main checkout's HEAD.
  */
 export async function worktreeRemove(
@@ -450,7 +450,7 @@ export async function worktreeRemove(
   if (!root) throw new GitError('not a git repository', null, '');
   const base = worktreesBase(root);
   if (typeof worktreePath !== 'string' || !isInside(base, worktreePath))
-    throw new GitError('not a crewdeck worktree', null, '');
+    throw new GitError('not a zapfleet worktree', null, '');
   const target = path.resolve(worktreePath);
 
   let branch: string | null = null;

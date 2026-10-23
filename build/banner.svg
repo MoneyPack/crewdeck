@@ -1,33 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220" role="img" aria-labelledby="title desc">
+  <title id="title">zapfleet</title>
+  <desc id="desc">zapfleet: a fleet of coding agents side by side. Claude, Codex and Gemini lanes.</desc>
   <style>
-    .arm{transform-origin:690px 112px;animation:wave 1.4s ease-in-out infinite}
-    .eyes{transform-origin:670px 111px;animation:blink 3.2s steps(1) infinite}
-    .scan{animation:scan 3s linear infinite}
-    .lane{stroke-dasharray:140;stroke-dashoffset:140;animation:fill 1.2s cubic-bezier(.7,0,.2,1) forwards}
-    @keyframes wave{0%,100%{transform:rotate(0)}30%{transform:rotate(-28deg)}60%{transform:rotate(14deg)}}
-    @keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
-    @keyframes scan{from{transform:translateY(-40px)}to{transform:translateY(260px)}}
-    @keyframes fill{to{stroke-dashoffset:0}}
-    @media (prefers-reduced-motion:reduce){*{animation:none!important;stroke-dashoffset:0!important}}
+    .lane { stroke-dasharray: 140; stroke-dashoffset: 140; animation: run 1.2s cubic-bezier(.7,0,.2,1) forwards; }
+    .l1 { animation-delay: .1s; }
+    .l2 { animation-delay: .2s; }
+    .l3 { animation-delay: .3s; }
+    .arm { transform-origin: 722px 102px; animation: wave 2.4s ease-in-out infinite; }
+    .eyes { transform-origin: 675px 100px; animation: blink 3s steps(1) infinite; }
+    .scan { animation: scan 3s linear infinite; }
+    @keyframes run { to { stroke-dashoffset: 0; } }
+    @keyframes wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-14deg); } }
+    @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+    @keyframes scan { from { transform: translateY(0); } to { transform: translateY(220px); } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; stroke-dashoffset: 0 !important; }
+    }
   </style>
   <rect width="800" height="220" rx="14" fill="#0c0c0a"/>
-  <rect class="scan" width="800" height="2" fill="#ff4d00" opacity=".35"/>
-  <text x="40" y="96" font-family="Archivo, Inter, 'Segoe UI', sans-serif" font-weight="800" font-size="72" letter-spacing="4" fill="#e8e4da">CREW<tspan fill="#ff4d00">D</tspan>ECK</text>
-  <text x="42" y="126" font-family="Consolas, 'JetBrains Mono', monospace" font-size="13" letter-spacing="4" fill="#9c978b">CODING-AGENT CLIS, SIDE BY SIDE. ONE WINDOWS APP.</text>
-  <g font-family="Consolas, 'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#9c978b">
-    <text x="42" y="162">CLAUDE</text>  <line class="lane" x1="120" y1="158" x2="260" y2="158" stroke="#ff8a4c" stroke-width="2" style="animation-delay:.1s"/>
-    <text x="42" y="182">CODEX</text>   <line class="lane" x1="120" y1="178" x2="260" y2="178" stroke="#3fe0ff" stroke-width="2" style="animation-delay:.3s"/>
-    <text x="300" y="162">GEMINI</text> <line class="lane" x1="378" y1="158" x2="518" y2="158" stroke="#b69cff" stroke-width="2" style="animation-delay:.5s"/>
-    <text x="300" y="182">OPENCODE</text><line class="lane" x1="378" y1="178" x2="518" y2="178" stroke="#c6f432" stroke-width="2" style="animation-delay:.7s"/>
+  <rect x="1" y="1" width="798" height="218" rx="13" fill="none" stroke="#2a2a22" stroke-width="2"/>
+  <rect class="scan" x="0" y="0" width="800" height="2" fill="#c6f432" opacity=".08"/>
+
+  <text x="40" y="96" font-family="Archivo, Inter, 'Segoe UI', sans-serif" font-weight="800" font-size="72" letter-spacing="4" fill="#f4f1ea"><tspan fill="#c6f432">ZAP</tspan>FLEET</text>
+  <text x="42" y="126" font-family="Consolas, 'JetBrains Mono', monospace" font-size="13" letter-spacing="4" fill="#e8e4da" opacity=".75">A FLEET OF CODING AGENTS, SIDE BY SIDE. ONE WINDOWS APP.</text>
+
+  <g font-family="Consolas, 'JetBrains Mono', monospace" font-size="11" letter-spacing="2">
+    <text x="42" y="162" fill="#ff4d00">CLAUDE</text>
+    <text x="42" y="182" fill="#c6f432">CODEX</text>
+    <text x="42" y="202" fill="#e8e4da">GEMINI</text>
   </g>
-  <g transform="translate(600,50) scale(1.4)">
-    <rect x="22" y="30" width="56" height="44" rx="10" fill="#1d1d1a" stroke="#45433c" stroke-width="2"/>
-    <rect x="30" y="40" width="40" height="22" rx="5" fill="#0c0c0a"/>
-    <g class="eyes" style="transform-origin:50px 51px"><circle cx="41" cy="51" r="3.5" fill="#ff4d00"/><circle cx="59" cy="51" r="3.5" fill="#ff4d00"/></g>
-    <path d="M43 58 Q50 62 57 58" stroke="#c6f432" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <line x1="50" y1="30" x2="50" y2="20" stroke="#45433c" stroke-width="2"/><circle cx="50" cy="17" r="4" fill="#ff4d00"/>
-    <rect x="12" y="46" width="10" height="16" rx="4" fill="#262622"/>
-    <g class="arm" style="transform-origin:70px 52px"><rect x="70" y="36" width="10" height="22" rx="4" fill="#262622"/><circle cx="75" cy="34" r="5" fill="#3fe0ff"/></g>
-    <rect x="34" y="74" width="12" height="10" rx="3" fill="#262622"/><rect x="54" y="74" width="12" height="10" rx="3" fill="#262622"/>
+  <line class="lane l1" x1="120" y1="158" x2="260" y2="158" stroke="#ff4d00" stroke-width="3" stroke-linecap="round"/>
+  <line class="lane l2" x1="120" y1="178" x2="260" y2="178" stroke="#c6f432" stroke-width="3" stroke-linecap="round"/>
+  <line class="lane l3" x1="120" y1="198" x2="260" y2="198" stroke="#e8e4da" stroke-width="3" stroke-linecap="round"/>
+
+  <g>
+    <rect x="640" y="70" width="90" height="62" rx="14" fill="#16160f" stroke="#2a2a22" stroke-width="2"/>
+    <g class="eyes">
+      <circle cx="662" cy="100" r="5" fill="#ff4d00"/>
+      <circle cx="690" cy="100" r="5" fill="#ff4d00"/>
+    </g>
+    <path d="M664 116 Q676 122 688 116" stroke="#c6f432" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <line x1="676" y1="70" x2="676" y2="54" stroke="#e8e4da" stroke-width="2"/>
+    <polygon points="679,46 671,56 676,56 673,62 682,52 677,52" fill="#c6f432"/>
+    <g class="arm">
+      <rect x="722" y="96" width="12" height="30" rx="5" fill="#2a2a22"/>
+      <circle cx="728" cy="94" r="5" fill="#c6f432"/>
+    </g>
   </g>
 </svg>

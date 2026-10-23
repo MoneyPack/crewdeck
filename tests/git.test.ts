@@ -143,7 +143,7 @@ function hasGit(): boolean {
 }
 
 test('gitStatus/gitStage/gitDiff against a real repo', { skip: !hasGit() && 'git not installed' }, async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-git-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-git-'));
   try {
     const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, stdio: 'pipe' });
     git('init', '-q', '-b', 'main');
@@ -195,8 +195,8 @@ test(
   'worktreeAdd/worktreeRemove lifecycle against a real repo',
   { skip: !hasGit() && 'git not installed' },
   async () => {
-    // Parent dir holds both the repo and its sibling .crewdeck-worktrees folder, so one rm cleans all.
-    const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-wt-'));
+    // Parent dir holds both the repo and its sibling .zapfleet-worktrees folder, so one rm cleans all.
+    const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-wt-'));
     const dir = path.join(parent, 'proj');
     fs.mkdirSync(dir);
     try {
@@ -221,7 +221,7 @@ test(
       // Clean worktree: add then remove without force, branch deleted.
       const wt = await worktreeAdd(dir, 'tab1', 'Claude');
       assert.equal(wt.path, path.join(base, 'tab1'));
-      assert.match(wt.branch, /^crewdeck\/claude-[0-9a-f]{6}$/);
+      assert.match(wt.branch, /^zapfleet\/claude-[0-9a-f]{6}$/);
       assert.ok(fs.existsSync(path.join(wt.path, 'a.txt')));
       assert.equal(git(wt.path, 'rev-parse', '--abbrev-ref', 'HEAD').trim(), wt.branch);
       await assert.rejects(worktreeAdd(dir, 'tab1', 'claude'), /already exists/);
@@ -255,9 +255,9 @@ test(
       assert.deepEqual(await worktreeRemove(dir, gone.path, false), { removed: true });
       assert.doesNotMatch(git(root, 'worktree', 'list', '--porcelain'), /tab4/);
 
-      // Paths outside the crewdeck base are never touched.
+      // Paths outside the zapfleet base are never touched.
       for (const bad of [root, base, path.join(base, '..', 'other', 'x'), path.join(parent, 'elsewhere')]) {
-        await assert.rejects(worktreeRemove(dir, bad, true), /not a crewdeck worktree/, bad);
+        await assert.rejects(worktreeRemove(dir, bad, true), /not a zapfleet worktree/, bad);
       }
       assert.ok(fs.existsSync(path.join(root, 'a.txt')));
     } finally {

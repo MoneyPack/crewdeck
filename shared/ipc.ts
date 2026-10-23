@@ -53,7 +53,7 @@ export interface TerminalExitEvent {
 
 export type Unsubscribe = () => void;
 
-export interface CrewdeckTerminalApi {
+export interface ZapfleetTerminalApi {
   create(options?: TerminalCreateOptions): Promise<TerminalCreateResult>;
   write(id: string, data: string): void;
   resize(id: string, cols: number, rows: number): void;
@@ -92,7 +92,7 @@ export const ProjectChannels = {
   preset: 'project:preset',
 } as const;
 
-/** `.crewdeck.json` in a project root: agents to open when the project has no saved terminals. */
+/** `.zapfleet.json` in a project root: agents to open when the project has no saved terminals. */
 export interface ProjectPreset {
   /** Agent profile ids (built-in or custom), e.g. ["claude", "codex", "shell"]. */
   agents: string[];
@@ -100,7 +100,7 @@ export interface ProjectPreset {
   layout?: number;
 }
 
-export interface CrewdeckAgentsApi {
+export interface ZapfleetAgentsApi {
   /** Detects which built-in agent CLIs are installed. Cached in main after the first call unless `refresh`. */
   detect(refresh?: boolean): Promise<AgentDetection[]>;
   install(ids: string[]): Promise<AgentInstallResult[]>;
@@ -137,7 +137,7 @@ export interface PersistedTerminal {
 export interface WorktreeInfo {
   /** Absolute worktree path. */
   path: string;
-  /** Branch checked out in the worktree, e.g. `crewdeck/claude-1a2b3c`. */
+  /** Branch checked out in the worktree, e.g. `zapfleet/claude-1a2b3c`. */
   branch: string;
 }
 
@@ -147,14 +147,14 @@ export interface RestoreResult {
   terminals: PersistedTerminal[];
 }
 
-export interface CrewdeckProjectApi {
+export interface ZapfleetProjectApi {
   /** Opens a folder picker. Resolves null if the user cancels. */
   select(): Promise<ProjectInfo | null>;
   /** Returns the most recently opened project with its terminals and layout, or null. */
   restore(): Promise<RestoreResult | null>;
   saveLayout(projectId: string, layout: PersistedLayout): Promise<void>;
   saveTerminals(projectId: string, terminals: PersistedTerminal[]): Promise<void>;
-  /** Reads and validates `<projectPath>/.crewdeck.json`; null when absent or invalid. */
+  /** Reads and validates `<projectPath>/.zapfleet.json`; null when absent or invalid. */
   preset(projectPath: string): Promise<ProjectPreset | null>;
 }
 
@@ -191,7 +191,7 @@ export interface RouteLogInput {
   viaFile?: boolean;
 }
 
-export interface CrewdeckRoutingApi {
+export interface ZapfleetRoutingApi {
   /** Writes a large forward payload to a temp file; resolves its absolute path. */
   writeTemp(text: string): Promise<string>;
   /** Records a routed message. Resolves the stored entry, or null if the input was rejected. */
@@ -282,7 +282,7 @@ export interface GitChangedEvent {
   projectId: string;
 }
 
-export interface CrewdeckGitApi {
+export interface ZapfleetGitApi {
   /** Never rejects; non-repo projects resolve `{ isRepo: false }`. */
   status(projectId: string): Promise<GitStatus>;
   /** Resolves null on invalid input or git failure. */
@@ -295,9 +295,9 @@ export interface CrewdeckGitApi {
   unstage(projectId: string, path: string, oldPath?: string): Promise<GitActionResult>;
   /** Irreversible. `untracked` deletes the file; otherwise restores it from the index. */
   discard(projectId: string, path: string, untracked: boolean): Promise<GitActionResult>;
-  /** Creates `<project>/../.crewdeck-worktrees/<project>/<tabId>` on a new `crewdeck/<agent>-<shortid>` branch. */
+  /** Creates `<project>/../.zapfleet-worktrees/<project>/<tabId>` on a new `zapfleet/<agent>-<shortid>` branch. */
   worktreeAdd(projectId: string, tabId: string, agentId: string): Promise<WorktreeAddResult>;
-  /** Removes a crewdeck worktree and its branch. Refuses dirty/unmerged work unless `force`. */
+  /** Removes a zapfleet worktree and its branch. Refuses dirty/unmerged work unless `force`. */
   worktreeRemove(projectId: string, worktreePath: string, force: boolean): Promise<WorktreeRemoveResult>;
   /** Full patch of everything a worktree changed vs the main checkout's HEAD (Diff Race). */
   worktreeDiff(projectId: string, worktreePath: string): Promise<WorktreeDiffResult | { error: string }>;
@@ -328,7 +328,7 @@ export interface BrowserBridgeInfo {
   mcpPath: string;
 }
 
-export interface CrewdeckBrowserApi {
+export interface ZapfleetBrowserApi {
   /** Runs a browser command (validated in main). `projectId` attributes the routing-log entry. */
   run(command: unknown, projectId: string | null): Promise<BrowserResult>;
   /** Positions the native view in window content coordinates (CSS px at zoom 1 == DIP). */
@@ -390,7 +390,7 @@ export const SettingsChannels = {
   removeAgent: 'settings:removeAgent',
 } as const;
 
-export interface CrewdeckSettingsApi {
+export interface ZapfleetSettingsApi {
   get(): Promise<AppSettings>;
   update(patch: Partial<AppSettings>): Promise<AppSettings>;
   listKeys(): Promise<ProviderKeyInfo[]>;
@@ -399,13 +399,13 @@ export interface CrewdeckSettingsApi {
   removeAgent(id: string): Promise<AppSettings>;
 }
 
-export interface CrewdeckApi {
-  terminal: CrewdeckTerminalApi;
-  agents: CrewdeckAgentsApi;
-  settings: CrewdeckSettingsApi;
-  project: CrewdeckProjectApi;
-  routing: CrewdeckRoutingApi;
-  git: CrewdeckGitApi;
-  browser: CrewdeckBrowserApi;
+export interface ZapfleetApi {
+  terminal: ZapfleetTerminalApi;
+  agents: ZapfleetAgentsApi;
+  settings: ZapfleetSettingsApi;
+  project: ZapfleetProjectApi;
+  routing: ZapfleetRoutingApi;
+  git: ZapfleetGitApi;
+  browser: ZapfleetBrowserApi;
   platform: string;
 }

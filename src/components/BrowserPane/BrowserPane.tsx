@@ -38,7 +38,7 @@ function formatResult(r: BrowserResult): string {
 }
 
 export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = null, onUrlChange }: Props) {
-  const api = window.crewdeck.browser;
+  const api = window.zapfleet.browser;
   const viewportRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<BrowserState>(EMPTY_STATE);
   const [address, setAddress] = useState('');
@@ -299,7 +299,7 @@ export function BrowserPane({ projectId, onClose, hidden = false, initialUrl = n
           <div className="browser-empty">
             <strong>No page</strong>
             <span>
-              Type a URL above, or let an agent drive it with <code>crewdeck-browser open &lt;url&gt;</code>.
+              Type a URL above, or let an agent drive it with <code>zapfleet-browser open &lt;url&gt;</code>.
             </span>
           </div>
         )}

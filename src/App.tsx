@@ -15,7 +15,7 @@ import { mentionHandles, type MentionTarget } from '../shared/mention';
 import { INLINE_FORWARD_LIMIT, stripAnsi, utf8Length } from '../shared/ansi';
 import { AGENT_PROFILES, getProfile, type AgentDetection, type AgentId, type AgentProfile } from '../shared/agents';
 import { Splash } from './components/Splash/Splash';
-import { CrewBot, CrewLine } from './components/Splash/CrewBot';
+import { ZapBot, CrewLine } from './components/Splash/ZapBot';
 import { Inbox } from './components/Inbox/Inbox';
 import { RaceDialog } from './components/Race/RaceDialog';
 import { RacePanel } from './components/Race/RacePanel';
@@ -104,13 +104,13 @@ const SUBMIT_DELAY_MS = 40;
 
 /** Types `message` into a PTY and submits it. Multi-line text goes in as a bracketed paste. */
 function submitToPty(ptyId: string, message: string) {
-  const api = window.crewdeck.terminal;
+  const api = window.zapfleet.terminal;
   const body = message.includes('\n') ? `\x1b[200~${message.replace(/\r?\n/g, '\r')}\x1b[201~` : message;
   api.write(ptyId, body);
   setTimeout(() => api.write(ptyId, '\r'), SUBMIT_DELAY_MS);
 }
 
-const IS_MAC = window.crewdeck.platform === 'darwin';
+const IS_MAC = window.zapfleet.platform === 'darwin';
 
 /** Primary key combo for an action (used for inline key-cap hints). */
 function comboFor(action: ShortcutAction): Combo {
@@ -139,7 +139,7 @@ export function App() {
   const [customProfiles, setCustomProfiles] = useState<AgentProfile[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   useEffect(() => {
-    window.crewdeck.settings
+    window.zapfleet.settings
       .get()
       .then((s) => {
         setAppSettings(s);
@@ -151,7 +151,7 @@ export function App() {
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [showTip, setShowTip] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('crewdeck.onboarded') !== '1';
+      return localStorage.getItem('zapfleet.onboarded') !== '1';
     } catch {
       return false;
     }
@@ -159,7 +159,7 @@ export function App() {
   const dismissTip = () => {
     setShowTip(false);
     try {
-      localStorage.setItem('crewdeck.onboarded', '1');
+      localStorage.setItem('zapfleet.onboarded', '1');
     } catch {
       /* ignore */
     }
@@ -197,7 +197,7 @@ export function App() {
     setRouteLog([]);
     if (!projectId) return;
     let cancelled = false;
-    window.crewdeck.routing
+    window.zapfleet.routing
       .list(projectId)
       .then((entries) => {
         if (!cancelled) setRouteLog(entries);
@@ -212,7 +212,7 @@ export function App() {
   const recordRoute = useCallback((input: RouteLogInput) => {
     const id = projectIdRef.current;
     if (!id) return;
-    window.crewdeck.routing
+    window.zapfleet.routing
       .log(id, input)
       .then((entry) => {
         // Drop the result if the user switched projects while the write was in flight.
@@ -225,7 +225,7 @@ export function App() {
   // Main-process writes (agent browser actions) arrive live; dedupe against local optimistic inserts.
   useEffect(
     () =>
-      window.crewdeck.routing.onAppended((entry) => {
+      window.zapfleet.routing.onAppended((entry) => {
         if (entry.projectId !== projectIdRef.current) return;
         setRouteLog((prev) => (prev.some((p) => p.id === entry.id) ? prev : [entry, ...prev]));
       }),
@@ -334,7 +334,7 @@ export function App() {
         return;
       }
       try {
-        const path = await window.crewdeck.routing.writeTemp(clean);
+        const path = await window.zapfleet.routing.writeTemp(clean);
         submitToPty(ptyId, `Read the output from "${fromTitle}" saved in ${path}`);
         log(true);
       } catch (err) {
@@ -345,7 +345,7 @@ export function App() {
   );
 
   const refreshAgents = useCallback((refresh: boolean) => {
-    window.crewdeck.agents
+    window.zapfleet.agents
       .detect(refresh)
       .then(setDetections)
       .catch(() => setDetections([]));
@@ -378,7 +378,7 @@ export function App() {
     if (!detections || restoreStarted.current) return;
     restoreStarted.current = true;
     const dets = detections;
-    window.crewdeck.project
+    window.zapfleet.project
       .restore()
       .then((r) => {
         if (r) applyRestore(r, dets);
@@ -386,7 +386,7 @@ export function App() {
       .catch((err: unknown) => console.error('restore failed', err))
       .finally(() => {
         setReady(true);
-        window.crewdeck.settings
+        window.zapfleet.settings
           .get()
           .then((s) => {
             if (s.startup === 'palette') setPaletteOpen(true);
@@ -421,7 +421,7 @@ export function App() {
     const p = project;
     const payload = toPersisted(terminals, p.path);
     return scheduleSave('terminals', () => {
-      window.crewdeck.project.saveTerminals(p.id, payload).catch((err: unknown) => console.error(err));
+      window.zapfleet.project.saveTerminals(p.id, payload).catch((err: unknown) => console.error(err));
     });
   }, [ready, project, terminals, scheduleSave]);
 
@@ -432,7 +432,7 @@ export function App() {
       ? { layout, slots, activeSlot, browserUrl }
       : { layout, slots, activeSlot };
     return scheduleSave('layout', () => {
-      window.crewdeck.project.saveLayout(id, payload).catch((err: unknown) => console.error(err));
+      window.zapfleet.project.saveLayout(id, payload).catch((err: unknown) => console.error(err));
     });
   }, [ready, project, layout, slots, activeSlot, browserUrl, scheduleSave]);
 
@@ -487,7 +487,7 @@ export function App() {
     let worktree: WorktreeInfo | undefined;
     if ((opts.isolate ?? isolateNext) && project) {
       try {
-        const r = await window.crewdeck.git.worktreeAdd(project.id, id, profileId);
+        const r = await window.zapfleet.git.worktreeAdd(project.id, id, profileId);
         if (!r.ok) {
           setWorktreeError(`Worktree not created: ${r.error}`);
           return null;
@@ -515,7 +515,7 @@ export function App() {
       // A stale debounced save (without this terminal) must not land after ours and delete the row.
       pendingSaves.current.delete('terminals');
       try {
-        await window.crewdeck.project.saveTerminals(project.id, toPersisted([...known, spec], project.path));
+        await window.zapfleet.project.saveTerminals(project.id, toPersisted([...known, spec], project.path));
       } catch (err) {
         console.error('saveTerminals failed', err);
       }
@@ -576,13 +576,13 @@ export function App() {
   const keepRacer = async (id: string): Promise<string | void> => {
     const t = terminals.find((x) => x.id === id);
     if (!project || !t?.worktree || !race) return 'racer not found';
-    const r = await window.crewdeck.git.worktreeKeep(project.id, t.worktree.path, `crewdeck race: ${race.task}`);
+    const r = await window.zapfleet.git.worktreeKeep(project.id, t.worktree.path, `zapfleet race: ${race.task}`);
     if (!r.ok) return r.error;
     // Winner merged: drop the losers' worktrees (force; their work is discarded by design).
     for (const loser of race.ids.filter((x) => x !== id)) {
       const lt = terminals.find((x) => x.id === loser);
       closeTerminal(loser);
-      if (lt?.worktree) void window.crewdeck.git.worktreeRemove(project.id, lt.worktree.path, true).catch(() => {});
+      if (lt?.worktree) void window.zapfleet.git.worktreeRemove(project.id, lt.worktree.path, true).catch(() => {});
     }
     setRace(null);
     setRaceOpen(false);
@@ -591,7 +591,7 @@ export function App() {
     const t = terminals.find((x) => x.id === id);
     closeTerminal(id);
     if (project && t?.worktree)
-      void window.crewdeck.git.worktreeRemove(project.id, t.worktree.path, true).catch(() => {});
+      void window.zapfleet.git.worktreeRemove(project.id, t.worktree.path, true).catch(() => {});
     setRace((r) => {
       if (!r) return r;
       const ids = r.ids.filter((x) => x !== id);
@@ -631,7 +631,7 @@ export function App() {
     for (let attempt = 0, delay = 300; attempt < 6; attempt++, delay = Math.min(delay * 2, 2000)) {
       await new Promise((r) => setTimeout(r, delay));
       try {
-        const r = await window.crewdeck.git.worktreeRemove(project.id, path, force);
+        const r = await window.zapfleet.git.worktreeRemove(project.id, path, force);
         if (r.ok) {
           setWorktreeError(null);
           return;
@@ -679,7 +679,7 @@ export function App() {
   };
 
   const selectProject = async () => {
-    const picked = await window.crewdeck.project.select();
+    const picked = await window.zapfleet.project.select();
     if (!picked || picked.id === project?.id) return;
     // Write out the old project's pending state before switching away from it.
     for (const fn of pendingSaves.current.values()) fn();
@@ -691,9 +691,9 @@ export function App() {
     // Persist adopted orphans immediately so they survive a restart even without further edits.
     const adopt = async (r: RestoreResult) => {
       let merged = merge(r);
-      // Fresh project with a `.crewdeck.json` preset: open its agents (installed ones only).
+      // Fresh project with a `.zapfleet.json` preset: open its agents (installed ones only).
       if (!merged.terminals.length) {
-        const preset = await window.crewdeck.project.preset(picked.path).catch(() => null);
+        const preset = await window.zapfleet.project.preset(picked.path).catch(() => null);
         if (preset) {
           const dets = detections ?? [];
           const known = new Set([...AGENT_PROFILES, ...customProfiles].map((p) => p.id));
@@ -721,7 +721,7 @@ export function App() {
               layout: { layout, slots: terms.slice(0, layout).map((t) => t.id), activeSlot: 0 },
             };
             try {
-              await window.crewdeck.project.saveTerminals(picked.id, terms);
+              await window.zapfleet.project.saveTerminals(picked.id, terms);
             } catch (err) {
               console.error('saveTerminals failed', err);
             }
@@ -730,7 +730,7 @@ export function App() {
       }
       if (orphans.length) {
         try {
-          await window.crewdeck.project.saveTerminals(picked.id, merged.terminals);
+          await window.zapfleet.project.saveTerminals(picked.id, merged.terminals);
         } catch (err) {
           console.error('saveTerminals failed', err);
         }
@@ -739,7 +739,7 @@ export function App() {
     };
     try {
       // The picked project is now the most recently opened one, so restore loads its saved state.
-      const r = await window.crewdeck.project.restore();
+      const r = await window.zapfleet.project.restore();
       await adopt(r && r.project.id === picked.id ? r : { project: picked, layout: null, terminals: [] });
     } catch (err) {
       console.error('restore failed', err);
@@ -809,7 +809,7 @@ export function App() {
   // Past Claude/Codex sessions for this project, refreshed whenever the palette opens.
   useEffect(() => {
     if (!paletteOpen || !projectId) return;
-    window.crewdeck.agents
+    window.zapfleet.agents
       .sessions(projectId)
       .then(setAgentSessions)
       .catch(() => setAgentSessions([]));
@@ -947,7 +947,7 @@ export function App() {
     >
       {splash && <Splash onDone={endSplash} />}
       <div className="toolbar">
-        <span className="title">crewdeck</span>
+        <span className="title">zapfleet</span>
         <Inbox
           working={terminals.filter((x) => activities[x.id] === 'working').length}
           items={terminals
@@ -955,7 +955,7 @@ export function App() {
             .map((x) => ({ id: x.id, title: x.title, agent: x.profileId, tail: tails.current[x.id] ?? '' }))}
           onReply={(id, keys) => {
             const p = ptyIds.current.get(id);
-            if (p) void window.crewdeck.terminal.write(p, keys);
+            if (p) void window.zapfleet.terminal.write(p, keys);
           }}
           onFocus={showTerminal}
         />
@@ -1012,7 +1012,7 @@ export function App() {
         </select>
         <label
           className="worktree-toggle"
-          title="Start new terminals and agents in their own git worktree on a crewdeck/* branch"
+          title="Start new terminals and agents in their own git worktree on a zapfleet/* branch"
         >
           <input
             type="checkbox"
@@ -1148,7 +1148,7 @@ export function App() {
                   void removeWorktree(t.id);
                 }}
               >
-                {t.worktree.branch.replace(/^crewdeck\//, '')}
+                {t.worktree.branch.replace(/^zapfleet\//, '')}
               </button>
             )}
             <button
@@ -1172,7 +1172,7 @@ export function App() {
           <div className="grid empty">
             <section className="onboard" aria-labelledby="onboard-title">
               <div className="onboard-mascot">
-                <CrewBot size={72} />
+                <ZapBot size={72} />
                 <CrewLine />
               </div>
               <span className="kicker">
@@ -1193,7 +1193,7 @@ export function App() {
               <p>
                 {project
                   ? `Working in ${project.name}. Launch a shell or an agent, tile up to four panes, and route one message to many with @mentions in the composer.`
-                  : 'crewdeck runs Claude Code, Codex, Gemini CLI, OpenCode, your own agents and plain shells side by side against one folder. Choose a project to start the deck.'}
+                  : 'zapfleet runs Claude Code, Codex, Gemini CLI, OpenCode, your own agents and plain shells side by side against one folder. Choose a project to start the deck.'}
               </p>
               <ol>
                 <li className="card">
@@ -1373,7 +1373,7 @@ export function App() {
         detections={detections ?? []}
         onClose={() => setSettingsOpen(false)}
         onChange={() => {
-          window.crewdeck.settings
+          window.zapfleet.settings
             .get()
             .then((st) => {
               setAppSettings(st);
@@ -1385,7 +1385,7 @@ export function App() {
       />
       {showTip && (
         <div className="onboard-tip" role="note" aria-label="Getting started">
-          <div className="onboard-title">Welcome to crewdeck</div>
+          <div className="onboard-title">Welcome to zapfleet</div>
           <ul className="onboard-list">
             <li>
               <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> command palette

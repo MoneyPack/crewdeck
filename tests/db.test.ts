@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import Database from 'better-sqlite3';
-import { CrewdeckDb, LATEST_SCHEMA_VERSION, migrate } from '../electron/services/db';
+import { ZapfleetDb, LATEST_SCHEMA_VERSION, migrate } from '../electron/services/db';
 import { MIGRATIONS } from '../electron/services/migrations';
 
-function withDb(fn: (db: CrewdeckDb) => void): void {
-  const db = new CrewdeckDb(':memory:');
+function withDb(fn: (db: ZapfleetDb) => void): void {
+  const db = new ZapfleetDb(':memory:');
   try {
     fn(db);
   } finally {
@@ -114,7 +114,7 @@ test('terminals: ordered replace keeps ids and cascades deletes', () => {
 test('terminals: worktree config round-trips and can be cleared', () => {
   withDb((db) => {
     const p = db.openProject('C:/p', 'p');
-    const worktree = { path: 'C:/.crewdeck-worktrees/p/tab1', branch: 'crewdeck/claude-abc123' };
+    const worktree = { path: 'C:/.zapfleet-worktrees/p/tab1', branch: 'zapfleet/claude-abc123' };
     const [t] = db.saveTerminals(p.id, [
       { title: 'claude', profileId: 'claude', cwd: worktree.path, config: { yolo: true, worktree } },
     ]);

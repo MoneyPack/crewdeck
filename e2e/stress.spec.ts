@@ -6,10 +6,10 @@ import { paneText } from './xterm';
 
 // Terminal stress harness: 4 visible panes, 3 flooding output while pane 0 stays interactive.
 // Measures renderer FPS, keystroke echo latency under load, per-pane throughput and memory.
-// Opt-in only (slow, machine-dependent): `npm run test:stress` sets CREWDECK_STRESS=1.
-test.skip(!process.env.CREWDECK_STRESS, 'set CREWDECK_STRESS=1 (npm run test:stress)');
+// Opt-in only (slow, machine-dependent): `npm run test:stress` sets ZAPFLEET_STRESS=1.
+test.skip(!process.env.ZAPFLEET_STRESS, 'set ZAPFLEET_STRESS=1 (npm run test:stress)');
 
-const FLOOD_SECONDS = Number(process.env.CREWDECK_STRESS_SECONDS ?? 15);
+const FLOOD_SECONDS = Number(process.env.ZAPFLEET_STRESS_SECONDS ?? 15);
 const PANES = 4;
 const ECHO_SAMPLES = 12;
 
@@ -52,30 +52,30 @@ const sampleFrames = (page: Page, ms: number) =>
 
 test('stress: 4 panes, 3 flooding, interactive echo latency', async () => {
   test.setTimeout(180_000);
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-stress-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-stress-'));
   const userData = path.join(root, 'userData');
   const project = path.join(root, 'project');
   fs.mkdirSync(userData);
   fs.mkdirSync(project);
 
-  const exe = process.env.CREWDECK_E2E_EXE;
+  const exe = process.env.ZAPFLEET_E2E_EXE;
   const app = await electron.launch({
     ...(exe ? { executablePath: path.resolve(exe), args: [] } : { args: [path.resolve('dist-electron/main.cjs')] }),
-    env: { ...process.env, CREWDECK_USER_DATA: userData, CREWDECK_TEST_PROJECT: project } as Record<string, string>,
+    env: { ...process.env, ZAPFLEET_USER_DATA: userData, ZAPFLEET_TEST_PROJECT: project } as Record<string, string>,
   });
   try {
     const page = await app.firstWindow();
     await page.keyboard.press('Escape').catch(() => {});
     await page.waitForSelector('[data-testid=splash]', { state: 'detached' });
     await page.setViewportSize({ width: 1600, height: 1000 }).catch(() => undefined);
-    // CREWDECK_STRESS_RENDERER=dom forces the DOM renderer for A/B comparison (read at pane mount).
-    const renderer = process.env.CREWDECK_STRESS_RENDERER === 'dom' ? 'dom' : 'webgl';
+    // ZAPFLEET_STRESS_RENDERER=dom forces the DOM renderer for A/B comparison (read at pane mount).
+    const renderer = process.env.ZAPFLEET_STRESS_RENDERER === 'dom' ? 'dom' : 'webgl';
     await page.evaluate((r) => {
       const ls = (
         globalThis as unknown as { localStorage: { setItem(k: string, v: string): void; removeItem(k: string): void } }
       ).localStorage;
-      if (r === 'dom') ls.setItem('crewdeck.renderer', 'dom');
-      else ls.removeItem('crewdeck.renderer');
+      if (r === 'dom') ls.setItem('zapfleet.renderer', 'dom');
+      else ls.removeItem('zapfleet.renderer');
     }, renderer);
     await page.locator('button.project').click();
     await expect(page.locator('button.project')).toContainText('project');

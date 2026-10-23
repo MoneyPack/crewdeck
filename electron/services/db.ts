@@ -1,5 +1,5 @@
 // SQLite persistence (better-sqlite3). This module is the only place that talks
-// to the database driver; the rest of the main process uses CrewdeckDb.
+// to the database driver; the rest of the main process uses ZapfleetDb.
 // It is deliberately free of `electron` imports so it can be exercised from
 // plain Node and from the smoke test with any file path.
 import Database from 'better-sqlite3';
@@ -157,7 +157,7 @@ export function migrate(db: Database.Database, migrations: readonly Migration[] 
   const latest = migrations.length ? migrations[migrations.length - 1].version : 0;
   if (current > latest) {
     throw new Error(
-      `Database schema v${current} is newer than this build supports (v${latest}). Update crewdeck or remove the database.`,
+      `Database schema v${current} is newer than this build supports (v${latest}). Update zapfleet or remove the database.`,
     );
   }
   const applied: number[] = [];
@@ -172,7 +172,7 @@ export function migrate(db: Database.Database, migrations: readonly Migration[] 
   return applied;
 }
 
-export class CrewdeckDb {
+export class ZapfleetDb {
   readonly raw: Database.Database;
   readonly appliedMigrations: number[];
 
@@ -369,15 +369,15 @@ export class CrewdeckDb {
 
 export { LATEST_SCHEMA_VERSION };
 
-let instance: CrewdeckDb | null = null;
+let instance: ZapfleetDb | null = null;
 
 /** Opens (once) the app database at `file`, running migrations. */
-export function openDatabase(file: string): CrewdeckDb {
-  instance ??= new CrewdeckDb(file);
+export function openDatabase(file: string): ZapfleetDb {
+  instance ??= new ZapfleetDb(file);
   return instance;
 }
 
-export function getDatabase(): CrewdeckDb {
+export function getDatabase(): ZapfleetDb {
   if (!instance) throw new Error('Database not opened yet');
   return instance;
 }

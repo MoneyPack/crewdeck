@@ -10,7 +10,7 @@ import { ROUTE_PREVIEW_LIMIT } from '../shared/ipc';
 import { mentionCompletions, mentionHandles, parseMention } from '../shared/mention';
 import { MAX_ROUTE_LABEL, MAX_ROUTE_TARGETS, parseRouteInput } from '../shared/routeLog';
 import { writeForwardTemp } from './ipc/routing';
-import { CrewdeckDb, LATEST_SCHEMA_VERSION } from './services/db';
+import { ZapfleetDb, LATEST_SCHEMA_VERSION } from './services/db';
 import { langForPath, tokenizeLine } from '../src/components/GitPanel/highlight';
 import {
   gitDiff,
@@ -51,18 +51,18 @@ function throws(fn: () => unknown): boolean {
 
 // DB checks: migrations, idempotent reopen, round-trips, json_extract, FK cascade, json_valid guard.
 function dbChecks(): void {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-smoke-'));
-  const file = path.join(dir, 'crewdeck.db');
-  let db: CrewdeckDb | undefined;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-smoke-'));
+  const file = path.join(dir, 'zapfleet.db');
+  let db: ZapfleetDb | undefined;
   try {
-    db = new CrewdeckDb(file);
+    db = new ZapfleetDb(file);
     check(db.appliedMigrations.length === LATEST_SCHEMA_VERSION, `fresh db applied ${db.appliedMigrations}`);
     check(db.schemaVersion === LATEST_SCHEMA_VERSION, `schemaVersion ${db.schemaVersion}`);
     check(db.raw.pragma('foreign_keys', { simple: true }) === 1, 'foreign_keys off');
     check(db.raw.pragma('journal_mode', { simple: true }) === 'wal', 'journal_mode not wal');
     db.close();
 
-    db = new CrewdeckDb(file);
+    db = new ZapfleetDb(file);
     check(db.appliedMigrations.length === 0, 'reopen re-applied migrations');
 
     // settings
@@ -207,7 +207,7 @@ function dbChecks(): void {
     db.raw.pragma(`user_version = ${LATEST_SCHEMA_VERSION + 1}`);
     db.close();
     check(
-      throws(() => new CrewdeckDb(file)),
+      throws(() => new ZapfleetDb(file)),
       'newer schema not refused',
     );
     console.log(`db ok (schema v${LATEST_SCHEMA_VERSION})`);
@@ -228,7 +228,7 @@ function scrollbackChecks(): void {
     `ring cap: ${lines[0]}..${lines.length}`,
   );
 
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-sb-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-sb-'));
   try {
     const store = new ScrollbackStore(dir, 60_000, 100);
     const name = store.attach('pty1', 'sess1', 'seed\n');
@@ -309,7 +309,7 @@ function ansiChecks(): void {
   check(utf8Length('héllo') === 6 && utf8Length('') === 0, 'utf8Length');
   check(INLINE_FORWARD_LIMIT === 4096, 'inline limit');
 
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-fwd-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-fwd-'));
   try {
     const big = 'x'.repeat(INLINE_FORWARD_LIMIT + 1);
     const file = writeForwardTemp(big, path.join(dir, 'nested'));
@@ -383,7 +383,7 @@ async function gitChecks(): Promise<void> {
     'irrelevant',
   );
 
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-git-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-git-'));
   try {
     const plain = path.join(dir, 'plain');
     fs.mkdirSync(plain);
@@ -396,7 +396,7 @@ async function gitChecks(): Promise<void> {
     fs.mkdirSync(repo);
     const git = (...args: string[]) => runGit(repo, args);
     await git('init', '-q', '-b', 'main');
-    await git('config', 'user.email', 'smoke@crewdeck.local');
+    await git('config', 'user.email', 'smoke@zapfleet.local');
     await git('config', 'user.name', 'smoke');
     await git('config', 'core.autocrlf', 'false');
     fs.writeFileSync(path.join(repo, 'a.txt'), 'one\ntwo\n');
@@ -537,7 +537,7 @@ async function removeTree(dir: string): Promise<void> {
 }
 
 function loggerChecks(): void {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-log-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-log-'));
   try {
     const logger = new Logger({ maxBytes: 200, maxFiles: 2, echo: false });
     const file = logger.init(dir);
@@ -554,7 +554,7 @@ function loggerChecks(): void {
       () => {},
     );
     check(
-      throws(() => manager.create({ shell: 'crewdeck-missing-shell.exe', cols: 80, rows: 24 })),
+      throws(() => manager.create({ shell: 'zapfleet-missing-shell.exe', cols: 80, rows: 24 })),
       'spawn of missing shell throws',
     );
     check(manager.size === 0, 'failed spawn leaves no session');
@@ -600,7 +600,7 @@ async function run(): Promise<void> {
 
   // Round-trip: the marker is built by concatenation so the echoed input line alone cannot match.
   manager.write(id, "Write-Output ('CREW' + 'DECK_OK')\r");
-  await waitFor(/CREWDECK_OK/, 'echo marker');
+  await waitFor(/ZAPFLEET_OK/, 'echo marker');
   console.log('round-trip ok');
 
   manager.resize(id, 132, 40);

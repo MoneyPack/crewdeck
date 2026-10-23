@@ -237,7 +237,7 @@ export function TerminalPane({
     const host = hostRef.current;
     if (!host) return;
 
-    const api = window.crewdeck.terminal;
+    const api = window.zapfleet.terminal;
     const term = new Terminal({
       fontFamily: terminalSettingsRef.current?.fontFamily || readXtermFont(),
       fontSize: terminalSettingsRef.current?.fontSize ?? 13,
@@ -251,7 +251,7 @@ export function TerminalPane({
       // ConPTY clears the screen (ESC[2J) when a new session starts; push the replayed
       // history into scrollback instead of erasing it.
       scrollOnEraseInDisplay: true,
-      windowsPty: window.crewdeck.platform === 'win32' ? { backend: 'conpty' } : undefined,
+      windowsPty: window.zapfleet.platform === 'win32' ? { backend: 'conpty' } : undefined,
       theme: readXtermTheme(),
     });
     const fit = new FitAddon();
@@ -260,12 +260,12 @@ export function TerminalPane({
     term.open(host);
     // App-level shortcuts are handled by the window capture listener; keep xterm from also
     // forwarding them to the PTY.
-    const mac = window.crewdeck.platform === 'darwin';
+    const mac = window.zapfleet.platform === 'darwin';
     term.attachCustomKeyEventHandler((e) => !findShortcut(e, mac));
     // GPU renderer; falls back to the DOM renderer if WebGL2 is unavailable or the context is lost.
-    // `localStorage['crewdeck.renderer'] = 'dom'` forces the DOM renderer (A/B + troubleshooting).
+    // `localStorage['zapfleet.renderer'] = 'dom'` forces the DOM renderer (A/B + troubleshooting).
     let webgl: WebglAddon | null = null;
-    if (localStorage.getItem('crewdeck.renderer') !== 'dom') {
+    if (localStorage.getItem('zapfleet.renderer') !== 'dom') {
       try {
         const addon = new WebglAddon();
         addon.onContextLoss(() => {
@@ -327,11 +327,11 @@ export function TerminalPane({
     };
     let spawnedAt = 0;
 
-    const offData = window.crewdeck.terminal.onData((event) => {
+    const offData = window.zapfleet.terminal.onData((event) => {
       if (ptyId === null) pending.push(event);
       else if (event.id === ptyId) queueOut(event.data);
     });
-    const offExit = window.crewdeck.terminal.onExit((event: TerminalExitEvent) => {
+    const offExit = window.zapfleet.terminal.onExit((event: TerminalExitEvent) => {
       if (event.id !== ptyId) return;
       cancelAnimationFrame(outFrame);
       flushOut();
@@ -439,7 +439,7 @@ export function TerminalPane({
       onFocus={onActivate}
     >
       <div className="pane-header">
-        <img className="pane-logo" src={logo} alt="" title="crewdeck" />
+        <img className="pane-logo" src={logo} alt="" title="zapfleet" />
         <span className="pane-title">{title}</span>
         {headerExtra}
         <span className="pane-actions">

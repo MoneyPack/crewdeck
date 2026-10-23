@@ -11,10 +11,10 @@ import { getDatabase } from '../services/db';
 const MAX_TEMP_BYTES = 8 * 1024 * 1024;
 
 export function forwardTempDir(): string {
-  return path.join(os.tmpdir(), 'crewdeck');
+  return path.join(os.tmpdir(), 'zapfleet');
 }
 
-/** Writes `text` to a fresh file under the crewdeck temp dir and returns its path. */
+/** Writes `text` to a fresh file under the zapfleet temp dir and returns its path. */
 export function writeForwardTemp(text: string, dir = forwardTempDir()): string {
   if (typeof text !== 'string') throw new TypeError('text must be a string');
   if (Buffer.byteLength(text, 'utf8') > MAX_TEMP_BYTES) throw new RangeError('payload too large');

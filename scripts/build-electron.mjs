@@ -27,8 +27,8 @@ if (process.argv.includes('--test')) {
   const entryPoints = [
     'electron/main.ts',
     'electron/preload.ts',
-    'electron/cli/crewdeck-browser.ts',
-    'electron/cli/crewdeck-mcp.ts',
+    'electron/cli/zapfleet-browser.ts',
+    'electron/cli/zapfleet-mcp.ts',
   ];
   if (process.argv.includes('--smoke')) entryPoints.push('electron/smoke.ts');
 

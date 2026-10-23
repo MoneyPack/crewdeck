@@ -6,7 +6,7 @@ CREATE TABLE routing_log_new (
   id          TEXT    PRIMARY KEY,
   project_id  TEXT    NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
   -- 'composer' (typed @mention), 'forward' (terminal selection sent to an agent),
-  -- 'browser' (a command driven through the crewdeck browser pane)
+  -- 'browser' (a command driven through the zapfleet browser pane)
   kind        TEXT    NOT NULL CHECK (kind IN ('composer', 'forward', 'browser')),
   from_label  TEXT    NOT NULL,
   targets     TEXT    NOT NULL CHECK (json_valid(targets) AND json_type(targets) = 'array'),

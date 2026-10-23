@@ -1,5 +1,5 @@
 /**
- * crewdeck's agent-drivable browser: a WebContentsView hosted inside the main
+ * zapfleet's agent-drivable browser: a WebContentsView hosted inside the main
  * window and driven over the Chrome DevTools Protocol (webContents.debugger).
  *
  * Agents address elements by snapshot refs (@e1, @e2 …) derived from the
@@ -34,7 +34,7 @@ import { forwardTempDir } from '../ipc/routing';
 import { RoutingChannels } from '../../shared/ipc';
 import { getDatabase, type Json } from './db';
 
-export const BROWSER_PARTITION = 'persist:crewdeck-browser';
+export const BROWSER_PARTITION = 'persist:zapfleet-browser';
 const CONSOLE_LIMIT = 500;
 const SIGNAL_MS = 600;
 const ANNOTATE_LIMIT = 120;
@@ -385,7 +385,7 @@ export class BrowserEngine {
     const overlay = String(
       (await live
         .executeJavaScript(
-          "(() => { const n = document.getElementById('__crewdeck_annot'); return n ? n.outerHTML : ''; })()",
+          "(() => { const n = document.getElementById('__zapfleet_annot'); return n ? n.outerHTML : ''; })()",
           true,
         )
         .catch(() => '')) ?? '',
@@ -504,7 +504,7 @@ export class BrowserEngine {
       });
       const payload = JSON.stringify(notes);
       await this.evaluate(
-        `(function(){var n=${payload};var sx=window.scrollX,sy=window.scrollY;var root=document.createElement('div');root.id='__crewdeck_annot';root.style.cssText='position:absolute;left:0;top:0;width:0;height:0;z-index:2147483647;pointer-events:none';n.forEach(function(a){var b=document.createElement('div');b.style.cssText='position:absolute;box-sizing:border-box;border:2px solid #ff4d00;left:'+(a.box.x+sx)+'px;top:'+(a.box.y+sy)+'px;width:'+a.box.width+'px;height:'+a.box.height+'px';var l=document.createElement('div');l.textContent=a.label.text;l.style.cssText='position:absolute;font:600 11px/14px monospace;padding:0 3px;background:#ff4d00;color:#0b0b0b;left:'+(a.label.x+sx)+'px;top:'+(a.label.y+sy)+'px;height:'+a.label.height+'px';root.appendChild(b);root.appendChild(l);});document.documentElement.appendChild(root);return n.length})()`,
+        `(function(){var n=${payload};var sx=window.scrollX,sy=window.scrollY;var root=document.createElement('div');root.id='__zapfleet_annot';root.style.cssText='position:absolute;left:0;top:0;width:0;height:0;z-index:2147483647;pointer-events:none';n.forEach(function(a){var b=document.createElement('div');b.style.cssText='position:absolute;box-sizing:border-box;border:2px solid #ff4d00;left:'+(a.box.x+sx)+'px;top:'+(a.box.y+sy)+'px;width:'+a.box.width+'px;height:'+a.box.height+'px';var l=document.createElement('div');l.textContent=a.label.text;l.style.cssText='position:absolute;font:600 11px/14px monospace;padding:0 3px;background:#ff4d00;color:#0b0b0b;left:'+(a.label.x+sx)+'px;top:'+(a.label.y+sy)+'px;height:'+a.label.height+'px';root.appendChild(b);root.appendChild(l);});document.documentElement.appendChild(root);return n.length})()`,
       );
       legend = lines.join('\n');
     }
@@ -530,7 +530,7 @@ export class BrowserEngine {
       return { file, legend, via };
     } finally {
       if (annotate)
-        await this.evaluate(`(function(){var r=document.getElementById('__crewdeck_annot');if(r)r.remove()})()`).catch(
+        await this.evaluate(`(function(){var r=document.getElementById('__zapfleet_annot');if(r)r.remove()})()`).catch(
           () => undefined,
         );
     }

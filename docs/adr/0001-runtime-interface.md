@@ -4,7 +4,7 @@ Status: proposed (2026-10-18)
 
 ## Context
 
-CrewDeck spawns every agent CLI (Claude Code, Codex, Gemini, OpenCode and friends) by calling node-pty directly from the Electron main process. That works on one Windows host, but it ties session lifetime, file access and isolation to whatever the main process happens to do. M2 puts agents inside WSL2, M3 adds cloud machines and M4 adds Hyper-V sandboxes. Each of those changes where a shell lives, how it survives a window reload and how files cross the boundary. Without a seam, every backend leaks into terminal, worktree, limits and review code.
+Zapfleet spawns every agent CLI (Claude Code, Codex, Gemini, OpenCode and friends) by calling node-pty directly from the Electron main process. That works on one Windows host, but it ties session lifetime, file access and isolation to whatever the main process happens to do. M2 puts agents inside WSL2, M3 adds cloud machines and M4 adds Hyper-V sandboxes. Each of those changes where a shell lives, how it survives a window reload and how files cross the boundary. Without a seam, every backend leaks into terminal, worktree, limits and review code.
 
 cloudroom-core solves the same problem on macOS with a privileged core service (its ADR 0001) and a transfer path (`src/mac/transfer.rs`) that moves up to 16 MiB in one job and larger payloads up to 2 GiB in 8 MiB pieces, staged in a temp folder and checked with SHA-256. We borrow the shape of that contract, not the privilege model, for M1.
 

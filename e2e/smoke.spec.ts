@@ -6,23 +6,23 @@ import { paneText } from './xterm';
 
 // Launch the built app against a throwaway profile + project, spawn a shell, echo round-trip.
 test('launch, spawn shell, echo round-trip', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-e2e-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-e2e-'));
   const userData = path.join(root, 'userData');
   const project = path.join(root, 'project');
   fs.mkdirSync(userData);
   fs.mkdirSync(project);
 
-  // CREWDECK_E2E_EXE=release/win-unpacked/crewdeck.exe runs the same test against the packaged app.
-  const exe = process.env.CREWDECK_E2E_EXE;
+  // ZAPFLEET_E2E_EXE=release/win-unpacked/zapfleet.exe runs the same test against the packaged app.
+  const exe = process.env.ZAPFLEET_E2E_EXE;
   const app = await electron.launch({
     ...(exe ? { executablePath: path.resolve(exe), args: [] } : { args: [path.resolve('dist-electron/main.cjs')] }),
-    env: { ...process.env, CREWDECK_USER_DATA: userData, CREWDECK_TEST_PROJECT: project } as Record<string, string>,
+    env: { ...process.env, ZAPFLEET_USER_DATA: userData, ZAPFLEET_TEST_PROJECT: project } as Record<string, string>,
   });
   try {
     const page = await app.firstWindow();
     await page.keyboard.press('Escape').catch(() => {});
     await page.waitForSelector('[data-testid=splash]', { state: 'detached' });
-    await expect(page.locator('.toolbar .title')).toHaveText('crewdeck');
+    await expect(page.locator('.toolbar .title')).toHaveText('zapfleet');
 
     // Open the project via the test hook (bypasses the native folder dialog).
     await page.locator('button.project').click();
@@ -36,7 +36,7 @@ test('launch, spawn shell, echo round-trip', async () => {
     await pane.locator('.pane-body').click();
     await page.keyboard.type("Write-Output ('CREW' + 'DECK_E2E')");
     await page.keyboard.press('Enter');
-    await expect.poll(() => paneText(pane), { timeout: 15_000 }).toContain('CREWDECK_E2E');
+    await expect.poll(() => paneText(pane), { timeout: 15_000 }).toContain('ZAPFLEET_E2E');
   } finally {
     await app.close();
     try {

@@ -19,6 +19,6 @@ const run = (cmd, cmdArgs, env) => {
 if (!noBuild) run('npm', ['run', 'build']);
 
 run('npx', ['playwright', 'test', 'e2e/stress.spec.ts', '--reporter=list'], {
-  CREWDECK_STRESS: '1',
-  ...(secondsArg ? { CREWDECK_STRESS_SECONDS: secondsArg.split('=')[1] } : {}),
+  ZAPFLEET_STRESS: '1',
+  ...(secondsArg ? { ZAPFLEET_STRESS_SECONDS: secondsArg.split('=')[1] } : {}),
 });

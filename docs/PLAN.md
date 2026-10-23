@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="../design/logo.svg" width="112" alt="CrewDeck logo" />
+  <img src="../design/logo.svg" width="112" alt="Zapfleet logo" />
 </p>
 
-<h1 align="center">CrewDeck — The Plan</h1>
+<h1 align="center">Zapfleet — The Plan</h1>
 
-<p align="center"><b>Hire a crew in one click.</b></p>
+<p align="center"><b>Launch a fleet in one click.</b></p>
 
 <p align="center">
   claude · codex · gemini · OneAPI · your agent · shell — side by side, then everywhere.
@@ -14,7 +14,7 @@
 
 > *Hey, captain. Your crew is waking up.*
 
-This document is where CrewDeck goes next. It is not a rewrite. It is an
+This document is where Zapfleet goes next. It is not a rewrite. It is an
 evolution of the app that already exists — Electron + React + Vite, `node-pty`
 terminals, xterm.js panes, SQLite state, MCP — into the best place on Windows
 to run, supervise, and ship work from a crew of AI coding agents.
@@ -23,8 +23,8 @@ to run, supervise, and ship work from a crew of AI coding agents.
 
 ## 1. The vision in one paragraph
 
-Today you open CrewDeck and tile up to four agents next to each other.
-Tomorrow you describe a job, and CrewDeck **hires the crew for it**: a lead
+Today you open Zapfleet and tile up to four agents next to each other.
+Tomorrow you describe a job, and Zapfleet **hires the crew for it**: a lead
 agent splits the work, each crew member gets its own sandbox and its own git
 branch, they run locally or in the cloud, you watch every keystroke, approve
 anything risky with one tap, compare their answers side by side, and merge the
@@ -38,9 +38,9 @@ best one as a pull request. You stay the captain. The crew does the rowing.
    own sandbox. Nothing an agent does can touch another agent's work, or your
    machine, without permission.
 3. **Any agent, no lock-in.** Claude Code, Codex, Gemini CLI, OneAPI, any CLI,
-   or a plain shell. CrewDeck is the deck, not the crew.
+   or a plain shell. Zapfleet is the deck, not the crew.
 4. **Windows first, and proud of it.** Most agent tooling treats Windows as an
-   afterthought. CrewDeck treats it as home: ConPTY, PowerShell, WSL2, Windows
+   afterthought. Zapfleet treats it as home: ConPTY, PowerShell, WSL2, Windows
    Sandbox, Hyper-V, winget, Mica.
 5. **Evolve, don't rewrite.** Every milestone ships on top of the current
    stack and keeps the app working.
@@ -49,7 +49,7 @@ best one as a pull request. You stay the captain. The crew does the rowing.
 
 ## 3. Where we stand
 
-CrewDeck already runs Claude Code, Codex, Gemini CLI, OneAPI, any CLI, or a
+Zapfleet already runs Claude Code, Codex, Gemini CLI, OneAPI, any CLI, or a
 plain shell side by side on Windows, with up to four tiled panes, `@mentions`
 and a built-in browser.
 
@@ -104,18 +104,18 @@ reference; if we ever reuse its code we carry its MIT notice.
 
 The conclusion: the best agent platforms isolate every agent, make every
 action visible, and let sessions move between laptop and cloud. None of them
-do it natively on Windows. CrewDeck will.
+do it natively on Windows. Zapfleet will.
 
 ## 5. Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ CrewDeck desktop  (Electron + React + Vite + xterm.js)           │
+│ Zapfleet desktop  (Electron + React + Vite + xterm.js)           │
 │  threads · tiles · @mentions · review · budgets · approvals      │
 └───────────────┬──────────────────────────────────────────────────┘
                 │ named pipe  /  localhost + per-session token
 ┌───────────────▼──────────────────────────────────────────────────┐
-│ crewdeck host-daemon  (Node today, Rust-ready interface)         │
+│ zapfleet host-daemon  (Node today, Rust-ready interface)         │
 │  PTY supervisor · worktrees · Command Guard · cost meter · MCP   │
 │  SQLite state · secrets broker · Teleport                        │
 └───────┬──────────────────────┬───────────────────────┬───────────┘
@@ -211,7 +211,7 @@ Each build lists **why**, **how**, and **done when**.
 - **Done when:** a captain can go from "ask three" to an open PR in one view.
 
 ### 9. Orchestration
-- **Why:** "Hire a crew" means more than one hire.
+- **Why:** "A fleet" means more than one agent.
 - **How:** a lead agent splits the job into tasks, assigns crew members,
   each on its own branch; a merge queue lands their work in order and reruns
   checks on conflict.
@@ -254,16 +254,16 @@ Every milestone ends with the app installable, updatable, and usable.
 
 ## 9. License and attribution
 
-CrewDeck is **MIT**, "Copyright (c) 2026 MoneyPack". We stay MIT. If code
+Zapfleet is **MIT**, "Copyright (c) 2026 MoneyPack". We stay MIT. If code
 from `bb` is ever reused, its MIT notice ships alongside ours. Ideas studied
 from cloudroom-core and cloudroom-gui are re-implemented, not copied.
 
 ## 10. Naming notes
 
-- The product is **CrewDeck**; tagline **"Hire a crew in one click."**
+- The product is **Zapfleet**; tagline **"Launch a fleet in one click."**
 - An earlier candidate, *Krew*, was dropped: it collides with kubectl's
   `krew` plugin manager.
-- **The CrewDeck trademark has not been checked.** Run a search before any
+- **The Zapfleet trademark has not been checked.** Run a search before any
   paid marketing or store listing.
 
 ## 11. The first three moves

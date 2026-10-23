@@ -88,7 +88,7 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
     if (!projectId) return;
     const token = ++statusToken.current;
     setLoading(true);
-    window.crewdeck.git
+    window.zapfleet.git
       .status(projectId)
       .then((s) => {
         if (token === statusToken.current) setStatus(s);
@@ -127,7 +127,7 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
         ? `Delete untracked file "${f.path}"?\n\nThis permanently removes it from disk and cannot be undone.`
         : `Discard unstaged changes to "${f.path}"?\n\nThis cannot be undone.`;
       if (!window.confirm(msg)) return;
-      await runAction(() => window.crewdeck.git.discard(projectId, f.path, untracked));
+      await runAction(() => window.zapfleet.git.discard(projectId, f.path, untracked));
     },
     [projectId, runAction],
   );
@@ -140,14 +140,14 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
     setDiffError(null);
     if (!projectId) return;
     refresh();
-    void window.crewdeck.git.watch(projectId).catch(() => false);
-    const off = window.crewdeck.git.onChanged((e) => {
+    void window.zapfleet.git.watch(projectId).catch(() => false);
+    const off = window.zapfleet.git.onChanged((e) => {
       if (e.projectId === projectId) refresh();
     });
     return () => {
       off();
       statusToken.current++;
-      void window.crewdeck.git.unwatch(projectId).catch(() => undefined);
+      void window.zapfleet.git.unwatch(projectId).catch(() => undefined);
     };
   }, [projectId, refresh]);
 
@@ -174,7 +174,7 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
     const kind = diffKind(selectedFile, selected.section);
     const oldPath = kind === 'staged' ? selectedFile.oldPath : undefined;
     setDiffLoading(true);
-    window.crewdeck.git
+    window.zapfleet.git
       .diff(projectId, selectedFile.path, kind, oldPath)
       .then((d) => {
         if (token !== diffToken.current) return;
@@ -239,7 +239,7 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
                       type="button"
                       title="Stage"
                       disabled={busy}
-                      onClick={() => void runAction(() => window.crewdeck.git.stage(projectId!, f.path))}
+                      onClick={() => void runAction(() => window.zapfleet.git.stage(projectId!, f.path))}
                     >
                       +
                     </button>
@@ -248,7 +248,7 @@ export function GitPanel({ projectId, onClose, attributions }: Props) {
                       type="button"
                       title="Unstage"
                       disabled={busy}
-                      onClick={() => void runAction(() => window.crewdeck.git.unstage(projectId!, f.path, f.oldPath))}
+                      onClick={() => void runAction(() => window.zapfleet.git.unstage(projectId!, f.path, f.oldPath))}
                     >
                       −
                     </button>

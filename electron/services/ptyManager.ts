@@ -26,7 +26,7 @@ const FLUSH_INTERVAL_MS = 8;
 /** Flush immediately once this much output is pending. */
 const MAX_PENDING_BYTES = 64 * 1024;
 
-/** Extra environment injected into every spawned shell (crewdeck browser bridge, shim PATH). */
+/** Extra environment injected into every spawned shell (zapfleet browser bridge, shim PATH). */
 let extraEnv: Record<string, string> = {};
 let extraPath: string | null = null;
 

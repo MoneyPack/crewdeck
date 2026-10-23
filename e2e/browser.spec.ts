@@ -55,7 +55,7 @@ function refFor(snapshot: string, role: string, name: string): string {
 }
 
 const FORM = [
-  '<!doctype html><title>crewdeck form</title>',
+  '<!doctype html><title>zapfleet form</title>',
   '<label>Name <input id="n" aria-label="Name"></label>',
   '<button id="g" type="button">Greet</button>',
   '<p id="out"></p>',
@@ -64,20 +64,20 @@ const FORM = [
 const FORM_URL = `data:text/html,${encodeURIComponent(FORM)}`;
 
 test('browser pane is driven over the authenticated bridge', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'crewdeck-browser-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zapfleet-browser-'));
   const userData = path.join(root, 'userData');
   const project = path.join(root, 'project');
   fs.mkdirSync(userData, { recursive: true });
   fs.mkdirSync(project, { recursive: true });
 
-  const exe = process.env.CREWDECK_E2E_EXE;
+  const exe = process.env.ZAPFLEET_E2E_EXE;
   const app = await electron.launch({
     ...(exe ? { executablePath: exe } : { args: [path.resolve('dist-electron/main.cjs')] }),
     env: {
       ...process.env,
-      CREWDECK_USER_DATA: userData,
-      CREWDECK_TEST_PROJECT: project,
-      CREWDECK_E2E_BRIDGE: '1',
+      ZAPFLEET_USER_DATA: userData,
+      ZAPFLEET_TEST_PROJECT: project,
+      ZAPFLEET_E2E_BRIDGE: '1',
     } as Record<string, string>,
   });
 
@@ -86,7 +86,7 @@ test('browser pane is driven over the authenticated bridge', async () => {
       const w = await app.firstWindow();
       await w.keyboard.press('Escape').catch(() => {});
       await w.waitForSelector('[data-testid=splash]', { state: 'detached' });
-      await expect(w.locator('.toolbar .title')).toHaveText('crewdeck');
+      await expect(w.locator('.toolbar .title')).toHaveText('zapfleet');
       await w.locator('button.project').click();
       await expect(w.locator('button.project')).toContainText('project');
       await w.getByRole('button', { name: 'Browser', exact: true }).click();
@@ -98,7 +98,7 @@ test('browser pane is driven over the authenticated bridge', async () => {
       let found: Bridge | null = null;
       await expect
         .poll(async () => {
-          found = await app.evaluate(() => (globalThis as any).__crewdeckBridge ?? null);
+          found = await app.evaluate(() => (globalThis as any).__zapfleetBridge ?? null);
           return Boolean(found && found.url && found.token);
         })
         .toBe(true);
@@ -129,7 +129,7 @@ test('browser pane is driven over the authenticated bridge', async () => {
       });
 
     const opened = await run({ action: 'open', url: FORM_URL });
-    expect(opened.title).toBe('crewdeck form');
+    expect(opened.title).toBe('zapfleet form');
 
     const snap = await run({ action: 'snapshot', interactiveOnly: true });
     const nameRef = refFor(snap.text, 'textbox', 'Name');
@@ -150,7 +150,7 @@ test('browser pane is driven over the authenticated bridge', async () => {
       const state = await request(bridge, 'GET', '/state');
       expect(state.status).toBe(200);
       expect(state.body.ok).toBe(true);
-      expect(state.body.state.title).toBe('crewdeck form');
+      expect(state.body.state.title).toBe('zapfleet form');
       await expect(win.getByLabel('Address')).toHaveValue(/^data:text\/html/);
     });
 

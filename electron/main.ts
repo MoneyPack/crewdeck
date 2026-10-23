@@ -17,7 +17,7 @@ import { autoUpdater } from 'electron-updater';
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
 
 // Test hook: isolate profile/DB/scrollback. Must run before app is ready.
-if (process.env.CREWDECK_USER_DATA) app.setPath('userData', path.resolve(process.env.CREWDECK_USER_DATA));
+if (process.env.ZAPFLEET_USER_DATA) app.setPath('userData', path.resolve(process.env.ZAPFLEET_USER_DATA));
 
 try {
   log.init(path.join(app.getPath('userData'), 'logs'));
@@ -25,7 +25,7 @@ try {
   console.error('[app] could not open log file:', err);
 }
 log.info(
-  `[app] crewdeck ${app.getVersion()} starting (electron ${process.versions.electron}, ${process.platform}-${process.arch})`,
+  `[app] zapfleet ${app.getVersion()} starting (electron ${process.versions.electron}, ${process.platform}-${process.arch})`,
 );
 process.on('uncaughtException', (err) => log.error('[process] uncaughtException:', err));
 process.on('unhandledRejection', (reason) => log.error('[process] unhandledRejection:', reason));
@@ -49,7 +49,7 @@ function createWindow(): BrowserWindow {
     width: 1280,
     height: 800,
     backgroundColor: '#0c0c0a',
-    title: 'crewdeck',
+    title: 'zapfleet',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -86,7 +86,7 @@ registerBrowserIpc();
 registerSettingsIpc(() => registerSummonHotkey());
 
 function initDatabase(): boolean {
-  const file = path.join(app.getPath('userData'), 'crewdeck.db');
+  const file = path.join(app.getPath('userData'), 'zapfleet.db');
   try {
     const db = openDatabase(file);
     if (db.appliedMigrations.length) log.info(`[db] migrated to v${db.schemaVersion}`);
@@ -102,7 +102,7 @@ function initDatabase(): boolean {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error('[db] open failed:', file, err);
-    dialog.showErrorBox('crewdeck: database error', `Could not open ${file}\n\n${message}`);
+    dialog.showErrorBox('zapfleet: database error', `Could not open ${file}\n\n${message}`);
     return false;
   }
 }
