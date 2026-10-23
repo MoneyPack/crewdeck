@@ -1,0 +1,24 @@
+<Configuration>
+  <Networking>Disable</Networking>
+  <MemoryInMB>8192</MemoryInMB>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>{{REPO}}\release</HostFolder>
+      <SandboxFolder>C:\Users\WDAGUtilityAccount\Desktop\zapfleet\release</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>{{REPO}}\scripts</HostFolder>
+      <SandboxFolder>C:\Users\WDAGUtilityAccount\Desktop\zapfleet\scripts</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>{{REPO}}\smoke-results</HostFolder>
+      <SandboxFolder>C:\Users\WDAGUtilityAccount\Desktop\zapfleet\smoke-results</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\WDAGUtilityAccount\Desktop\zapfleet\scripts\smoke-sandbox.ps1 -Guest</Command>
+  </LogonCommand>
+</Configuration>
