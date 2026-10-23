@@ -7,7 +7,7 @@
   <a href="https://github.com/MoneyPack/zapfleet/actions/workflows/ci.yml"><img src="https://github.com/MoneyPack/zapfleet/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/MoneyPack/zapfleet/releases"><img src="https://img.shields.io/github/v/release/MoneyPack/zapfleet?color=ff4d00" alt="Release"></a>
   <a href="https://github.com/MoneyPack/zapfleet/releases"><img src="https://img.shields.io/github/downloads/MoneyPack/zapfleet/total?color=c6f432" alt="Downloads"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3fe0ff" alt="MIT License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-c6f432" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/platform-Windows-0c0c0a" alt="Windows">
 </p>
 

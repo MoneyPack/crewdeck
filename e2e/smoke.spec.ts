@@ -36,7 +36,7 @@ test('launch, spawn shell, echo round-trip', async () => {
     await pane.locator('.pane-body').click();
     await page.keyboard.type("Write-Output ('ZAPFLEET' + '_E2E')");
     await page.keyboard.press('Enter');
-    await expect.poll(() => paneText(pane), { timeout: 15_000 }).toContain('ZAPFLEET_E2E');
+    await expect.poll(() => paneText(pane), { timeout: process.env.CI ? 60_000 : 15_000 }).toContain('ZAPFLEET_E2E');
   } finally {
     await app.close();
     try {

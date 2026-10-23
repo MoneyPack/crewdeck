@@ -629,4 +629,14 @@ async function run(): Promise<void> {
   app.exit(0);
 }
 
-app.whenReady().then(() => run().catch((err: unknown) => fail(err instanceof Error ? err.message : String(err))));
+process.on('unhandledRejection', (err: unknown) => {
+  console.error('SMOKE FAIL: unhandled rejection:', err instanceof Error ? err.message : String(err));
+  app.exit(1);
+});
+
+app.whenReady().then(() =>
+  run().catch((err: unknown) => {
+    console.error('SMOKE FAIL:', err instanceof Error ? err.message : String(err));
+    app.exit(1);
+  }),
+);

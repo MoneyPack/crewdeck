@@ -10,3 +10,4 @@ playwright-report/
 *.db-wal
 *.db-shm
 .env
+smoke-results/

@@ -71,7 +71,7 @@ jobs:
         run: npm run dist
 
       - name: Run packaged e2e smoke
-        run: npm run test:e2e:dist
+        run: npm run test:e2e:dist -- --no-build
         env:
           ZAPFLEET_E2E_EXE: ${{ github.workspace }}\release\win-unpacked\zapfleet.exe
 
