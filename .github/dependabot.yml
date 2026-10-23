@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Native/ABI-sensitive deps: own PR, never auto-merged, must pass the
+      # packaged smoke job (M1-04) before merge.
+      native:
+        patterns:
+          - electron
+          - node-pty
+          - better-sqlite3
+      deps:
+        patterns:
+          - '*'
+        exclude-patterns:
+          - electron
+          - node-pty
+          - better-sqlite3
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - '*'

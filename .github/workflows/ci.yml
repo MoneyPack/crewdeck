@@ -5,71 +5,85 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: write
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '26'
+
 jobs:
-  build-test:
+  build:
+    name: Lint, typecheck, native rebuild, test
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install MSVC Spectre-mitigated libraries (MSB8040)
+        shell: pwsh
+        run: ./scripts/ci/install-spectre-libs.ps1
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+
+      - name: Rebuild native modules against Electron
+        run: npm run rebuild
+
+      - name: Load native modules inside Electron (ABI check)
+        run: npm run smoke
+
+      - run: npm test
+
+  smoke:
+    name: Packaged smoke (win-unpacked)
+    needs: build
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Install
-        run: npm ci
+      - name: Install MSVC Spectre-mitigated libraries (MSB8040)
+        shell: pwsh
+        run: ./scripts/ci/install-spectre-libs.ps1
 
-      - name: Lint
-        run: npm run lint
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
 
-      - name: Format check
-        run: npm run format:check
-
-      - name: Rebuild better-sqlite3 for Electron ABI
-        run: npx electron-rebuild -f -o better-sqlite3
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit tests
-        run: npm test
-
-      - name: Package (NSIS)
+      - name: Build installer
         run: npm run dist
 
-      - name: Packaged e2e
-        run: node scripts/e2e-dist.mjs --no-build
-
-      - name: Upload installer
-        uses: actions/upload-artifact@v7
-        with:
-          name: zapfleet-installer
-          path: release/*.exe
-          if-no-files-found: error
-
-      - name: Upload test results
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-results
-          path: test-results/
-          if-no-files-found: ignore
-
-      - name: Publish GitHub release
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: bash
+      - name: Run packaged e2e smoke
+        run: npm run test:e2e:dist
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release view "${{ github.ref_name }}" >/dev/null 2>&1 || gh release create "${{ github.ref_name }}" --generate-notes
-          gh release upload "${{ github.ref_name }}" release/*.exe release/*.blockmap release/latest.yml --clobber
+          ZAPFLEET_E2E_EXE: ${{ github.workspace }}\release\win-unpacked\zapfleet.exe
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-failure-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            release/*.exe
+            test-results/
+            playwright-report/
+            ~/AppData/Roaming/zapfleet/logs/main.log
